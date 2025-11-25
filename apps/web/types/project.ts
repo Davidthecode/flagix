@@ -1,0 +1,30 @@
+export type Project = {
+  id: string;
+  name: string;
+  subtitle: string;
+  flags: number;
+  environments: number;
+  lastUpdated: string;
+  isFavorite: boolean;
+};
+
+export type ProjectRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
+
+export type ProjectDetail = {
+  id: string;
+  name: string;
+  description: string | null;
+};
+
+export type ProjectMemberDetail = {
+  id: string;
+  user: { id: string; name: string; email: string };
+  role: ProjectRole;
+};
+
+export type ProjectSettingsResponse = {
+  project: ProjectDetail;
+  members: ProjectMemberDetail[];
+  userRole: ProjectRole | undefined;
+  isAuthorizedToEdit: boolean;
+};

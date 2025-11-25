@@ -1,20 +1,35 @@
 {
-  "name": "my-turborepo",
+  "name": "flagix",
   "private": true,
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "web:dev": "turbo dev --filter=web",
+    "api:dev": "turbo dev --filter=api",
+    "db:migrate": "pnpm --filter @flagix/db db:migrate",
+    "db:deploy": "pnpm --filter @flagix/db db:deploy",
+    "db:generate": "pnpm --filter @flagix/db db:generate",
+    "db:push": "pnpm --filter @flagix/db db:push",
+    "db:studio": "pnpm --filter @flagix/db db:studio",
+    "check-types": "turbo run check-types",
+    "lint": "npx ultracite@latest check",
+    "format": "npx ultracite@latest fix",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "prettier": "^3.6.2",
+    "@biomejs/biome": "2.3.2",
+    "husky": "^9.1.7",
     "turbo": "^2.5.8",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "ultracite": "6.1.0"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {
     "node": ">=18"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "18.3.5"
+    }
   }
 }

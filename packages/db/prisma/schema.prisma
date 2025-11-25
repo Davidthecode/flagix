@@ -1,0 +1,230 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  ownedProjects Project[]
+  projectMembers ProjectMember[]
+  activityLogs ActivityLog[]
+
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@map("verification")
+}
+
+model Project {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
+  starred     Boolean    @default(false)
+
+  ownerId     String
+  owner       User       @relation(fields: [ownerId], references: [id])
+  members     ProjectMember[]
+  environments Environment[]
+  flags       Flag[]
+  activityLogs ActivityLog[]
+
+
+  @@map("project")
+}
+
+model ProjectMember {
+  id        String   @id @default(cuid())
+  userId    String
+  projectId String
+  role      ProjectRole  @default(MEMBER)
+  
+  user      User     @relation(fields: [userId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([userId, projectId])
+  @@map("project_member")
+}
+
+enum ProjectRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+model Environment {
+  id          String   @id @default(cuid())
+  name        String   // e.g. 'production', 'staging'
+  apiKey      String   @unique
+  projectId   String
+
+  project     Project  @relation(fields: [projectId], references: [id])
+  flags       FlagState[]
+  rules       EnvironmentRule[]
+
+  lastSeenAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@unique([projectId, name])
+  @@map("environment")
+}
+
+model Flag {
+  id          String   @id @default(cuid())
+  key         String   // Unique flag key
+  description String?
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  variations  Variation[] // global variations
+  states      FlagState[] // per-environment flag state
+  rules       EnvironmentRule[] // per-environment rules
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@unique([projectId, key])
+  @@map("flag")
+}
+
+model Variation {
+  id        String @id @default(cuid())
+  flagId    String
+  name      String // "on" | "off" | "variant-a" etc.
+  value     Json   // true | false | "dark" | 42 etc.
+  type      String // "boolean" | "string" | "number"
+
+  createdAt DateTime @default(now())
+  flag      Flag   @relation(fields: [flagId], references: [id], onDelete: Cascade)
+  targetingRules EnvironmentRule[]
+  flagState FlagState[]
+
+  @@unique([flagId, name])
+  @@map("variation")
+}
+
+model FlagState {
+  id            String     @id @default(cuid())
+  flagId        String
+  environmentId String
+  enabled       Boolean @default(false)
+  defaultVariationId String? // which variation serves when no rule matches
+
+  defaultVariation Variation? @relation(fields: [defaultVariationId], references: [id])
+  flag          Flag       @relation(fields: [flagId], references: [id], onDelete: Cascade)
+  environment   Environment @relation(fields: [environmentId], references: [id])
+
+  @@unique([flagId, environmentId])
+  @@map("flag_state")
+}
+
+model EnvironmentRule {
+  id            String @id @default(cuid())
+  flagId        String
+  environmentId String
+  description   String
+
+  order         Int     // rule evaluation order (0,1,2 etc)
+  type          String  // "targeting" | "a/b" 
+
+  conditions    Json?
+
+  // for targeting rules only  
+  rolloutPercentage Int? 
+
+  // for targeting rules only
+  variationId   String? // which variation this rule serves (for targeting)
+
+  // For experiment (A/B) – multiple weighted(percentage) variations
+  distribution  Json? // [{ variationId: String, weight: Int (0-100) }]
+
+  flag          Flag       @relation(fields: [flagId], references: [id], onDelete: Cascade)
+  environment   Environment @relation(fields: [environmentId], references: [id])
+  variation     Variation? @relation(fields: [variationId], references: [id])
+
+  @@unique([flagId, environmentId, order])
+  @@map("environment_rule")
+}
+
+model ActivityLog {
+  id          String    @id @default(cuid())
+  projectId   String   
+  
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
+  
+  actionType  String    // e.g., 'FLAG_CREATED', 'ENV_API_KEY_ROTATED', 'MEMBER_ADDED'
+  description String    
+  details     Json?    
+  environmentName String?
+
+  createdAt   DateTime  @default(now())
+  
+  project     Project   @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
+  @@map("activity_log")
+}
+

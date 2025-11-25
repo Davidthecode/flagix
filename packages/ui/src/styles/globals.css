@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+@layer components {
+  .container-wrapper {
+    @apply mx-auto max-w-[1020px] px-6;
+  }
+}
