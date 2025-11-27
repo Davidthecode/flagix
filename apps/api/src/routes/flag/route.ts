@@ -352,6 +352,7 @@ router.put(
       return res.status(401).json({ error: "unauthenticated" });
     }
 
+    const userId = req.session.user.id;
     const { flagId } = req.params;
     const { variations, projectId } = req.body as UpdateVariationsPayload;
 
@@ -365,10 +366,7 @@ router.put(
       const projectAccess = await db.project.findFirst({
         where: {
           id: projectId,
-          OR: [
-            { ownerId: req.session.user.id },
-            { members: { some: { userId: req.session.user.id } } },
-          ],
+          OR: [{ ownerId: userId }, { members: { some: { userId } } }],
         },
         select: { id: true },
       });
@@ -387,7 +385,6 @@ router.put(
       await db.$transaction(async (tx) => {
         const keptVariationNames = new Set(variations.map((v) => v.name));
 
-        // Upsert Variations
         for (const variation of variations) {
           const isNew = !existingVariations.some(
             (existingVariation) => existingVariation.name === variation.name
@@ -399,12 +396,10 @@ router.put(
           };
 
           if (isNew) {
-            // Create new variation
             await tx.variation.create({
               data: { ...updateData, flagId },
             });
           } else {
-            // Update existing variation
             const existingId = existingVariations.find(
               (v) => v.name === variation.name
             )?.id;
@@ -426,6 +421,19 @@ router.put(
             where: { id: { in: variationsToDelete.map((v) => v.id) } },
           });
         }
+
+        await tx.activityLog.create({
+          data: {
+            projectId,
+            userId,
+            actionType: "FLAG_VARIATIONS_UPDATED",
+            description: `Updated variations for flag ${flagId}. Created/Updated: ${variations.length}, Deleted: ${variationsToDelete.length}.`,
+            details: {
+              variations: variations.map((v) => v.name),
+              deleted: variationsToDelete.map((v) => v.name),
+            },
+          },
+        });
       });
 
       const updatedVariations = await db.variation.findMany({
@@ -447,6 +455,7 @@ router.put(
       return res.status(401).json({ error: "unauthenticated" });
     }
 
+    const userId = req.session.user.id;
     const { flagId } = req.params;
     const { defaultVariationName, environmentName, projectId } = req.body as {
       defaultVariationName: string;
@@ -464,10 +473,7 @@ router.put(
       const projectAccess = await db.project.findFirst({
         where: {
           id: projectId,
-          OR: [
-            { ownerId: req.session.user.id },
-            { members: { some: { userId: req.session.user.id } } },
-          ],
+          OR: [{ ownerId: userId }, { members: { some: { userId } } }],
         },
         select: { id: true },
       });
@@ -513,6 +519,19 @@ router.put(
         data: { defaultVariationId: newDefaultVariationId },
       });
 
+      await db.activityLog.create({
+        data: {
+          projectId,
+          userId,
+          actionType: "FLAG_DEFAULT_VARIATION_UPDATED",
+          description: `Updated default variation for flag ${flagId} in ${environmentName} to "${newDefaultVariation.name}".`,
+          environmentName,
+          details: {
+            defaultVariationName: newDefaultVariation.name,
+          },
+        },
+      });
+
       res.json({ defaultVariationName: newDefaultVariation.name });
     } catch (error) {
       console.error(
@@ -529,6 +548,7 @@ router.put("/:flagId/state", async (req: RequestWithSession, res: Response) => {
     return res.status(401).json({ error: "unauthenticated" });
   }
 
+  const userId = req.session.user.id;
   const { flagId } = req.params;
   const { environmentName, isEnabled, projectId } =
     req.body as ToggleFlagStatePayload;
@@ -543,10 +563,7 @@ router.put("/:flagId/state", async (req: RequestWithSession, res: Response) => {
     const projectAccess = await db.project.findFirst({
       where: {
         id: projectId,
-        OR: [
-          { ownerId: req.session.user.id },
-          { members: { some: { userId: req.session.user.id } } },
-        ],
+        OR: [{ ownerId: userId }, { members: { some: { userId } } }],
       },
       select: {
         id: true,
@@ -582,6 +599,19 @@ router.put("/:flagId/state", async (req: RequestWithSession, res: Response) => {
       },
     });
 
+    await db.activityLog.create({
+      data: {
+        projectId,
+        userId,
+        actionType: "FLAG_STATE_TOGGLED",
+        description: `Flag ${flagId} turned ${isEnabled ? "ON" : "OFF"} in ${environmentName}.`,
+        environmentName,
+        details: {
+          isEnabled,
+        },
+      },
+    });
+
     res.json({ success: true, isEnabled: updatedState.enabled });
   } catch (error) {
     console.error(
@@ -599,6 +629,7 @@ router.post(
       return res.status(401).json({ error: "unauthenticated" });
     }
 
+    const userId = req.session.user.id;
     const { flagId } = req.params;
     const { environmentName, projectId, rule } = req.body;
 
@@ -614,10 +645,7 @@ router.post(
           projectId,
           name: environmentName,
           project: {
-            OR: [
-              { ownerId: req.session.user.id },
-              { members: { some: { userId: req.session.user.id } } },
-            ],
+            OR: [{ ownerId: userId }, { members: { some: { userId } } }],
           },
         },
         select: { id: true },
@@ -639,13 +667,11 @@ router.post(
           data: { order: { increment: 1 } },
         });
 
-        // Prepare the data for the new rule
         let variationId: string | undefined;
         let distributionJson: string | typeof Prisma.JsonNull = Prisma.JsonNull;
         let rolloutPercentage: number | undefined;
 
         if (rule.ruleType === "targeting") {
-          // Find the Variation to get the variation id
           const targetVariation = await tx.variation.findFirst({
             where: { flagId, name: rule.targetVariation },
             select: { id: true },
@@ -662,7 +688,6 @@ router.post(
           distributionJson = JSON.stringify(rule.variationSplits);
         }
 
-        // Create the new rule at order 0
         const newRule = await tx.environmentRule.create({
           data: {
             flagId,
@@ -679,6 +704,21 @@ router.post(
             distribution: distributionJson,
           },
           select: { id: true, order: true },
+        });
+
+        await tx.activityLog.create({
+          data: {
+            projectId,
+            userId,
+            actionType: "FLAG_RULE_CREATED",
+            description: `Added a new '${rule.ruleType}' rule for flag ${flagId} in ${environmentName}: "${rule.description}".`,
+            environmentName,
+            details: {
+              ruleId: newRule.id,
+              ruleType: rule.ruleType,
+              conditions: rule.conditions,
+            },
+          },
         });
 
         return newRule.id;
@@ -702,6 +742,7 @@ router.put(
       return res.status(401).json({ error: "unauthenticated" });
     }
 
+    const userId = req.session.user.id;
     const { flagId, ruleId } = req.params;
     const { environmentName, projectId, rule } = req.body;
 
@@ -717,10 +758,7 @@ router.put(
           projectId,
           name: environmentName,
           project: {
-            OR: [
-              { ownerId: req.session.user.id },
-              { members: { some: { userId: req.session.user.id } } },
-            ],
+            OR: [{ ownerId: userId }, { members: { some: { userId } } }],
           },
         },
         select: { id: true },
@@ -732,13 +770,11 @@ router.put(
           .json({ error: "Unauthorized access or environment not found." });
       }
 
-      // Prepare the data for update
       let variationId: string | undefined;
       let distributionData: string | typeof Prisma.JsonNull = Prisma.JsonNull;
       let rolloutPercentage: number | undefined;
 
       if (rule.ruleType === "targeting") {
-        // Find the Variation to get the variation id
         const targetVariation = await db.variation.findFirst({
           where: { flagId, name: rule.targetVariation },
           select: { id: true },
@@ -755,7 +791,6 @@ router.put(
         distributionData = JSON.stringify(rule.variationSplits);
       }
 
-      // Update the rule
       const updatedRule = await db.environmentRule.update({
         where: { id: ruleId },
         data: {
@@ -769,6 +804,21 @@ router.put(
           distribution: distributionData,
         },
         select: { id: true },
+      });
+
+      await db.activityLog.create({
+        data: {
+          projectId,
+          userId,
+          actionType: "FLAG_RULE_UPDATED",
+          description: `Updated rule ID ${ruleId} ('${rule.description}') for flag ${flagId} in ${environmentName}.`,
+          environmentName,
+          details: {
+            ruleId,
+            ruleType: rule.ruleType,
+            conditions: rule.conditions,
+          },
+        },
       });
 
       res.json({ id: updatedRule.id, success: true });
@@ -789,6 +839,7 @@ router.delete(
       return res.status(401).json({ error: "unauthenticated" });
     }
 
+    const userId = req.session.user.id;
     const { flagId, ruleId } = req.params;
 
     try {
@@ -798,7 +849,17 @@ router.delete(
       await db.$transaction(async (tx) => {
         const ruleToDelete = await tx.environmentRule.findUnique({
           where: { id: ruleId, flagId },
-          select: { order: true, environmentId: true },
+          select: {
+            order: true,
+            description: true,
+            environmentId: true,
+            environment: {
+              select: {
+                name: true,
+                projectId: true,
+              },
+            },
+          },
         });
 
         if (!ruleToDelete) {
@@ -807,9 +868,26 @@ router.delete(
 
         deletedRuleOrder = ruleToDelete.order;
         environmentId = ruleToDelete.environmentId;
+        const projectId = ruleToDelete.environment.projectId;
+        const environmentName = ruleToDelete.environment.name;
+        const deletedRuleDescription = ruleToDelete.description;
 
         await tx.environmentRule.delete({
           where: { id: ruleId },
+        });
+
+        await tx.activityLog.create({
+          data: {
+            projectId,
+            userId,
+            actionType: "FLAG_RULE_DELETED",
+            description: `Deleted rule ID ${req.params.ruleId}: '${deletedRuleDescription}' for flag ${flagId}.`,
+            environmentName,
+            details: {
+              ruleId: req.params.ruleId,
+              description: deletedRuleDescription,
+            },
+          },
         });
 
         // Decrement the order of all rules that were below the deleted rule
@@ -906,6 +984,7 @@ router.put(
       return res.status(401).json({ error: "unauthenticated" });
     }
 
+    const userId = req.session.user.id;
     const { flagId } = req.params;
     const { projectId, newKey, newDescription } = req.body;
 
@@ -921,10 +1000,7 @@ router.put(
           id: flagId,
           projectId,
           project: {
-            OR: [
-              { ownerId: req.session.user.id },
-              { members: { some: { userId: req.session.user.id } } },
-            ],
+            OR: [{ ownerId: userId }, { members: { some: { userId } } }],
           },
         },
         select: { id: true },
@@ -951,6 +1027,17 @@ router.put(
         });
       }
 
+      const currentFlag = await db.flag.findUnique({
+        where: { id: flagId },
+        select: { key: true, description: true },
+      });
+
+      if (!currentFlag) {
+        return res.status(409).json({
+          error: "Flag does not exist",
+        });
+      }
+
       const updatedFlag = await db.flag.update({
         where: { id: flagId },
         data: {
@@ -958,6 +1045,21 @@ router.put(
           description: newDescription,
         },
         select: { key: true, description: true },
+      });
+
+      await db.activityLog.create({
+        data: {
+          projectId,
+          userId,
+          actionType: "FLAG_METADATA_UPDATED",
+          description: `Flag metadata updated. Key changed from '${currentFlag.key}' to '${newKey}'.`,
+          details: {
+            oldKey: currentFlag.key,
+            newKey,
+            oldDescription: currentFlag.description,
+            newDescription,
+          },
+        },
       });
 
       res.json({
@@ -977,6 +1079,7 @@ router.delete("/:flagId", async (req: RequestWithSession, res: Response) => {
     return res.status(401).json({ error: "unauthenticated" });
   }
 
+  const userId = req.session.user.id;
   const { flagId } = req.params;
 
   try {
@@ -984,18 +1087,31 @@ router.delete("/:flagId", async (req: RequestWithSession, res: Response) => {
       where: {
         id: flagId,
         project: {
-          OR: [
-            { ownerId: req.session.user.id },
-            { members: { some: { userId: req.session.user.id } } },
-          ],
+          OR: [{ ownerId: userId }, { members: { some: { userId } } }],
         },
       },
-      select: { id: true },
+      select: {
+        id: true,
+        key: true,
+        projectId: true,
+      },
     });
 
     if (!flagToDelete) {
       return res.status(404).json({ error: "Flag not found or unauthorized." });
     }
+
+    const { key: flagKey, projectId } = flagToDelete;
+
+    await db.activityLog.create({
+      data: {
+        projectId,
+        userId,
+        actionType: "FLAG_DELETED",
+        description: `Feature flag '${flagKey}' deleted.`,
+        details: { flagId, flagKey },
+      },
+    });
 
     await db.flag.delete({
       where: { id: flagId },

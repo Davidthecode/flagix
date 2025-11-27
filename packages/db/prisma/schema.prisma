@@ -98,7 +98,7 @@ model ProjectMember {
   role      ProjectRole  @default(MEMBER)
   
   user      User     @relation(fields: [userId], references: [id])
-  project   Project  @relation(fields: [projectId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -120,7 +120,7 @@ model Environment {
   apiKey      String   @unique
   projectId   String
 
-  project     Project  @relation(fields: [projectId], references: [id])
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   flags       FlagState[]
   rules       EnvironmentRule[]
 
@@ -174,7 +174,7 @@ model FlagState {
 
   defaultVariation Variation? @relation(fields: [defaultVariationId], references: [id])
   flag          Flag       @relation(fields: [flagId], references: [id], onDelete: Cascade)
-  environment   Environment @relation(fields: [environmentId], references: [id])
+  environment   Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
 
   @@unique([flagId, environmentId])
   @@map("flag_state")
@@ -201,7 +201,7 @@ model EnvironmentRule {
   distribution  Json? // [{ variationId: String, weight: Int (0-100) }]
 
   flag          Flag       @relation(fields: [flagId], references: [id], onDelete: Cascade)
-  environment   Environment @relation(fields: [environmentId], references: [id])
+  environment   Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
   variation     Variation? @relation(fields: [variationId], references: [id])
 
   @@unique([flagId, environmentId, order])
@@ -222,7 +222,7 @@ model ActivityLog {
 
   createdAt   DateTime  @default(now())
   
-  project     Project   @relation(fields: [projectId], references: [id])
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
   @@map("activity_log")

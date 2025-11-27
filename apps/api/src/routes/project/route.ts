@@ -125,6 +125,14 @@ router.post("/", async (req: RequestWithSession, res: Response) => {
         },
       });
 
+      await tx.projectMember.create({
+        data: {
+          userId,
+          projectId: proj.id,
+          role: "OWNER",
+        },
+      });
+
       const defaultEnvs = ["development", "staging", "production"];
       await Promise.all(
         defaultEnvs.map((name) =>
@@ -137,6 +145,16 @@ router.post("/", async (req: RequestWithSession, res: Response) => {
           })
         )
       );
+
+      await tx.activityLog.create({
+        data: {
+          projectId: proj.id,
+          userId,
+          actionType: "PROJECT_CREATED",
+          description: `Project created: "${proj.name}".`,
+          details: body,
+        },
+      });
 
       return proj;
     });
@@ -400,6 +418,17 @@ router.post(
       const defaultNames = ["development", "staging", "production"];
       const isDefault = defaultNames.includes(newEnv.name.toLowerCase());
 
+      await db.activityLog.create({
+        data: {
+          projectId,
+          userId,
+          actionType: "ENVIRONMENT_CREATED",
+          description: `Created new environment: "${newEnv.name}".`,
+          environmentName: newEnv.name,
+          details: { apiKey: newEnv.apiKey },
+        },
+      });
+
       res.status(201).json({
         ...newEnv,
         isDefault,
@@ -443,6 +472,26 @@ router.delete(
           error: "Unauthorized: User is not a member of this project",
         });
       }
+
+      const environmentToDelete = await db.environment.findUnique({
+        where: { id: environmentId, projectId },
+        select: { name: true },
+      });
+
+      if (!environmentToDelete) {
+        return res.status(404).json({ error: "Environment not found" });
+      }
+
+      await db.activityLog.create({
+        data: {
+          projectId,
+          userId,
+          actionType: "ENVIRONMENT_DELETED",
+          description: `Deleted environment: "${environmentToDelete.name}".`,
+          environmentName: environmentToDelete.name,
+          details: { environmentId },
+        },
+      });
 
       await db.environment.delete({
         where: {
@@ -651,7 +700,6 @@ router.get(
 );
 
 router.put("/:projectId", async (req: RequestWithSession, res: Response) => {
-  console.log("updating project");
   const { projectId } = req.params;
   const session = req.session;
 

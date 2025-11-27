@@ -1,3 +1,4 @@
+import { toast } from "@flagix/ui/components/sonner";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { api } from "@/lib/api";
@@ -20,7 +21,9 @@ export const useUpdateProject = (projectId: string) => {
   const queryClient = useQueryClient();
   return useMutation<
     ProjectDetail,
-    AxiosError,
+    AxiosError<{
+      error: string;
+    }>,
     { name: string; description: string }
   >({
     mutationFn: async (data: { name: string; description: string }) => {
@@ -33,6 +36,8 @@ export const useUpdateProject = (projectId: string) => {
     },
 
     onSuccess: () => {
+      toast.success("Project updated successfully!");
+
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.PROJECT_SETTINGS(projectId),
       });
@@ -40,6 +45,13 @@ export const useUpdateProject = (projectId: string) => {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.PROJECT(projectId),
       });
+    },
+
+    onError: (error) => {
+      const message =
+        error.response?.data?.error ||
+        "Failed to update project. Please try again.";
+      toast.error(message);
     },
   });
 };
