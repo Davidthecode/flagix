@@ -43,7 +43,7 @@ export function RecentActivity({ logs }: RecentActivityProps) {
       <div className="mt-4 border-gray-100 border-t pt-3 text-right">
         <Link
           className="font-medium text-emerald-600 text-sm hover:text-emerald-70 hover:underline"
-          href={`/projects/${projectId}/audit-logs`}
+          href={`/projects/${projectId}/audit`}
         >
           View All Audit Logs
         </Link>

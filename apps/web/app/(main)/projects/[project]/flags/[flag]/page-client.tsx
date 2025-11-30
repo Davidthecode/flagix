@@ -280,6 +280,7 @@ function PageClient() {
 
     deleteFlagMutation.mutate(flagId, {
       onSuccess: () => {
+        setIsDeleteModalOpen(false);
         router.push(`/projects/${projectId}/flags`);
       },
     });

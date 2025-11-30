@@ -92,7 +92,7 @@ function FlagsPageClient() {
 
         <FlagTableList
           filteredFlags={filteredFlags}
-          isLoading={isLoading || createFlagMutation.isPending}
+          isLoading={isLoading}
           projectId={projectId}
           searchTerm={searchTerm}
         />

@@ -34,7 +34,6 @@ export function DeleteFlagModal({
     if (confirmationInput === flagKey) {
       onConfirmDelete(flagKey);
       setConfirmationInput("");
-      onClose();
     }
   };
 

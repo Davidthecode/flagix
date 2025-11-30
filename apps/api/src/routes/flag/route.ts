@@ -317,9 +317,7 @@ router.get("/:flagId", async (req: RequestWithSession, res: Response) => {
           );
 
           const envDefaultVariationName =
-            state?.defaultVariation?.name ||
-            defaultOffVariation?.name || // Fallback to 'off' if Prisma found nothing
-            "off";
+            state?.defaultVariation?.name || defaultOffVariation?.name || "off";
 
           // Determine the detailed rules for this environment.
           // We only include the full rules array if this is the active requested environment.
@@ -660,12 +658,19 @@ router.post(
       const environmentId = environment.id;
 
       const newRuleId = await db.$transaction(async (tx) => {
-        // Increment the order of all existing rules in this environment
-        // This makes space for the new rule at order 0.
-        await tx.environmentRule.updateMany({
+        const existingRules = await tx.environmentRule.findMany({
           where: { flagId, environmentId },
-          data: { order: { increment: 1 } },
+          orderBy: { order: "desc" },
+          select: { id: true, order: true },
         });
+
+        // Increment the order of all existing rules in this environment
+        for (const existingRule of existingRules) {
+          await tx.environmentRule.update({
+            where: { id: existingRule.id },
+            data: { order: existingRule.order + 1 },
+          });
+        }
 
         let variationId: string | undefined;
         let distributionJson: string | typeof Prisma.JsonNull = Prisma.JsonNull;
@@ -724,13 +729,101 @@ router.post(
         return newRule.id;
       });
 
-      res.json({ id: newRuleId, success: true });
+      const newRule = {
+        id: newRuleId,
+        description: rule.description,
+        ruleType: rule.ruleType,
+        conditions: rule.conditions,
+        targetVariation: rule.targetVariation || undefined,
+        rolloutPercentage: rule.rolloutPercentage || undefined,
+        variationSplits: rule.variationSplits || undefined,
+      };
+
+      res.json(newRule);
     } catch (error) {
       console.error(
         `Failed to add rule to flag ${flagId} in ${environmentName}:`,
         error
       );
       res.status(500).json({ error: "Failed to add targeting rule." });
+    }
+  }
+);
+
+router.put(
+  "/:flagId/rules/reorder",
+  async (req: RequestWithSession, res: Response) => {
+    if (!req.session) {
+      return res.status(401).json({ error: "unauthenticated" });
+    }
+
+    const { flagId } = req.params;
+    const { environmentName, projectId, ruleIdsInNewOrder } = req.body;
+
+    if (!environmentName || !projectId || !Array.isArray(ruleIdsInNewOrder)) {
+      return res
+        .status(400)
+        .json({ error: "Missing required parameters for reordering." });
+    }
+
+    try {
+      const environment = await db.environment.findFirst({
+        where: {
+          projectId,
+          name: environmentName,
+          project: {
+            OR: [
+              { ownerId: req.session.user.id },
+              { members: { some: { userId: req.session.user.id } } },
+            ],
+          },
+        },
+        select: { id: true },
+      });
+
+      if (!environment) {
+        return res
+          .status(403)
+          .json({ error: "Unauthorized access or environment not found." });
+      }
+
+      await db.$transaction(async (tx) => {
+        // Set all rules to temporary negative orders to avoid conflicts
+        await Promise.all(
+          ruleIdsInNewOrder.map((ruleId: string, index: number) =>
+            tx.environmentRule.update({
+              where: {
+                id: ruleId,
+                flagId,
+                environmentId: environment.id,
+              },
+              data: { order: -(index + 1) },
+            })
+          )
+        );
+
+        // Set final positive orders
+        await Promise.all(
+          ruleIdsInNewOrder.map((ruleId: string, index: number) =>
+            tx.environmentRule.update({
+              where: {
+                id: ruleId,
+                flagId,
+                environmentId: environment.id,
+              },
+              data: { order: index },
+            })
+          )
+        );
+      });
+
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error(
+        `Failed to reorder rules for flag ${flagId} in ${environmentName}:`,
+        error
+      );
+      res.status(500).json({ error: "Failed to save rule order." });
     }
   }
 );
@@ -791,7 +884,7 @@ router.put(
         distributionData = JSON.stringify(rule.variationSplits);
       }
 
-      const updatedRule = await db.environmentRule.update({
+      await db.environmentRule.update({
         where: { id: ruleId },
         data: {
           description: rule.description,
@@ -821,7 +914,17 @@ router.put(
         },
       });
 
-      res.json({ id: updatedRule.id, success: true });
+      const updatedRule = {
+        id: ruleId,
+        description: rule.description,
+        ruleType: rule.ruleType,
+        conditions: rule.conditions,
+        targetVariation: rule.targetVariation || undefined,
+        rolloutPercentage: rule.rolloutPercentage || undefined,
+        variationSplits: rule.variationSplits || undefined,
+      };
+
+      res.json(updatedRule);
     } catch (error) {
       console.error(
         `Failed to update rule ${ruleId} for flag ${flagId}:`,
@@ -909,70 +1012,6 @@ router.delete(
         error
       );
       res.status(500).json({ error: "Failed to delete targeting rule." });
-    }
-  }
-);
-
-router.put(
-  "/:flagId/rules/reorder",
-  async (req: RequestWithSession, res: Response) => {
-    if (!req.session) {
-      return res.status(401).json({ error: "unauthenticated" });
-    }
-
-    const { flagId } = req.params;
-    const { environmentName, projectId, newRuleOrder } = req.body;
-
-    if (!environmentName || !projectId || !Array.isArray(newRuleOrder)) {
-      return res
-        .status(400)
-        .json({ error: "Missing required parameters for reordering." });
-    }
-
-    try {
-      const environment = await db.environment.findFirst({
-        where: {
-          projectId,
-          name: environmentName,
-          project: {
-            OR: [
-              { ownerId: req.session.user.id },
-              { members: { some: { userId: req.session.user.id } } },
-            ],
-          },
-        },
-        select: { id: true },
-      });
-
-      if (!environment) {
-        return res
-          .status(403)
-          .json({ error: "Unauthorized access or environment not found." });
-      }
-
-      const environmentId = environment.id;
-
-      const updateOperations = newRuleOrder.map((ruleId, index) =>
-        db.environmentRule.update({
-          where: {
-            id: ruleId,
-            flagId,
-            environmentId,
-          },
-          data: { order: index },
-          select: { id: true },
-        })
-      );
-
-      await db.$transaction(updateOperations);
-
-      res.json({ success: true });
-    } catch (error) {
-      console.error(
-        `Failed to reorder rules for flag ${flagId} in ${environmentName}:`,
-        error
-      );
-      res.status(500).json({ error: "Failed to save rule order." });
     }
   }
 );
