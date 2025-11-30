@@ -34,7 +34,7 @@ const DropdownMenuItem = ({
     className={cn(
       "flex cursor-pointer select-none items-center rounded-lg px-3 py-2 text-sm outline-none",
       "transition-colors duration-150",
-      "hover:bg-gray-100 focus:bg-gray-100",
+      "hover:bg-[#F4F4F5] focus:bg-[#F4F4F5]",
       "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className
     )}
@@ -59,7 +59,7 @@ const DropdownMenuSeparator = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("my-1 h-px bg-gray-200", className)} {...props} />
+  <div className={cn("my-1 h-px bg-[#F4F4F5]", className)} {...props} />
 );
 
 export {

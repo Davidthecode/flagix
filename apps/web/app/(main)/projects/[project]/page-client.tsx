@@ -1,11 +1,11 @@
 "use client";
 
 import { MetricCard } from "@flagix/ui/components/metric-card";
-import { Spinner } from "@flagix/ui/components/spinner";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { IntegrationStatus } from "@/components/project/integration-status";
 import { RecentActivity } from "@/components/project/recent-activity";
+import { DashboardSkeleton } from "@/components/project/skeleton";
 import { api } from "@/lib/api";
 import { QUERY_KEYS } from "@/lib/queries/keys";
 import { useProject } from "@/providers/project";
@@ -57,9 +57,8 @@ export default function ProjectDashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full flex-col items-center justify-center py-16">
-        <Spinner className="text-emerald-600" size={40} />
-        <p className="mt-4 text-gray-500">Loading dashboard data...</p>
+      <div>
+        <DashboardSkeleton />
       </div>
     );
   }

@@ -29,7 +29,7 @@ export const Nav = () => {
 
   return (
     <header className="sticky top-0 z-50 border-b bg-[#18181B] text-white">
-      <div className="container-wrapper flex h-16 items-center justify-between px-6">
+      <div className="container-wrapper flex h-20 items-center justify-between">
         <Link className="flex items-center gap-2" href="/dashboard">
           <span className="font-semibold text-lg">Flagix</span>
         </Link>

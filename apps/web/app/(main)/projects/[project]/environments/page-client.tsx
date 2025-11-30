@@ -6,7 +6,7 @@ import { CreateEnvironmentModal } from "@/components/environment/create-environm
 import { DeleteEnvironmentModal } from "@/components/environment/delete-environment-modal";
 import { EnvironmentDetails } from "@/components/environment/environment-details";
 import { EnvironmentTabs } from "@/components/environment/environment-tabs";
-import PageLoader from "@/components/shared/page-loader";
+import { EnvironmentPageSkeleton } from "@/components/environment/skeleton";
 import {
   useCreateEnvironment,
   useDeleteEnvironment,
@@ -116,7 +116,7 @@ export default function PageClient() {
   const envToDelete = environmentToDelete;
 
   if (isLoading) {
-    return <PageLoader />;
+    return <EnvironmentPageSkeleton />;
   }
 
   if (isError) {

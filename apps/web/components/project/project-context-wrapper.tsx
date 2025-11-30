@@ -62,7 +62,7 @@ export const ProjectContextWrapper = ({
 
     const loadingBody = (
       <div className="flex justify-center py-8">
-        <Spinner className="text-emerald-600" size={40} />
+        <Spinner className="text-emerald-600" size={30} />
       </div>
     );
 

@@ -60,7 +60,7 @@ export const FlagTableList = ({
 
     return (
       <TableEmpty>
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#F4F4F5]">
           <Search className="h-6 w-6 text-gray-400" />
         </div>
         <p className="text-gray-600 text-sm">

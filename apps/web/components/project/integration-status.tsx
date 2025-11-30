@@ -1,55 +1,47 @@
+"use client";
+
+import { Button } from "@flagix/ui/components/button";
 import { toast } from "@flagix/ui/components/sonner";
-import { formatDistanceToNow, isAfter, subDays, subHours } from "date-fns";
-import { Clipboard, Server } from "lucide-react";
+import { Clipboard, Eye, EyeOff, Server } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { useProject } from "@/providers/project";
 import type { DashboardData } from "@/types/dashboard";
+import { getIntegrationStatus, maskApiKey } from "@/utils/project";
 
 type IntegrationStatusProps = {
   environments: DashboardData["environments"];
 };
 
-const ACTIVE_THRESHOLD = subHours(new Date(), 3);
-const STALE_THRESHOLD = subDays(new Date(), 7);
-
 export function IntegrationStatus({ environments }: IntegrationStatusProps) {
   const { projectId } = useProject();
+  const [isKeyVisible, setIsKeyVisible] = useState(false);
 
   const devEnvironment =
     environments.find((e) => e.name.toLowerCase() === "development") ||
     environments[0];
 
-  const apiKeyDisplay = devEnvironment ? devEnvironment.apiKey : "N/A";
+  const apiKey = devEnvironment ? devEnvironment.apiKey : "N/A";
   const environmentName = devEnvironment
     ? devEnvironment.name
     : "an environment";
   const lastSeenAt = devEnvironment?.lastSeenAt;
 
-  let statusText = "Never Connected";
-  let statusClass = "border-yellow-200 bg-yellow-50 text-yellow-700";
+  let displayKey: string;
 
-  if (lastSeenAt) {
-    const lastSeenDate = new Date(lastSeenAt);
-    const lastSeen = formatDistanceToNow(lastSeenDate, { addSuffix: true });
-
-    if (isAfter(lastSeenDate, ACTIVE_THRESHOLD)) {
-      statusText = `Active (Last seen ${lastSeen})`;
-      statusClass = "border-green-200 bg-green-50 text-green-700";
-    } else if (isAfter(lastSeenDate, STALE_THRESHOLD)) {
-      statusText = `Stale (Last seen ${lastSeen})`;
-      statusClass = "border-yellow-200 bg-yellow-50 text-yellow-700";
-    } else {
-      statusText = `Inactive (Last seen ${lastSeen})`;
-      statusClass = "border-red-200 bg-red-50 text-red-700";
-    }
+  if (apiKey === "N/A") {
+    displayKey = "N/A";
+  } else if (isKeyVisible) {
+    displayKey = apiKey;
   } else {
-    statusText = "Never Connected";
-    statusClass = "border-red-200 bg-red-50 text-red-700";
+    displayKey = maskApiKey(apiKey);
   }
 
+  const { statusText, statusClass } = getIntegrationStatus(lastSeenAt);
+
   const copyToClipboard = () => {
-    if (apiKeyDisplay !== "N/A") {
-      navigator.clipboard.writeText(apiKeyDisplay);
+    if (apiKey !== "N/A") {
+      navigator.clipboard.writeText(apiKey);
       toast.success("API Key Copied!");
     }
   };
@@ -61,23 +53,37 @@ export function IntegrationStatus({ environments }: IntegrationStatusProps) {
       </h3>
       <div className="mb-4">
         <p className="mb-2 text-gray-600 text-sm">
-          **{environmentName}** Environment API Key (for SDK Initialization):
+          {environmentName} Environment API Key (for SDK Initialization):
         </p>
 
         <div className="flex items-center rounded-lg border border-gray-200 bg-[#F4F4F5] p-2 font-mono text-gray-800 text-sm">
           <code className="flex-1 overflow-x-auto whitespace-nowrap pr-2 text-xs">
-            {apiKeyDisplay}
+            {displayKey}
           </code>
 
-          <button
+          <Button
+            aria-label={isKeyVisible ? "Hide API Key" : "Show API Key"}
+            className="ml-2 flex-shrink-0 rounded-md p-1 text-gray-500 transition-colors hover:bg-[#F4F4F5] hover:text-gray-700"
+            disabled={apiKey === "N/A"}
+            onClick={() => setIsKeyVisible((prev) => !prev)}
+            type="button"
+          >
+            {isKeyVisible ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+          </Button>
+
+          <Button
             aria-label="Copy API Key to clipboard"
             className="ml-2 flex-shrink-0 rounded-md p-1 text-gray-500 transition-colors hover:bg-[#F4F4F5] hover:text-gray-700"
-            disabled={apiKeyDisplay === "N/A"}
+            disabled={apiKey === "N/A"}
             onClick={copyToClipboard}
             type="button"
           >
             <Clipboard className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       </div>
       <div className="flex items-center justify-between border-gray-100 border-t pt-3 text-xs">

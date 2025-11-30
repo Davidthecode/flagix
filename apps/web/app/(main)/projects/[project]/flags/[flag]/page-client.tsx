@@ -11,7 +11,7 @@ import { FlagDeleteSection } from "@/components/flags/main/flag-delete-section";
 import { FlagMetadataSection } from "@/components/flags/main/flag-metadata-section";
 import { FlagVariationsSection } from "@/components/flags/main/flag-variations-section";
 import { TargetingRuleModal } from "@/components/flags/rule/targeting-rule-modal";
-import PageLoader from "@/components/shared/page-loader";
+import { FlagPageSkeleton } from "@/components/flags/skeleton";
 import {
   useAddRuleMutation,
   useDeleteFlagMutation,
@@ -288,8 +288,7 @@ function PageClient() {
 
   if (!flag) {
     if (isLoading) {
-      console.log("no flag so refetching");
-      return <PageLoader />;
+      return <FlagPageSkeleton />;
     }
     if (isError) {
       return <div className="py-8 text-red-500">Failed to load flag.</div>;

@@ -5,9 +5,11 @@ import { ProjectMetrics } from "@/components/dashboard/project-metrics";
 
 export default function DashboardClient() {
   return (
-    <div>
-      <ProjectMetrics />
-      <ProjectList />
+    <div className="bg-[#F4F4F5]">
+      <div className="container-wrapper">
+        <ProjectMetrics />
+        <ProjectList />
+      </div>
     </div>
   );
 }
