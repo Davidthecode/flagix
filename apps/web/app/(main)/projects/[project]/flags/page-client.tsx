@@ -2,10 +2,10 @@
 
 import { toast } from "@flagix/ui/components/sonner";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CreateFlagModal } from "@/components/flags/create-flag-modal";
-import { FlagTableOverview } from "@/components/flags/flag-table-overview";
-import PageLoader from "@/components/shared/page-loader";
+import { FlagControlsHeader } from "@/components/flags/flag-controls-header";
+import { FlagTableList } from "@/components/flags/flag-table-list";
 import { api } from "@/lib/api";
 import { QUERY_KEYS } from "@/lib/queries/keys";
 import { useProject } from "@/providers/project";
@@ -21,6 +21,7 @@ function FlagsPageClient() {
   const { projectId } = useProject();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const {
     data: flags,
@@ -47,6 +48,18 @@ function FlagsPageClient() {
     },
   });
 
+  const flagList = flags || [];
+
+  const filteredFlags = useMemo(
+    () =>
+      flagList.filter(
+        (flag) =>
+          flag.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          flag.description.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [flagList, searchTerm]
+  );
+
   const handleCreateFlag = (key: string, description: string) => {
     if (flags.some((flag) => flag.key === key)) {
       toast.error(`Flag with key '${key}' already exists.`);
@@ -56,9 +69,11 @@ function FlagsPageClient() {
     createFlagMutation.mutate({ key, description, projectId });
   };
 
-  if (isLoading || createFlagMutation.isPending) {
-    return <PageLoader />;
-  }
+  const flagCountDisplay = isLoading
+    ? "Loading..."
+    : `${flagList.length} ${flagList.length === 1 ? "Flag" : "Flags"} Total`;
+
+  const isControlsDisabled = createFlagMutation.isPending;
 
   if (isError) {
     return <div className="py-8 text-red-500">Failed to load flags.</div>;
@@ -67,16 +82,25 @@ function FlagsPageClient() {
   return (
     <div>
       <div className="py-8">
-        <FlagTableOverview
-          flags={flags}
+        <FlagControlsHeader
+          flagCountDisplay={flagCountDisplay}
+          isControlsDisabled={isControlsDisabled}
           onOpenCreateModal={() => setIsModalOpen(true)}
+          onSearchTermChange={setSearchTerm}
+          searchTerm={searchTerm}
+        />
+
+        <FlagTableList
+          filteredFlags={filteredFlags}
+          isLoading={isLoading || createFlagMutation.isPending}
           projectId={projectId}
+          searchTerm={searchTerm}
         />
       </div>
 
       <CreateFlagModal
         isOpen={isModalOpen}
-        isSubmitting={createFlagMutation.isPending}
+        isSubmitting={isControlsDisabled}
         onClose={() => setIsModalOpen(false)}
         onCreate={handleCreateFlag}
       />
