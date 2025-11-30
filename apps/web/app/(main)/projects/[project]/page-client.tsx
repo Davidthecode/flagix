@@ -95,7 +95,7 @@ export default function ProjectDashboardPage() {
     <div>
       <div className="mt-8">
         <h2 className="mb-4 font-semibold text-lg">Overview Metrics</h2>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {dashboardMetrics.map((metric) => (
             <MetricCard key={metric.title} {...metric} linkComponent={Link} />
           ))}
@@ -104,7 +104,7 @@ export default function ProjectDashboardPage() {
 
       <div className="mt-8">
         <h2 className="mb-4 font-semibold text-lg">Quick Actions & Status</h2>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <IntegrationStatus environments={data.environments} />
           <RecentActivity logs={data.recentActivity} />
         </div>
