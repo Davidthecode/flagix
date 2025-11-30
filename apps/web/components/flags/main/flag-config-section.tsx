@@ -1,7 +1,7 @@
 import { Button } from "@flagix/ui/components/button";
 import { Toggle } from "@flagix/ui/components/toggle";
 import { Lock } from "lucide-react";
-import { FlagRuleCard } from "@/components/flags/flag-rule-card";
+import { SortableRuleList } from "@/components/flags/main/sortable-rule-list";
 import type { BaseEnvironment } from "@/types/environment";
 import type { StatusSummary, TargetingRule } from "@/types/flag";
 
@@ -14,6 +14,7 @@ type FlagConfigSectionProps = {
   handleToggleFlag: () => void;
   isAnyMutationPending: boolean;
   targetingRules: TargetingRule[];
+  handleRuleOrderUpdate: (reorderedRules: TargetingRule[]) => void;
   otherEnvStatuses: StatusSummary[];
   handleDeleteRule: (ruleId: string, onSuccess?: () => void) => void;
   handleEditRuleClick: (rule: TargetingRule) => void;
@@ -30,6 +31,7 @@ export function FlagConfigSection({
   handleToggleFlag,
   isAnyMutationPending,
   targetingRules,
+  handleRuleOrderUpdate,
   otherEnvStatuses,
   handleDeleteRule,
   handleEditRuleClick,
@@ -129,16 +131,14 @@ export function FlagConfigSection({
         </div>
 
         <div className="space-y-3">
-          {targetingRules.map((rule) => (
-            <FlagRuleCard
-              isDeleting={isDeletingRule}
-              isEditable={isEditable}
-              key={rule.id}
-              onDelete={handleDeleteRule}
-              onEdit={handleEditRuleClick}
-              rule={rule}
-            />
-          ))}
+          <SortableRuleList
+            isDeletingRule={isDeletingRule}
+            isEditable={isEditable}
+            onDelete={handleDeleteRule}
+            onEdit={handleEditRuleClick}
+            onRuleOrderChange={handleRuleOrderUpdate}
+            rules={targetingRules}
+          />
         </div>
 
         <p className="mt-4 border-gray-200 border-t pt-4 text-gray-500 text-sm">

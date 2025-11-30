@@ -5,9 +5,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { DeleteFlagModal } from "@/components/flags/delete-flag-modal";
 import { EditFlagMetadataModal } from "@/components/flags/edit-flag-metadata-modal";
+import { FlagEnvironmentConfig } from "@/components/flags/flag-environment-config";
 import { FlagVariationManagementModal } from "@/components/flags/flag-variation-modal";
-import { FlagConfigSection } from "@/components/flags/main/flag-config-section";
-import { FlagDefaultVariationSection } from "@/components/flags/main/flag-default-variation-section";
 import { FlagDeleteSection } from "@/components/flags/main/flag-delete-section";
 import { FlagMetadataSection } from "@/components/flags/main/flag-metadata-section";
 import { FlagVariationsSection } from "@/components/flags/main/flag-variations-section";
@@ -20,6 +19,7 @@ import {
   useEditFlagMetadataMutation,
   useEditRuleMutation,
   useFlagConfig,
+  useReorderRulesMutation,
   useToggleFlagMutation,
   useUpdateDefaultVariationMutation,
   useUpdateVariationsMutation,
@@ -56,14 +56,16 @@ function PageClient() {
   const [isAddRuleModalOpen, setIsAddRuleModalOpen] = useState(false);
 
   useEffect(() => {
-    if (currentEnvironment?.name && !viewingEnvironmentName) {
+    if (currentEnvironment?.name) {
       setViewingEnvironmentName(currentEnvironment.name);
     }
-  }, [currentEnvironment, viewingEnvironmentName]);
+  }, [currentEnvironment?.name]);
 
   const {
     data: flag,
     isLoading,
+    isFetching,
+    isPlaceholderData,
     isError,
   } = useFlagConfig(projectId, flagId, displayEnvironmentName);
 
@@ -93,6 +95,11 @@ function PageClient() {
   const editRuleMutation = useEditRuleMutation(projectId, flagId);
   const deleteRuleMutation = useDeleteRuleMutation(projectId, flagId);
   const deleteFlagMutation = useDeleteFlagMutation(projectId);
+  const reorderRulesMutation = useReorderRulesMutation(
+    projectId,
+    flagId,
+    displayEnvironmentName
+  );
 
   const isAnyMutationPending =
     updateVariationsMutation.isPending ||
@@ -116,20 +123,37 @@ function PageClient() {
         return;
       }
 
-      editMetadataMutation.mutate({
-        flagId,
-        projectId,
-        newKey,
-        newDescription,
-      });
+      editMetadataMutation.mutate(
+        {
+          flagId,
+          projectId,
+          newKey,
+          newDescription,
+        },
+        {
+          onSuccess: () => {
+            setIsEditDetailsModalOpen(false);
+          },
+          onError: () => {
+            toast.error("Error editing flag metadata");
+          },
+        }
+      );
     },
     [flagId, projectId, editMetadataMutation]
   );
 
   const handleVariationsUpdate = (newVariations: FlagVariation[]) => {
-    updateVariationsMutation.mutate({
-      variations: newVariations,
-    });
+    updateVariationsMutation.mutate(
+      {
+        variations: newVariations,
+      },
+      {
+        onSuccess: () => {
+          setIsVariationModalOpen(false);
+        },
+      }
+    );
   };
 
   const handleSetDefaultVariation = useCallback(
@@ -176,11 +200,17 @@ function PageClient() {
       return;
     }
 
-    addRuleMutation.mutate({
-      environmentName: displayEnvironmentName,
-
-      rule: newRuleData,
-    });
+    addRuleMutation.mutate(
+      {
+        environmentName: displayEnvironmentName,
+        rule: newRuleData,
+      },
+      {
+        onSuccess: () => {
+          setIsAddRuleModalOpen(false);
+        },
+      }
+    );
   };
 
   const handleEditRuleClick = (rule: TargetingRule) => {
@@ -197,14 +227,29 @@ function PageClient() {
         return;
       }
 
-      editRuleMutation.mutate({
-        ruleId: updatedRule.id,
-        environmentName: displayEnvironmentName,
-
-        rule: updatedRule,
-      });
+      editRuleMutation.mutate(
+        {
+          ruleId: updatedRule.id,
+          environmentName: displayEnvironmentName,
+          rule: updatedRule,
+        },
+        {
+          onSuccess: () => {
+            setIsAddRuleModalOpen(false);
+            setEditingRule(null);
+          },
+        }
+      );
     },
     [displayEnvironmentName, editRuleMutation]
+  );
+
+  const handleRuleOrderUpdate = useCallback(
+    (newRules: TargetingRule[]) => {
+      const ruleIdsInNewOrder = newRules.map((r) => r.id);
+      reorderRulesMutation.mutate({ ruleIdsInNewOrder });
+    },
+    [reorderRulesMutation]
   );
 
   const handleDeleteRule = useCallback(
@@ -240,16 +285,15 @@ function PageClient() {
     });
   }, [flagId, deleteFlagMutation, projectId, router]);
 
-  if (isLoading || !flag) {
-    return <PageLoader />;
-  }
-
-  if (isError) {
-    return (
-      <div className="py-8 text-red-500">
-        Failed to load flag configuration.
-      </div>
-    );
+  if (!flag) {
+    if (isLoading) {
+      console.log("no flag so refetching");
+      return <PageLoader />;
+    }
+    if (isError) {
+      return <div className="py-8 text-red-500">Failed to load flag.</div>;
+    }
+    return null;
   }
 
   return (
@@ -269,27 +313,22 @@ function PageClient() {
           variations={flag.variations}
         />
 
-        <FlagConfigSection
+        <FlagEnvironmentConfig
           allEnvironments={allEnvironments}
+          config={displayEnvironmentConfig}
           displayEnvironmentName={displayEnvironmentName}
           handleDeleteRule={handleDeleteRule}
           handleEditRuleClick={handleEditRuleClick}
+          handleRuleOrderUpdate={handleRuleOrderUpdate}
+          handleSetDefaultVariation={handleSetDefaultVariation}
           handleToggleFlag={handleToggleFlag}
           isAnyMutationPending={isAnyMutationPending}
           isDeletingRule={deleteRuleMutation.isPending}
           isEditable={isEditable}
-          isEnabled={displayEnvironmentConfig.isEnabled}
+          isLoading={isFetching && isPlaceholderData}
           onAddRuleClick={() => setIsAddRuleModalOpen(true)}
           otherEnvStatuses={otherEnvStatuses}
           setViewingEnvironmentName={setViewingEnvironmentName}
-          targetingRules={displayEnvironmentConfig.targetingRules}
-        />
-
-        <FlagDefaultVariationSection
-          defaultVariationName={displayEnvironmentConfig.defaultVariationName}
-          isAnyMutationPending={isAnyMutationPending}
-          isEditable={isEditable}
-          onSetDefaultVariation={handleSetDefaultVariation}
           variations={flag.variations}
         />
 

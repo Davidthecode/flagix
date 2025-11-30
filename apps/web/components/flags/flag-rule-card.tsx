@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@flagix/ui/components/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, GripVertical, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { DeleteRuleModal } from "@/components/flags/rule/delete-rule-modal";
 import type { TargetingRule } from "@/types/flag";
@@ -12,12 +12,19 @@ export function FlagRuleCard({
   onEdit,
   onDelete,
   isDeleting,
+  dragHandleProps,
 }: {
   rule: TargetingRule;
   isEditable: boolean;
   onEdit: (rule: TargetingRule) => void;
   onDelete: (ruleId: string, onSuccess?: () => void) => void;
   isDeleting: boolean;
+  dragHandleProps?: React.HTMLAttributes<HTMLButtonElement> & {
+    role?: string;
+    "aria-pressed"?: boolean;
+    "aria-roledescription"?: string;
+    "aria-describedby"?: string;
+  };
 }) {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
@@ -82,6 +89,17 @@ export function FlagRuleCard({
           </div>
 
           <div className="flex space-x-1">
+            {isEditable && (
+              <Button
+                className={`text-gray-400 hover:text-gray-600 ${isEditable ? "cursor-grab" : "cursor-default"}`}
+                disabled={!isEditable}
+                {...dragHandleProps}
+                size="icon"
+                variant="ghost"
+              >
+                <GripVertical className="h-5 w-5" />
+              </Button>
+            )}
             <Button
               className="text-gray-400 hover:text-gray-600 disabled:opacity-40"
               disabled={!isEditable}

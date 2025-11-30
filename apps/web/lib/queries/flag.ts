@@ -1,8 +1,30 @@
 import { toast } from "@flagix/ui/components/sonner";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { QUERY_KEYS } from "@/lib/queries/keys";
-import type { FlagConfig, FlagVariation, TargetingRule } from "@/types/flag";
+import type {
+  EnvironmentConfig,
+  FlagConfig,
+  FlagVariation,
+  TargetingRule,
+} from "@/types/flag";
+
+const updateCacheWithNewEnvConfig = (
+  oldFlagConfig: FlagConfig,
+  environmentName: string,
+  newEnvConfig: EnvironmentConfig
+): FlagConfig => ({
+  ...oldFlagConfig,
+  environments: {
+    ...oldFlagConfig.environments,
+    [environmentName]: newEnvConfig,
+  },
+});
 
 /**
  * Fetches the configuration for a specific flag in a specific environment.
@@ -19,6 +41,7 @@ export const useFlagConfig = (
         .get(`/api/flags/${flagId}?environmentName=${environmentName}`)
         .then((res) => res.data),
     enabled: Boolean(projectId && flagId && environmentName),
+    placeholderData: keepPreviousData,
   });
 
 /**
@@ -196,15 +219,37 @@ export const useAddRuleMutation = (projectId: string, flagId: string) => {
         .post(`/api/flags/${flagId}/rules`, { ...payload, projectId })
         .then((res) => res.data as TargetingRule),
 
-    onSuccess: (_newRule, variables) => {
+    onSuccess: (newRule: TargetingRule, variables) => {
       toast.success("New rule added successfully!");
-      queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.FLAG_CONFIG(
-          projectId,
-          flagId,
-          variables.environmentName
-        ),
-      });
+
+      queryClient.setQueryData(
+        QUERY_KEYS.FLAG_CONFIG(projectId, flagId, variables.environmentName),
+        (oldFlagConfig) => {
+          const flagConfig = oldFlagConfig as FlagConfig | undefined;
+
+          if (!flagConfig) {
+            return oldFlagConfig;
+          }
+
+          const envConfig = flagConfig.environments[variables.environmentName];
+          if (!envConfig) {
+            return oldFlagConfig;
+          }
+
+          const updatedEnvConfig = {
+            ...envConfig,
+            targetingRules: [newRule, ...envConfig.targetingRules],
+          };
+
+          return {
+            ...flagConfig,
+            environments: {
+              ...flagConfig.environments,
+              [variables.environmentName]: updatedEnvConfig,
+            },
+          };
+        }
+      );
     },
     onError: () => toast.error("Failed to add new rule."),
   });
@@ -228,17 +273,116 @@ export const useEditRuleMutation = (projectId: string, flagId: string) => {
           projectId,
         })
         .then((res) => res.data),
-    onSuccess: (_data, variables) => {
+    onSuccess: (updatedRule, variables) => {
       toast.success("Rule updated successfully!");
-      queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.FLAG_CONFIG(
-          projectId,
-          flagId,
-          variables.environmentName
-        ),
-      });
+      queryClient.setQueryData(
+        QUERY_KEYS.FLAG_CONFIG(projectId, flagId, variables.environmentName),
+        (oldData) => {
+          const oldFlagConfig = oldData as FlagConfig | undefined;
+          if (!oldFlagConfig) {
+            return;
+          }
+
+          const envConfig =
+            oldFlagConfig.environments[variables.environmentName];
+          if (!envConfig) {
+            return oldFlagConfig;
+          }
+
+          const updatedRules: TargetingRule[] = envConfig.targetingRules.map(
+            (rule) => (rule.id === updatedRule.id ? updatedRule : rule)
+          );
+
+          const updatedEnvConfig: EnvironmentConfig = {
+            ...envConfig,
+            targetingRules: updatedRules,
+          };
+
+          return updateCacheWithNewEnvConfig(
+            oldFlagConfig,
+            variables.environmentName,
+            updatedEnvConfig
+          );
+        }
+      );
     },
     onError: () => toast.error("Failed to save rule changes."),
+  });
+};
+
+/**
+ * Reorders a flag rule.
+ */
+export const useReorderRulesMutation = (
+  projectId: string,
+  flagId: string,
+  environmentName: string
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: { ruleIdsInNewOrder: string[] }) =>
+      api.put(`/api/flags/${flagId}/rules/reorder`, {
+        projectId,
+        environmentName,
+        ruleIdsInNewOrder: payload.ruleIdsInNewOrder,
+      }),
+
+    onMutate: async (newOrderPayload) => {
+      // cancel any current refetches to prevent overwriting
+      await queryClient.cancelQueries({
+        queryKey: QUERY_KEYS.FLAG_CONFIG(projectId, flagId, environmentName),
+      });
+
+      const previousConfig = queryClient.getQueryData<FlagConfig>(
+        QUERY_KEYS.FLAG_CONFIG(projectId, flagId, environmentName)
+      );
+
+      if (previousConfig) {
+        const rulesMap = new Map(
+          previousConfig.environments[environmentName].targetingRules.map(
+            (r) => [r.id, r]
+          )
+        );
+
+        const reorderedRules = newOrderPayload.ruleIdsInNewOrder
+          .map((id) => rulesMap.get(id))
+          .filter((rule): rule is TargetingRule => !!rule);
+
+        queryClient.setQueryData(
+          QUERY_KEYS.FLAG_CONFIG(projectId, flagId, environmentName),
+          (oldConfig) => {
+            const config = oldConfig as FlagConfig;
+            return {
+              ...config,
+              environments: {
+                ...config.environments,
+                [environmentName]: {
+                  ...config.environments[environmentName],
+                  targetingRules: reorderedRules,
+                },
+              },
+            };
+          }
+        );
+      }
+
+      return { previousConfig };
+    },
+
+    onError: (_err, _newOrderPayload, context) => {
+      toast.error("Failed to save rule order. Rolling back.");
+      if (context?.previousConfig) {
+        queryClient.setQueryData(
+          QUERY_KEYS.FLAG_CONFIG(projectId, flagId, environmentName),
+          context.previousConfig
+        );
+      }
+    },
+
+    onSuccess: () => {
+      toast.success("Rule order saved.");
+    },
   });
 };
 
@@ -254,11 +398,39 @@ export const useDeleteRuleMutation = (projectId: string, flagId: string) => {
         .delete(`/api/flags/${flagId}/rules/${payload.ruleId}`)
         .then((res) => res.data),
 
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       toast.success("Rule deleted successfully.");
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.FLAG_CONFIG_BASE[0], projectId, flagId],
-      });
+      queryClient.setQueryData(
+        QUERY_KEYS.FLAG_CONFIG(projectId, flagId, variables.environmentName),
+        (oldData) => {
+          const oldFlagConfig = oldData as FlagConfig | undefined;
+          if (!oldFlagConfig) {
+            return;
+          }
+
+          const envConfig =
+            oldFlagConfig.environments[variables.environmentName];
+          if (!envConfig) {
+            return oldFlagConfig;
+          }
+
+          // Filter out the deleted rule
+          const updatedRules: TargetingRule[] = envConfig.targetingRules.filter(
+            (rule) => rule.id !== variables.ruleId
+          );
+
+          const updatedEnvConfig: EnvironmentConfig = {
+            ...envConfig,
+            targetingRules: updatedRules,
+          };
+
+          return updateCacheWithNewEnvConfig(
+            oldFlagConfig,
+            variables.environmentName,
+            updatedEnvConfig
+          );
+        }
+      );
     },
     onError: () => toast.error("Failed to delete rule."),
   });
