@@ -134,9 +134,7 @@ export const CreateFlagModal = ({
               Cancel
             </Button>
             <Button
-              className={
-                "bg-emerald-600 px-4 py-2 text-sm text-white shadow-sm hover:bg-emerald-700"
-              }
+              className="bg-emerald-600 px-4 py-2 text-sm text-white shadow-sm hover:bg-emerald-700"
               disabled={!key.trim() || !!error || isSubmitting}
               type="submit"
             >

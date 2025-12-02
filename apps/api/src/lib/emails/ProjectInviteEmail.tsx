@@ -13,14 +13,24 @@ import {
   Text,
 } from "@react-email/components";
 
-type WelcomeEmailProps = {
-  userEmail: string;
+import { env } from "@/config/env";
+
+type ProjectInviteEmailProps = {
+  projectName: string;
+  projectInviteLink: string;
+  invitedRole: string;
+  invitedEmail: string;
 };
 
-const appBaseUrl = process.env.APP_URL;
+const appBaseUrl = env.FRONTEND_URL;
 
-export const WelcomeEmail = ({ userEmail }: WelcomeEmailProps) => {
-  const previewText = "Flagix is ready. Start shipping features with control!";
+export const ProjectInviteEmail = ({
+  projectName,
+  projectInviteLink,
+  invitedRole,
+  invitedEmail,
+}: ProjectInviteEmailProps) => {
+  const previewText = `You've been invited to join the project: ${projectName}`;
 
   return (
     <Html>
@@ -40,39 +50,34 @@ export const WelcomeEmail = ({ userEmail }: WelcomeEmailProps) => {
             </Section>
 
             <Heading className="my-6 text-center font-bold text-3xl text-[#10a390]">
-              Ready to Ship Smarter
+              Project Invitation
             </Heading>
             <Text className="text-center text-base text-gray-800 leading-relaxed">
-              Welcome to Flagix! You're now equipped with the ultimate tool for
-              modern development: feature flags.
-              <br />
-              <br />
-              Use Flagix to safely test in production, roll out features
-              gradually, and run precise A/B tests—all without deploying new
-              code.
+              You have been invited to join the project{" "}
+              <b className="font-bold text-[#10a390]">{projectName}</b>.
             </Text>
 
             <Text className="text-center font-semibold text-base text-gray-800 leading-relaxed">
-              Your next step is simple: Connect your app!
+              Your assigned role will be {invitedRole}.
             </Text>
 
             <Section className="my-8 text-center">
               <Button
-                className="rounded-lg bg-[#10a390] px-7 py-3 font-semibold text-base text-white hover:bg-[#0e8a7d]"
-                href={`${appBaseUrl}/onboarding`}
+                className="rounded-lg bg-[#10a390] px-7 py-3 font-semibold text-base text-white"
+                href={projectInviteLink}
               >
-                Go to Setup & Get Your SDK Key
+                Accept Invitation
               </Button>
             </Section>
 
             <Hr className="mx-0 my-[26px] w-full border border-[#e0e0e0] border-solid" />
 
             <Text className="text-[12px] text-gray-500 leading-6">
-              This account was registered for:{" "}
-              <span className="font-medium text-black">{userEmail}</span>.
+              This invitation was sent to:{" "}
+              <span className="font-medium text-black">{invitedEmail}</span>.
               <br />
-              Need technical help getting set up? Reach out to our engineering
-              support team at support@flagix.com.
+              If you did not expect this invitation, you can safely ignore this
+              email.
             </Text>
           </Container>
         </Body>

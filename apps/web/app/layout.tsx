@@ -33,14 +33,6 @@ export default function RootLayout({
 }>) {
   return (
     <html className="h-full" lang="en">
-      <head>
-        {process.env.NODE_ENV === "development" && (
-          <script
-            crossOrigin="anonymous"
-            src="//unpkg.com/react-scan/dist/auto.global.js"
-          />
-        )}
-      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${raleway.variable} h-full font-sans`}
       >

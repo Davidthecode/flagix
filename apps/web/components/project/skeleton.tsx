@@ -1,7 +1,7 @@
 import { Skeleton } from "@flagix/ui/components/skeleton";
 
 export const MetricCardSkeleton = () => (
-  <div className="flex h-full min-h-[160px] flex-col justify-between rounded-xl border bg-white p-6">
+  <div className="flex h-full min-h-40 flex-col justify-between rounded-xl border bg-white p-6">
     <div>
       <Skeleton className="h-4 w-1/2" />
       <Skeleton className="mt-4 h-8 w-1/3" />

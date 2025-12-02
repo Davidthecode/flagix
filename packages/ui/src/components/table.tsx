@@ -57,7 +57,6 @@ function TableBody({ className, children, ...props }: TableBodyProps) {
   );
 }
 
-// Table Row
 interface TableRowProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   hoverable?: boolean;

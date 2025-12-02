@@ -20,6 +20,8 @@ export type ProjectMemberDetail = {
   id: string;
   user: { id: string; name: string; email: string };
   role: ProjectRole;
+  status: "ACTIVE" | "PENDING";
+  project: { id: string; name: string };
 };
 
 export type ProjectSettingsResponse = {

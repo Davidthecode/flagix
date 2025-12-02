@@ -6,7 +6,7 @@ import type React from "react";
 import { useMemo, useState } from "react";
 import { DangerZone } from "@/components/settings/danger-zone";
 import { GeneralSettings } from "@/components/settings/general-settings";
-import { MemberSettings } from "@/components/settings/member-settings";
+import { MemberSettings } from "@/components/settings/member/member-settings";
 import PageLoader from "@/components/shared/page-loader";
 import { useProjectSettings } from "@/lib/queries/project";
 import { useProject } from "@/providers/project";
@@ -22,6 +22,8 @@ export default function PageClient() {
     isLoading,
     isError,
   } = useProjectSettings(projectId);
+
+  console.log("Settings Data:", settingsData);
 
   const tabs: { key: SettingTab; label: string; Icon: React.ElementType }[] =
     useMemo(

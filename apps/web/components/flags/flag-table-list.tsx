@@ -14,7 +14,7 @@ import { FlagTableRow } from "@/components/flags/flag-table-row";
 import type { FlagType } from "@/types/flag";
 
 const SkeletonRow = () => (
-  <TableRow className="!px-0 !py-0" hoverable={false}>
+  <TableRow className="px-0! py-0!" hoverable={false}>
     <div className="grid grid-cols-[3fr_1fr] items-center gap-4 px-6 py-4">
       <TableCell>
         <Skeleton className="mb-1 h-4 w-3/5" />

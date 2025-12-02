@@ -21,6 +21,7 @@ model User {
   ownedProjects Project[]
   projectMembers ProjectMember[]
   activityLogs ActivityLog[]
+  projectInvites ProjectInvite[]
 
 
   @@unique([email])
@@ -86,9 +87,29 @@ model Project {
   environments Environment[]
   flags       Flag[]
   activityLogs ActivityLog[]
+  projectInvites ProjectInvite[]
 
 
   @@map("project")
+}
+
+model ProjectInvite {
+  id          String    @id @default(cuid())
+  projectId   String
+  invitedById String
+  email       String
+  role        ProjectRole
+  token       String    @unique 
+  status      InviteStatus @default(PENDING)
+
+  invitedBy   User      @relation(fields: [invitedById], references: [id])
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+
+  @@unique([projectId, email])
+  @@map("project_invite")
 }
 
 model ProjectMember {
@@ -96,6 +117,8 @@ model ProjectMember {
   userId    String
   projectId String
   role      ProjectRole  @default(MEMBER)
+
+  inviteId  String?   @unique
   
   user      User     @relation(fields: [userId], references: [id])
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -112,6 +135,11 @@ enum ProjectRole {
   ADMIN
   MEMBER
   VIEWER
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
 }
 
 model Environment {
