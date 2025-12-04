@@ -1,7 +1,7 @@
 "use client";
 
 import { Spinner } from "@flagix/ui/components/spinner";
-import { Flag, Star } from "lucide-react";
+import { Folder, Star } from "lucide-react";
 import Link from "next/link";
 import type { Project } from "@/types/project";
 
@@ -22,7 +22,7 @@ export const ProjectRow = ({
         "flex h-10 w-10 items-center justify-center rounded-lg bg-[#009965]"
       }
     >
-      <Flag className="h-5 w-5 text-white" />
+      <Folder className="h-5 w-5 text-white" />
     </div>
 
     <div className="flex min-w-0 flex-1 items-center gap-8">
