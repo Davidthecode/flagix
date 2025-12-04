@@ -10,12 +10,14 @@ import {
   DropdownMenuTrigger,
 } from "@flagix/ui/components/dropdown-menu";
 import { Menu } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { NotificationsPopover } from "@/components/notifications/notifications-popover";
 import { useAuth } from "@/hooks/use-auth";
 import { useProject } from "@/providers/project";
+import FlagixLogo from "@/public/icon.png";
 import { getProjectRoutes } from "@/utils/project";
 
 export const Nav = () => {
@@ -30,8 +32,17 @@ export const Nav = () => {
   return (
     <header className="sticky top-0 z-50 border-b bg-[#18181B] text-white">
       <div className="container-wrapper flex h-20 items-center justify-between">
-        <Link className="flex items-center gap-2" href="/dashboard">
-          <span className="font-semibold text-lg">Flagix</span>
+        <Link className="flex w-fit items-center gap-2" href="/dashboard">
+          <div className="flex items-center space-x-3">
+            <Image
+              alt="flagix logo"
+              className="rounded-sm"
+              height={28}
+              src={FlagixLogo}
+              width={28}
+            />
+            <span className="font-semibold text-lg">Flagix</span>
+          </div>
         </Link>
 
         {/* Desktop Nav  */}
