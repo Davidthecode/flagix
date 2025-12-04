@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { env } from "@/config/env";
 import { authClient } from "@/lib/auth/client";
+import type { Provider } from "@/types/auth";
 
 export const useAuth = () => {
   const { data: session } = authClient.useSession();
@@ -10,7 +11,7 @@ export const useAuth = () => {
 
   console.log("session in useAuth hook:", session);
 
-  const login = async (provider: "google" | "github", callbackURL: string) => {
+  const login = async (provider: Provider, callbackURL: string) => {
     try {
       await authClient.signIn.social({
         provider,

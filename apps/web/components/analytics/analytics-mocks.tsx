@@ -130,16 +130,16 @@ export const mockFlagUsageData = {
   dailyVariationUsageProjectWide: mockDailyVariationUsageProjectWide,
   dailyTopFlagImpressions: mockDailyTopFlagImpressions,
   flagDistribution: [
-    { flagKey: "dark-mode-beta", on: 400_000, off: 600_000, total: 1_000_000 },
-    { flagKey: "new-checkout-flow", on: 50_000, off: 50_000, total: 100_000 },
-    { flagKey: "email-capture-v2", on: 120_000, off: 80_000, total: 200_000 },
+    { flagKey: "dark-mode-beta", on: 400_000, off: 600_000, total: 4000 },
+    { flagKey: "new-checkout-flow", on: 50_000, off: 50_000, total: 1000 },
+    { flagKey: "email-capture-v2", on: 120_000, off: 80_000, total: 2000 },
     {
       flagKey: "instant-search-enabled",
       on: 700_000,
       off: 300_000,
-      total: 1_000_000,
+      total: 4400,
     },
-    { flagKey: "mobile-nav-refactor", on: 30_000, off: 70_000, total: 100_000 },
+    { flagKey: "mobile-nav-refactor", on: 30_000, off: 70_000, total: 1000 },
     { flagKey: "old-flag-to-delete", on: 100, off: 100, total: 200 },
   ],
 };
