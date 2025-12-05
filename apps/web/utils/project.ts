@@ -27,7 +27,7 @@ export function getIntegrationStatus(lastSeenAt: Date | null | undefined): {
   statusClass: string;
 } {
   let statusText = "Never Connected";
-  let statusClass = "border-red-200 bg-red-50 text-red-700";
+  const statusClass = "border-gray-200 bg-[#F4F4F5] text-gray-800";
 
   if (lastSeenAt) {
     const lastSeenDate = new Date(lastSeenAt);
@@ -35,13 +35,10 @@ export function getIntegrationStatus(lastSeenAt: Date | null | undefined): {
 
     if (isAfter(lastSeenDate, ACTIVE_THRESHOLD)) {
       statusText = `Active (Last seen ${lastSeen})`;
-      statusClass = "border-green-200 bg-green-50 text-green-700";
     } else if (isAfter(lastSeenDate, STALE_THRESHOLD)) {
       statusText = `Stale (Last seen ${lastSeen})`;
-      statusClass = "border-yellow-200 bg-yellow-50 text-yellow-700";
     } else {
       statusText = `Inactive (Last seen ${lastSeen})`;
-      statusClass = "border-red-200 bg-red-50 text-red-700";
     }
   }
 
