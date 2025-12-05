@@ -20,7 +20,7 @@ export function RecentActivity({ logs }: RecentActivityProps) {
           {logs.map((log) => (
             <li
               className="flex items-start justify-between border-gray-100 border-b pb-3 text-sm last:border-b-0 last:pb-0"
-              key={`${log.description} - ${log.time}`}
+              key={log.id}
             >
               <p className="pr-4 text-gray-700">{log.description}</p>
               <span className="whitespace-nowrap font-mono text-gray-500 text-xs">

@@ -63,7 +63,7 @@ export function IntegrationStatus({ environments }: IntegrationStatusProps) {
 
           <Button
             aria-label={isKeyVisible ? "Hide API Key" : "Show API Key"}
-            className="ml-2 flex-shrink-0 rounded-md p-1 text-gray-500 transition-colors hover:bg-[#F4F4F5] hover:text-gray-700"
+            className="ml-2 shrink-0 rounded-md p-1 text-gray-500 transition-colors hover:bg-[#F4F4F5] hover:text-gray-700"
             disabled={apiKey === "N/A"}
             onClick={() => setIsKeyVisible((prev) => !prev)}
             type="button"
@@ -77,7 +77,7 @@ export function IntegrationStatus({ environments }: IntegrationStatusProps) {
 
           <Button
             aria-label="Copy API Key to clipboard"
-            className="ml-2 flex-shrink-0 rounded-md p-1 text-gray-500 transition-colors hover:bg-[#F4F4F5] hover:text-gray-700"
+            className="ml-2 shrink-0 rounded-md p-1 text-gray-500 transition-colors hover:bg-[#F4F4F5] hover:text-gray-700"
             disabled={apiKey === "N/A"}
             onClick={copyToClipboard}
             type="button"

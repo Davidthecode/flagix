@@ -47,7 +47,7 @@ export const InviteNewMemberForm = () => {
         Send an invitation link to a user's email, assigning an initial role.
       </p>
 
-      <div className="flex max-w-3xl items-end gap-3 rounded-xl border border-gray-200 bg-[#F4F4F5] p-4 shadow-inner">
+      <div className="flex max-w-3xl items-end gap-3 rounded-xl border border-gray-200 bg-[#F4F4F5] p-4">
         <Input
           className="flex-1 bg-white"
           disabled={isInviting}

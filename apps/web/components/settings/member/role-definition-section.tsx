@@ -6,7 +6,7 @@ import { useState } from "react";
 import { ROLES_INFO } from "@/lib/constants";
 
 export const RoleDefinitionsSection = () => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="rounded-lg border border-gray-200 bg-[#F4F4F5] p-5">

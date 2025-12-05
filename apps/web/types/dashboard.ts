@@ -9,6 +9,7 @@ export type DashboardMetric = {
 };
 
 export type DashboardActivityLog = {
+  id: string;
   time: string;
   description: string;
 };

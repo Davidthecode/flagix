@@ -276,12 +276,14 @@ router.get("/:id/dashboard", async (req: RequestWithSession, res: Response) => {
       orderBy: { createdAt: "desc" },
       take: 3,
       select: {
+        id: true,
         description: true,
         createdAt: true,
       },
     });
 
     const formattedLogs = recentLogs.map((log) => ({
+      id: log.id,
       time: formatDistanceToNow(log.createdAt, { addSuffix: true }),
       description: log.description,
     }));
