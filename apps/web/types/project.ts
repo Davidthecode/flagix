@@ -6,6 +6,8 @@ export type Project = {
   environments: number;
   lastUpdated: string;
   isFavorite: boolean;
+  isOwner: boolean;
+  userRole: ProjectRole;
 };
 
 export type ProjectRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";

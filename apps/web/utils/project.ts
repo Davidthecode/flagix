@@ -1,4 +1,5 @@
 import { formatDistanceToNow, isAfter, subDays, subHours } from "date-fns";
+import type { ProjectRole } from "@/types/project";
 
 export const getProjectRoutes = (projectId: string) => [
   { href: `/projects/${projectId}/flags`, label: "Flags" },
@@ -46,3 +47,10 @@ export function getIntegrationStatus(lastSeenAt: Date | null | undefined): {
 
   return { statusText, statusClass };
 }
+
+export const roleDisplay: Record<ProjectRole, string> = {
+  OWNER: "Owner",
+  ADMIN: "Admin",
+  MEMBER: "Member",
+  VIEWER: "Viewer",
+};

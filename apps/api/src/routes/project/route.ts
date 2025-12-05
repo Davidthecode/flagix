@@ -37,21 +37,33 @@ router.get("/", async (req: RequestWithSession, res: Response) => {
         description: true,
         starred: true,
         updatedAt: true,
+        ownerId: true,
         flags: { select: { id: true } },
         environments: { select: { id: true } },
+        members: {
+          where: { userId },
+          select: { role: true },
+        },
       },
       orderBy: { updatedAt: "desc" },
     });
 
-    const projectList = projects.map((p) => ({
-      id: p.id,
-      name: p.name,
-      subtitle: p.description || "No description",
-      flags: p.flags.length,
-      environments: p.environments.length,
-      lastUpdated: formatDistanceToNow(p.updatedAt, { addSuffix: true }),
-      isFavorite: p.starred,
-    }));
+    const projectList = projects.map((p) => {
+      const isOwner = p.ownerId === userId;
+      const userRole = isOwner ? "OWNER" : p.members[0]?.role || "VIEWER";
+
+      return {
+        id: p.id,
+        name: p.name,
+        subtitle: p.description || "No description",
+        flags: p.flags.length,
+        environments: p.environments.length,
+        lastUpdated: formatDistanceToNow(p.updatedAt, { addSuffix: true }),
+        isFavorite: p.starred,
+        isOwner,
+        userRole,
+      };
+    });
 
     res.json(projectList);
   } catch (error) {

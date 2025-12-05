@@ -1,9 +1,11 @@
 "use client";
 
+import { Button } from "@flagix/ui/components/button";
 import { Spinner } from "@flagix/ui/components/spinner";
 import { Folder, Star } from "lucide-react";
 import Link from "next/link";
-import type { Project } from "@/types/project";
+import type { Project, ProjectRole } from "@/types/project";
+import { roleDisplay } from "@/utils/project";
 
 type ProjectRowProps = {
   project: Project;
@@ -33,6 +35,11 @@ export const ProjectRow = ({
       >
         <div className="mb-0.5 font-semibold text-gray-900 text-sm">
           {project.name}
+          {!project.isOwner && (
+            <span className="ml-3 inline-flex items-center rounded-full bg-[#009965] px-2 py-0.5 font-medium text-white text-xs">
+              {roleDisplay[project.userRole as ProjectRole] || "Joined"}
+            </span>
+          )}
         </div>
         <div className="text-gray-500 text-xs">{project.subtitle}</div>
       </Link>
@@ -52,12 +59,11 @@ export const ProjectRow = ({
       <div className="flex-1 text-gray-500 text-sm">{project.lastUpdated}</div>
     </div>
 
-    <button
+    <Button
       aria-label={project.isFavorite ? "Unstar project" : "Star project"}
       className="flex items-center justify-center p-1"
       disabled={isStarring}
       onClick={(e) => onStarClick(e, project.id)}
-      type="button"
     >
       {isStarring ? (
         <Spinner className="text-yellow-400" size={20} />
@@ -70,6 +76,6 @@ export const ProjectRow = ({
           }`}
         />
       )}
-    </button>
+    </Button>
   </div>
 );

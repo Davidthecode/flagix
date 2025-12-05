@@ -116,7 +116,9 @@ export const ProjectList = () => {
   const isListLoading = isLoading;
 
   const starredProjects = filtered.filter((p) => p.isFavorite);
-  const regularProjects = filtered.filter((p) => !p.isFavorite);
+
+  const ownedProjects = filtered.filter((p) => !p.isFavorite && p.isOwner);
+  const joinedProjects = filtered.filter((p) => !p.isFavorite && !p.isOwner);
 
   const handleStarClick = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
@@ -184,15 +186,29 @@ export const ProjectList = () => {
           </div>
         )}
 
-        {regularProjects.length > 0 && (
+        {ownedProjects.length > 0 && (
           <div className="relative mb-8">
             <h3 className="mb-3 px-1 font-medium text-gray-400 text-xs uppercase tracking-wide">
-              Projects
+              Your Projects
             </h3>
 
             <ProjectSection
               onStarClick={handleStarClick}
-              projects={regularProjects}
+              projects={ownedProjects}
+              starringId={starringId}
+            />
+          </div>
+        )}
+
+        {joinedProjects.length > 0 && (
+          <div className="relative mb-8">
+            <h3 className="mb-3 px-1 font-medium text-gray-400 text-xs uppercase tracking-wide">
+              Joined Projects
+            </h3>
+
+            <ProjectSection
+              onStarClick={handleStarClick}
+              projects={joinedProjects}
               starringId={starringId}
             />
           </div>
