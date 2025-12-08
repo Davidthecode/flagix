@@ -19,9 +19,10 @@ const createApp = (): Express => {
   app.all("/api/auth/*splat", toNodeHandler(auth));
 
   app.use(express.json());
+  app.use(requireAuth);
 
-  app.use("/api/projects", requireAuth, projectRoutes);
-  app.use("/api/flags", requireAuth, flagRoutes);
+  app.use("/api/projects", projectRoutes);
+  app.use("/api/flags", flagRoutes);
 
   app.get("/health", (_req, res) => {
     res.json({ status: "ok" });

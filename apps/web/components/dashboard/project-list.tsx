@@ -74,8 +74,8 @@ export const ProjectList = () => {
   });
 
   const starMutation = useMutation({
-    mutationFn: (id: string) =>
-      api.patch(`/api/projects/${id}/star`).then((res) => res.data),
+    mutationFn: (projectId: string) =>
+      api.patch(`/api/projects/${projectId}/star`).then((res) => res.data),
 
     onMutate: async (projectIdToStar) => {
       setStarringId(projectIdToStar);

@@ -11,7 +11,6 @@ type sendProjectInviteEmailPropsType = {
   inviteLink: string;
 };
 
-// Function to send project invitation email
 export async function sendProjectInviteEmail({
   to,
   projectName,

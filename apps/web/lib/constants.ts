@@ -20,7 +20,7 @@ export const ROLES_INFO = [
     role: "MEMBER" as const,
     description:
       "Can create and edit flags, rules, and variations in non-production environments.",
-    access: "Flag creation and editing in development/staging.",
+    access: "Flag creation and editing in non-production environments.",
     tagColor: "bg-gray-500 text-white",
   },
   {
