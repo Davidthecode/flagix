@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { Suspense } from "react";
 import { LoginForm } from "@/components/auth/login-form";
 import FlagixLogo from "@/public/icon.png";
@@ -14,13 +15,15 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-[#F4F4F5] p-4 sm:p-6">
       <div className="w-full max-w-md rounded-xl">
         <div className="mb-6 flex flex-col items-center">
-          <Image
-            alt="flagix logo"
-            className="rounded-sm"
-            height={40}
-            src={FlagixLogo}
-            width={40}
-          />
+          <Link href="/">
+            <Image
+              alt="flagix logo"
+              className="rounded-sm"
+              height={40}
+              src={FlagixLogo}
+              width={40}
+            />
+          </Link>
           <p className="mt-4 font-semibold text-gray-600 text-xs uppercase tracking-widest dark:text-gray-400">
             Control Your Features. Ship Faster.
           </p>
