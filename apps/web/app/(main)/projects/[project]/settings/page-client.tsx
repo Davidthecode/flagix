@@ -23,8 +23,6 @@ export default function PageClient() {
     isError,
   } = useProjectSettings(projectId);
 
-  console.log("Settings Data:", settingsData);
-
   const tabs: { key: SettingTab; label: string; Icon: React.ElementType }[] =
     useMemo(
       () => [

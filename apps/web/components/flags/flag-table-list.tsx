@@ -41,7 +41,6 @@ export const FlagTableList = ({
   projectId,
   searchTerm,
 }: FlagTableListProps) => {
-  console.log("isLoading in flag-table ==>", isLoading);
   const renderTableBody = () => {
     if (isLoading) {
       return Array.from({ length: 5 }).map((_, idx) => (

@@ -9,8 +9,6 @@ export const useAuth = () => {
   const { data: session } = authClient.useSession();
   const router = useRouter();
 
-  console.log("session in useAuth hook:", session);
-
   const login = async (provider: Provider, callbackURL: string) => {
     try {
       await authClient.signIn.social({

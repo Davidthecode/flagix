@@ -85,8 +85,6 @@ router.get(
       return res.status(401).json({ error: "unauthenticated" });
     }
 
-    // console.log("req.params:", req.params);
-
     const userId = session.user.id;
     const projectId = req.params.projectId;
 
