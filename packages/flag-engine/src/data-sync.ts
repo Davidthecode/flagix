@@ -1,5 +1,4 @@
 import { db } from "@flagix/db";
-import { Redis } from "@upstash/redis";
 import { mapDbFlagToEngineConfig } from "./parser";
 import type { EngineCache, FlagConfig } from "./types";
 
@@ -8,39 +7,6 @@ export const REDIS_CHANNEL = "flag_updates";
 
 const getCacheKey = (environmentId: string, flagKey: string): string =>
   `${environmentId}:${flagKey}`;
-
-/**
- * Loads all flag configurations for a specific environment from the db
- * and updates the in-memory cache.
- */
-async function loadAllFlagsForEnvironment(
-  environmentId: string
-): Promise<void> {
-  const dbFlags = await db.flag.findMany({
-    where: { project: { environments: { some: { id: environmentId } } } },
-    include: {
-      variations: true,
-      states: { where: { environmentId } },
-      rules: { where: { environmentId }, orderBy: { order: "asc" } },
-    },
-  });
-
-  for (const key of CACHE.keys()) {
-    if (key.startsWith(`${environmentId}:`)) {
-      CACHE.delete(key);
-    }
-  }
-
-  for (const flag of dbFlags) {
-    const config = mapDbFlagToEngineConfig(flag, environmentId);
-    if (config) {
-      CACHE.set(getCacheKey(environmentId, flag.key), config);
-    }
-  }
-  console.log(
-    `[FlagEngine] Cache loaded for environment ${environmentId}. Total flags: ${dbFlags.length}`
-  );
-}
 
 /**
  * Fetches and processes data for a single flag, then updates the cache.
@@ -100,32 +66,39 @@ async function loadSingleFlagConfig(
 }
 
 /**
- * Initializes the engine by loading the initial configuration
- * Returns the Redis publisher instance for external use
+ * Retrieves a flag configuration from the in-memory cache using a composite key.
  */
-export async function startDataSync(environmentId: string) {
-  await loadAllFlagsForEnvironment(environmentId);
+export async function getFlagConfig(
+  key: string,
+  environmentId: string
+): Promise<FlagConfig | undefined> {
+  const cacheKey = getCacheKey(environmentId, key);
 
-  return Redis.fromEnv();
+  let config = CACHE.get(cacheKey);
+  if (config) {
+    return config;
+  }
+
+  console.warn(
+    `[FlagEngine] Cache miss for ${key}:${environmentId}. Loading from DB.`
+  );
+  await loadSingleFlagConfig(key, environmentId);
+
+  config = CACHE.get(cacheKey);
+  return config;
 }
 
 /**
- * Retrieves a flag configuration from the in-memory cache using a composite key.
+ * Updates a specific flag in cache when theres a change to it in the db
  */
-export function getFlagConfig(
-  key: string,
-  environmentId: string
-): FlagConfig | undefined {
-  return CACHE.get(getCacheKey(environmentId, key));
-}
-
-export async function reloadFlagData(message: string, environmentId: string) {
+export async function reloadFlagData(message: string) {
   try {
-    const { type, flagKey, envId } = JSON.parse(message);
+    const payload = JSON.parse(message);
+    const { flagKey, environmentId } = payload;
 
-    if (envId === environmentId && type === "flag_changed") {
+    if (flagKey && environmentId) {
       console.log(
-        `[FlagEngine] Received update for flag: ${flagKey} in environment ${envId}. Starting single-flag reload...`
+        `[FlagEngine] Received update for flag: ${flagKey} in environment ${environmentId}. Starting single-flag reload...`
       );
 
       await loadSingleFlagConfig(flagKey, environmentId);

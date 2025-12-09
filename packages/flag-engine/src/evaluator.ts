@@ -189,12 +189,12 @@ function resolveRuleVariation(
   return null;
 }
 
-export function evaluateFlag(
+export async function evaluateFlag(
   flagKey: string,
   context: EvaluationContext,
   environmentId: string
-): FlagVariation | null {
-  const config = getFlagConfig(flagKey, environmentId);
+): Promise<FlagVariation | null> {
+  const config = await getFlagConfig(flagKey, environmentId);
 
   if (!config) {
     console.warn(

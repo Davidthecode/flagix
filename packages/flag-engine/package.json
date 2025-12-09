@@ -16,8 +16,7 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "@flagix/db": "workspace:*",
-    "@upstash/redis": "^1.35.6"
+    "@flagix/db": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

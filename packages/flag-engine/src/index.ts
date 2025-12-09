@@ -3,7 +3,6 @@ export {
   getFlagConfig,
   REDIS_CHANNEL,
   reloadFlagData,
-  startDataSync,
 } from "./data-sync";
 
 export { evaluateFlag } from "./evaluator";
