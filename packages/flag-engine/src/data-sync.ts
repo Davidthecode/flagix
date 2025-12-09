@@ -44,6 +44,7 @@ async function loadSingleFlagConfig(
 
   if (!dbFlag) {
     CACHE.delete(cacheKey);
+    console.log("CACHE in del 1 ==>", CACHE);
     console.log(
       `[FlagEngine] Flag ${flagKey} not found in project ${projectId}. Removed from cache.`
     );
@@ -54,6 +55,7 @@ async function loadSingleFlagConfig(
 
   if (config) {
     CACHE.set(cacheKey, config);
+    console.log("CACHE after set ==>", CACHE);
     console.log(
       `[FlagEngine] Successfully updated single flag config for ${flagKey} in project ${projectId}.`
     );
@@ -62,6 +64,7 @@ async function loadSingleFlagConfig(
     console.warn(
       `[FlagEngine] Flag ${flagKey} configuration is invalid for environment ${environmentId}. Removed from cache.`
     );
+    console.log("CACHE in del2  ==>", CACHE);
   }
 }
 
