@@ -3,6 +3,7 @@ import cors from "cors";
 import express, { type Express } from "express";
 import { auth } from "@/lib/auth/auth";
 import { requireAuth } from "@/middleware/auth";
+import evaluationRoutes from "@/routes/evaluation/route";
 import flagRoutes from "@/routes/flag/route";
 import projectRoutes from "@/routes/project/route";
 
@@ -19,6 +20,9 @@ const createApp = (): Express => {
   app.all("/api/auth/*splat", toNodeHandler(auth));
 
   app.use(express.json());
+
+  app.use("/api/evaluate", evaluationRoutes);
+
   app.use(requireAuth);
 
   app.use("/api/projects", projectRoutes);

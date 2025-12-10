@@ -55,11 +55,11 @@ export const TargetingRuleModal = ({
     splits?: string;
   }>({});
 
-  // Sync when editingRule changes
   useEffect(() => {
     if (!isOpen) {
       return;
     }
+
     if (editingRule) {
       setRuleType(editingRule.ruleType);
       setDescription(editingRule.description);
@@ -73,7 +73,6 @@ export const TargetingRuleModal = ({
         setVariationSplits(editingRule.variationSplits ?? []);
       }
     } else {
-      // Reset for add
       setRuleType("targeting");
       setDescription("");
       setTargetVariation(availableVariations[0]?.name ?? "");
@@ -86,19 +85,24 @@ export const TargetingRuleModal = ({
         }))
       );
     }
+
     setErrors({});
   }, [isOpen, editingRule, availableVariations]);
 
   const getTotalSplitPercentage = () =>
     variationSplits.reduce((s, v) => s + v.percentage, 0);
 
-  const addCondition = () =>
+  const addCondition = () => {
     setConditions([
       ...conditions,
       { id: Date.now().toString(), attribute: "", operator: "==", value: "" },
     ]);
-  const removeCondition = (id: string) =>
+  };
+
+  const removeCondition = (id: string) => {
     setConditions(conditions.filter((c) => c.id !== id));
+  };
+
   const updateCondition = (
     id: string,
     field: keyof Condition,

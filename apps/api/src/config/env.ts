@@ -11,4 +11,5 @@ export const env = {
   GITHUB_SECRET: process.env.GITHUB_SECRET,
   DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID,
   DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET,
+  REDIS_URL: process.env.REDIS_URL,
 };

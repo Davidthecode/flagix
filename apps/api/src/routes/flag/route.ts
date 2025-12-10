@@ -2,6 +2,7 @@ import { db } from "@flagix/db";
 import { Prisma } from "@flagix/db/client";
 import { formatDistanceToNow } from "date-fns";
 import { type Response, Router } from "express";
+import { publishFlagUpdate } from "@/lib/redis/publisher";
 import { createFlagSchema } from "@/lib/validations/flag";
 import {
   resolveRoleByBodyOrQuery,
@@ -18,12 +19,6 @@ interface UpdateVariationsPayload {
     type: string;
     id?: string;
   }[];
-  projectId: string;
-}
-
-interface ToggleFlagStatePayload {
-  environmentName: string;
-  isEnabled: boolean;
   projectId: string;
 }
 
@@ -188,6 +183,8 @@ router.post(
           },
         });
 
+        const envIds = project.environments.map((env) => env.id);
+
         return {
           id: flag.id,
           key: flag.key,
@@ -201,8 +198,18 @@ router.post(
             {} as Record<string, boolean>
           ),
           updatedAt: new Date().toISOString(),
+          envIds,
         };
       });
+
+      for (const envId of newFlag.envIds) {
+        await publishFlagUpdate({
+          flagKey: newFlag.key,
+          environmentId: envId,
+          projectId,
+          type: "FLAG_CREATED",
+        });
+      }
 
       res.status(201).json(newFlag);
     } catch (error) {
@@ -442,6 +449,27 @@ router.put(
         where: { flagId },
       });
 
+      const environments = await db.environment.findMany({
+        where: { projectId },
+        select: { id: true },
+      });
+
+      const flag = await db.flag.findUnique({
+        where: { id: flagId },
+        select: { key: true, projectId: true },
+      });
+
+      if (flag) {
+        for (const env of environments) {
+          await publishFlagUpdate({
+            flagKey: flag.key,
+            environmentId: env.id,
+            projectId: flag.projectId,
+            type: "FLAG_UPDATED",
+          });
+        }
+      }
+
       res.json(updatedVariations);
     } catch (error) {
       console.error(`Failed to update variations for ${flagId}:`, error);
@@ -519,6 +547,25 @@ router.put(
         },
       });
 
+      const environment = await db.environment.findFirst({
+        where: { projectId, name: environmentName },
+        select: { id: true },
+      });
+
+      const flag = await db.flag.findUnique({
+        where: { id: flagId },
+        select: { key: true, projectId: true },
+      });
+
+      if (environment && flag) {
+        await publishFlagUpdate({
+          flagKey: flag.key,
+          environmentId: environment.id,
+          projectId,
+          type: "FLAG_UPDATED",
+        });
+      }
+
       res.json({ defaultVariationName: newDefaultVariation.name });
     } catch (error) {
       console.error(
@@ -541,8 +588,7 @@ router.put(
 
     const userId = req.session.user.id;
     const { flagId } = req.params;
-    const { environmentName, isEnabled, projectId } =
-      req.body as ToggleFlagStatePayload;
+    const { environmentName, isEnabled, projectId } = req.body;
 
     if (!environmentName || typeof isEnabled !== "boolean" || !projectId) {
       return res.status(400).json({
@@ -591,6 +637,20 @@ router.put(
           },
         },
       });
+
+      const flag = await db.flag.findUnique({
+        where: { id: flagId },
+        select: { key: true, projectId: true },
+      });
+
+      if (flag) {
+        await publishFlagUpdate({
+          flagKey: flag.key,
+          environmentId,
+          projectId,
+          type: "FLAG_UPDATED",
+        });
+      }
 
       res.json({ success: true, isEnabled: updatedState.enabled });
     } catch (error) {
@@ -716,6 +776,20 @@ router.post(
         variationSplits: rule.variationSplits || undefined,
       };
 
+      const flag = await db.flag.findUnique({
+        where: { id: flagId },
+        select: { key: true, projectId: true },
+      });
+
+      if (flag) {
+        await publishFlagUpdate({
+          flagKey: flag.key,
+          environmentId,
+          projectId,
+          type: "RULE_UPDATED",
+        });
+      }
+
       res.json(newRule);
     } catch (error) {
       console.error(
@@ -766,6 +840,8 @@ router.put(
           .json({ error: "Unauthorized access or environment not found." });
       }
 
+      const environmentId = environment.id;
+
       await db.$transaction(async (tx) => {
         // Set all rules to temporary negative orders to avoid conflicts
         await Promise.all(
@@ -796,6 +872,20 @@ router.put(
         );
       });
 
+      const flag = await db.flag.findUnique({
+        where: { id: flagId },
+        select: { key: true },
+      });
+
+      if (flag) {
+        await publishFlagUpdate({
+          flagKey: flag.key,
+          environmentId,
+          projectId,
+          type: "RULE_UPDATED",
+        });
+      }
+
       res.status(200).json({ success: true });
     } catch (error) {
       console.error(
@@ -811,6 +901,7 @@ router.put(
   "/:flagId/rules/:ruleId",
   verifyRole.MEMBER,
   verifyNonProductionAccess,
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: The complexity is only slightly over the threshold (16/15) and abstraction is postponed for now.
   async (req: RequestWithSession, res: Response) => {
     if (!req.session) {
       return res.status(401).json({ error: "unauthenticated" });
@@ -865,6 +956,8 @@ router.put(
         distributionData = JSON.stringify(rule.variationSplits);
       }
 
+      const environmentId = environment.id;
+
       await db.environmentRule.update({
         where: { id: ruleId },
         data: {
@@ -894,6 +987,20 @@ router.put(
           },
         },
       });
+
+      const flag = await db.flag.findUnique({
+        where: { id: flagId },
+        select: { key: true },
+      });
+
+      if (flag) {
+        await publishFlagUpdate({
+          flagKey: flag.key,
+          environmentId,
+          projectId,
+          type: "RULE_UPDATED",
+        });
+      }
 
       const updatedRule = {
         id: ruleId,
@@ -928,10 +1035,7 @@ router.delete(
     const { flagId, ruleId } = req.params;
 
     try {
-      let deletedRuleOrder: number;
-      let environmentId: string;
-
-      await db.$transaction(async (tx) => {
+      const publishData = await db.$transaction(async (tx) => {
         const ruleToDelete = await tx.environmentRule.findUnique({
           where: { id: ruleId, flagId },
           select: {
@@ -944,6 +1048,9 @@ router.delete(
                 projectId: true,
               },
             },
+            flag: {
+              select: { key: true },
+            },
           },
         });
 
@@ -951,9 +1058,10 @@ router.delete(
           throw new Error("Rule not found or does not belong to this flag.");
         }
 
-        deletedRuleOrder = ruleToDelete.order;
-        environmentId = ruleToDelete.environmentId;
+        const deletedRuleOrder = ruleToDelete.order;
+        const environmentId = ruleToDelete.environmentId;
         const projectId = ruleToDelete.environment.projectId;
+        const flagKey = ruleToDelete.flag.key;
         const environmentName = ruleToDelete.environment.name;
         const deletedRuleDescription = ruleToDelete.description;
 
@@ -985,6 +1093,15 @@ router.delete(
           },
           data: { order: { decrement: 1 } },
         });
+
+        return { environmentId, projectId, flagKey };
+      });
+
+      await publishFlagUpdate({
+        flagKey: publishData.flagKey,
+        environmentId: publishData.environmentId,
+        projectId: publishData.projectId,
+        type: "RULE_DELETED",
       });
 
       res.json({ success: true, ruleId });
@@ -1084,6 +1201,20 @@ router.put(
         },
       });
 
+      const environments = await db.environment.findMany({
+        where: { projectId },
+        select: { id: true },
+      });
+
+      for (const env of environments) {
+        await publishFlagUpdate({
+          flagKey: updatedFlag.key,
+          environmentId: env.id,
+          projectId,
+          type: "FLAG_METADATA_UPDATED",
+        });
+      }
+
       res.json({
         success: true,
         newKey: updatedFlag.key,
@@ -1143,6 +1274,20 @@ router.delete(
       await db.flag.delete({
         where: { id: flagId },
       });
+
+      const environments = await db.environment.findMany({
+        where: { projectId: flagToDelete.projectId },
+        select: { id: true },
+      });
+
+      for (const env of environments) {
+        await publishFlagUpdate({
+          flagKey: flagToDelete.key,
+          environmentId: env.id,
+          projectId: flagToDelete.projectId,
+          type: "FLAG_DELETED",
+        });
+      }
 
       res.json({ success: true, flagId });
     } catch (error) {

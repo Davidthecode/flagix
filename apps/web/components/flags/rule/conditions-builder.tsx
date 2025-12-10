@@ -119,7 +119,7 @@ export const ConditionsBuilder = ({
                 onChange={(e) => onUpdate(c.id, "value", e.target.value)}
                 placeholder={
                   c.operator === "in"
-                    ? 'Value (e.g., "US", "CA", "UK")'
+                    ? 'enter a comma-separated list of values e.g: "US", "CA", "UK"'
                     : "Value"
                 }
                 value={c.value}
