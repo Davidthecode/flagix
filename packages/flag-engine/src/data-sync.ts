@@ -3,10 +3,34 @@ import { mapDbFlagToEngineConfig } from "./parser";
 import type { EngineCache, FlagConfig } from "./types";
 
 const CACHE: EngineCache = new Map();
+const API_KEY_CACHE: Map<string, string> = new Map();
+
 export const REDIS_CHANNEL = "flag_updates";
 
 const getCacheKey = (environmentId: string, flagKey: string): string =>
   `${environmentId}:${flagKey}`;
+
+/**
+ * Fetches the environment id associated with the api key
+ */
+export async function resolveEnvironmentId(
+  apiKey: string
+): Promise<string | undefined> {
+  if (API_KEY_CACHE.has(apiKey)) {
+    return API_KEY_CACHE.get(apiKey);
+  }
+
+  const environment = await db.environment.findUnique({
+    where: { apiKey },
+    select: { id: true },
+  });
+
+  if (environment) {
+    API_KEY_CACHE.set(apiKey, environment.id);
+    return environment.id;
+  }
+  return;
+}
 
 /**
  * Fetches and processes data for a single flag, then updates the cache.
@@ -44,7 +68,6 @@ async function loadSingleFlagConfig(
 
   if (!dbFlag) {
     CACHE.delete(cacheKey);
-    console.log("CACHE in del 1 ==>", CACHE);
     console.log(
       `[FlagEngine] Flag ${flagKey} not found in project ${projectId}. Removed from cache.`
     );
@@ -55,7 +78,6 @@ async function loadSingleFlagConfig(
 
   if (config) {
     CACHE.set(cacheKey, config);
-    console.log("CACHE after set ==>", CACHE);
     console.log(
       `[FlagEngine] Successfully updated single flag config for ${flagKey} in project ${projectId}.`
     );
@@ -64,7 +86,6 @@ async function loadSingleFlagConfig(
     console.warn(
       `[FlagEngine] Flag ${flagKey} configuration is invalid for environment ${environmentId}. Removed from cache.`
     );
-    console.log("CACHE in del2  ==>", CACHE);
   }
 }
 

@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-import { getFlagConfig } from "./data-sync";
 import type {
   EngineRule,
   EvaluationContext,
@@ -189,20 +188,10 @@ function resolveRuleVariation(
   return null;
 }
 
-export async function evaluateFlag(
-  flagKey: string,
-  context: EvaluationContext,
-  environmentId: string
-): Promise<FlagVariation | null> {
-  const config = await getFlagConfig(flagKey, environmentId);
-
-  if (!config) {
-    console.warn(
-      `[FlagEngine] Flag ${flagKey} not found in cache for environment.`
-    );
-    return null;
-  }
-
+export function evaluateFlag(
+  config: FlagConfig,
+  context: EvaluationContext
+): FlagVariation | null {
   if (!config.enabled) {
     return config.defaultVariation;
   }
