@@ -1,5 +1,6 @@
 // biome-ignore lint/performance/noBarrelFile: Used for a unified API surface in this internal package.
 export {
+  getEnvironmentConfig,
   getFlagConfig,
   REDIS_CHANNEL,
   reloadFlagData,
@@ -7,5 +8,10 @@ export {
 } from "./data-sync";
 
 export { evaluateFlag } from "./evaluator";
+export { mapDbFlagToEngineConfig } from "./parser";
 
-export type { EvaluationContext, FlagVariation } from "./types";
+export type {
+  DbFlagWithRules,
+  EvaluationContext,
+  FlagVariation,
+} from "./types";

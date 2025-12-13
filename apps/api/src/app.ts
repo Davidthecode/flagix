@@ -5,7 +5,9 @@ import { auth } from "@/lib/auth/auth";
 import { requireAuth } from "@/middleware/auth";
 import evaluationRoutes from "@/routes/evaluation/route";
 import flagRoutes from "@/routes/flag/route";
+import flagConfigRoutes from "@/routes/flag-config/route";
 import projectRoutes from "@/routes/project/route";
+import sseRoutes from "@/routes/sse/route";
 
 const createApp = (): Express => {
   const app: Express = express();
@@ -22,6 +24,8 @@ const createApp = (): Express => {
   app.use(express.json());
 
   app.use("/api/evaluate", evaluationRoutes);
+  app.use("/api/flag-config", flagConfigRoutes);
+  app.use("/api/sse", sseRoutes);
 
   app.use(requireAuth);
 

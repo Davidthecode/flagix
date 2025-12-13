@@ -14,6 +14,7 @@ export interface FlagUpdatePayload {
     | "FLAG_UPDATED"
     | "FLAG_DELETED"
     | "FLAG_METADATA_UPDATED"
+    | "FLAG_STATE_TOGGLED"
     | "RULE_UPDATED"
     | "RULE_DELETED";
 }
@@ -31,14 +32,4 @@ export function getRedisPublisher(): RedisClient {
     });
   }
   return redisPublisher;
-}
-
-export async function publishFlagUpdate(
-  payload: FlagUpdatePayload
-): Promise<void> {
-  const publisher = getRedisPublisher();
-
-  const message = JSON.stringify(payload);
-
-  await publisher.publish(REDIS_CHANNEL, message);
 }

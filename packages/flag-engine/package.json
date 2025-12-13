@@ -12,11 +12,13 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
     "watch": "tsc -w"
   },
   "dependencies": {
-    "@flagix/db": "workspace:*"
+    "@flagix/db": "workspace:*",
+    "dotenv": "^17.2.3",
+    "ioredis": "^5.8.2"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

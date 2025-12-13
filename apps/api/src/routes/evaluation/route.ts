@@ -1,6 +1,9 @@
-import { db } from "@flagix/db";
 import type { EvaluationContext } from "@flagix/flag-engine";
-import { evaluateFlag, getFlagConfig } from "@flagix/flag-engine";
+import {
+  evaluateFlag,
+  getFlagConfig,
+  resolveEnvironmentId,
+} from "@flagix/flag-engine";
 import { type Request, type Response, Router } from "express";
 
 const router = Router();
@@ -16,15 +19,11 @@ router.post("/flag", async (req: Request, res: Response) => {
       .json({ error: "API Key and flag key are required." });
   }
 
-  const environment = await db.environment.findUnique({
-    where: { apiKey },
-    select: { id: true },
-  });
+  const environmentId = await resolveEnvironmentId(apiKey);
 
-  if (!environment) {
+  if (!environmentId) {
     return res.status(401).json({ error: "Invalid API Key." });
   }
-  const environmentId = environment.id;
 
   try {
     const flagConfig = await getFlagConfig(flagKey, environmentId);
@@ -33,14 +32,7 @@ router.post("/flag", async (req: Request, res: Response) => {
       return res.json({ enabled: false, value: null });
     }
 
-    if (!flagConfig.enabled) {
-      return res.json({
-        enabled: false,
-        value: flagConfig.defaultVariation.value,
-      });
-    }
-
-    const result = await evaluateFlag(flagKey, context, environmentId);
+    const result = evaluateFlag(flagConfig, context);
 
     res.json(result);
   } catch (error) {

@@ -2,7 +2,6 @@ import { db } from "@flagix/db";
 import { Prisma } from "@flagix/db/client";
 import { formatDistanceToNow } from "date-fns";
 import { type Response, Router } from "express";
-import { publishFlagUpdate } from "@/lib/redis/publisher";
 import { createFlagSchema } from "@/lib/validations/flag";
 import {
   resolveRoleByBodyOrQuery,
@@ -10,17 +9,9 @@ import {
 } from "@/middleware/resolve-role";
 import { verifyNonProductionAccess } from "@/middleware/verify-non-production-access";
 import { verifyRole } from "@/middleware/verify-role";
+import { syncAndPublishFlagUpdate } from "@/services/flag-config";
+import type { UpdateVariationsPayload } from "@/types/flag";
 import type { RequestWithSession } from "@/types/request";
-
-interface UpdateVariationsPayload {
-  variations: {
-    name: string;
-    value: boolean | string | number;
-    type: string;
-    id?: string;
-  }[];
-  projectId: string;
-}
 
 const router = Router();
 
@@ -202,13 +193,14 @@ router.post(
         };
       });
 
-      for (const envId of newFlag.envIds) {
-        await publishFlagUpdate({
-          flagKey: newFlag.key,
-          environmentId: envId,
-          projectId,
-          type: "FLAG_CREATED",
-        });
+      const environments = project.environments.map((env) => ({
+        id: env.id,
+        name: env.name,
+        projectId,
+      }));
+
+      for (const env of environments) {
+        await syncAndPublishFlagUpdate(newFlag.key, env, "FLAG_CREATED");
       }
 
       res.status(201).json(newFlag);
@@ -451,7 +443,7 @@ router.put(
 
       const environments = await db.environment.findMany({
         where: { projectId },
-        select: { id: true },
+        select: { id: true, name: true, projectId: true },
       });
 
       const flag = await db.flag.findUnique({
@@ -461,12 +453,7 @@ router.put(
 
       if (flag) {
         for (const env of environments) {
-          await publishFlagUpdate({
-            flagKey: flag.key,
-            environmentId: env.id,
-            projectId: flag.projectId,
-            type: "FLAG_UPDATED",
-          });
+          await syncAndPublishFlagUpdate(flag.key, env, "FLAG_UPDATED");
         }
       }
 
@@ -549,21 +536,16 @@ router.put(
 
       const environment = await db.environment.findFirst({
         where: { projectId, name: environmentName },
-        select: { id: true },
+        select: { id: true, name: true, projectId: true },
       });
 
       const flag = await db.flag.findUnique({
         where: { id: flagId },
-        select: { key: true, projectId: true },
+        select: { key: true },
       });
 
       if (environment && flag) {
-        await publishFlagUpdate({
-          flagKey: flag.key,
-          environmentId: environment.id,
-          projectId,
-          type: "FLAG_UPDATED",
-        });
+        await syncAndPublishFlagUpdate(flag.key, environment, "FLAG_UPDATED");
       }
 
       res.json({ defaultVariationName: newDefaultVariation.name });
@@ -599,7 +581,7 @@ router.put(
     try {
       const environment = await db.environment.findFirst({
         where: { projectId, name: environmentName },
-        select: { id: true },
+        select: { id: true, name: true, projectId: true },
       });
 
       if (!environment) {
@@ -643,13 +625,12 @@ router.put(
         select: { key: true, projectId: true },
       });
 
-      if (flag) {
-        await publishFlagUpdate({
-          flagKey: flag.key,
-          environmentId,
-          projectId,
-          type: "FLAG_UPDATED",
-        });
+      if (flag && environment) {
+        await syncAndPublishFlagUpdate(
+          flag.key,
+          environment,
+          "FLAG_STATE_TOGGLED"
+        );
       }
 
       res.json({ success: true, isEnabled: updatedState.enabled });
@@ -685,7 +666,7 @@ router.post(
     try {
       const environment = await db.environment.findFirst({
         where: { projectId, name: environmentName },
-        select: { id: true },
+        select: { id: true, name: true, projectId: true },
       });
 
       if (!environment) {
@@ -782,12 +763,7 @@ router.post(
       });
 
       if (flag) {
-        await publishFlagUpdate({
-          flagKey: flag.key,
-          environmentId,
-          projectId,
-          type: "RULE_UPDATED",
-        });
+        await syncAndPublishFlagUpdate(flag.key, environment, "RULE_UPDATED");
       }
 
       res.json(newRule);
@@ -831,7 +807,7 @@ router.put(
             ],
           },
         },
-        select: { id: true },
+        select: { id: true, name: true, projectId: true },
       });
 
       if (!environment) {
@@ -839,8 +815,6 @@ router.put(
           .status(403)
           .json({ error: "Unauthorized access or environment not found." });
       }
-
-      const environmentId = environment.id;
 
       await db.$transaction(async (tx) => {
         // Set all rules to temporary negative orders to avoid conflicts
@@ -878,12 +852,7 @@ router.put(
       });
 
       if (flag) {
-        await publishFlagUpdate({
-          flagKey: flag.key,
-          environmentId,
-          projectId,
-          type: "RULE_UPDATED",
-        });
+        await syncAndPublishFlagUpdate(flag.key, environment, "RULE_UPDATED");
       }
 
       res.status(200).json({ success: true });
@@ -926,7 +895,7 @@ router.put(
             OR: [{ ownerId: userId }, { members: { some: { userId } } }],
           },
         },
-        select: { id: true },
+        select: { id: true, name: true, projectId: true },
       });
 
       if (!environment) {
@@ -955,8 +924,6 @@ router.put(
         // experiment
         distributionData = JSON.stringify(rule.variationSplits);
       }
-
-      const environmentId = environment.id;
 
       await db.environmentRule.update({
         where: { id: ruleId },
@@ -994,12 +961,7 @@ router.put(
       });
 
       if (flag) {
-        await publishFlagUpdate({
-          flagKey: flag.key,
-          environmentId,
-          projectId,
-          type: "RULE_UPDATED",
-        });
+        await syncAndPublishFlagUpdate(flag.key, environment, "RULE_UPDATED");
       }
 
       const updatedRule = {
@@ -1094,15 +1056,18 @@ router.delete(
           data: { order: { decrement: 1 } },
         });
 
-        return { environmentId, projectId, flagKey };
+        return { environmentId, projectId, flagKey, environmentName };
       });
 
-      await publishFlagUpdate({
-        flagKey: publishData.flagKey,
-        environmentId: publishData.environmentId,
-        projectId: publishData.projectId,
-        type: "RULE_DELETED",
-      });
+      await syncAndPublishFlagUpdate(
+        publishData.flagKey,
+        {
+          id: publishData.environmentId,
+          projectId: publishData.projectId,
+          name: publishData.environmentName,
+        },
+        "RULE_DELETED"
+      );
 
       res.json({ success: true, ruleId });
     } catch (error) {
@@ -1203,16 +1168,15 @@ router.put(
 
       const environments = await db.environment.findMany({
         where: { projectId },
-        select: { id: true },
+        select: { id: true, name: true, projectId: true },
       });
 
       for (const env of environments) {
-        await publishFlagUpdate({
-          flagKey: updatedFlag.key,
-          environmentId: env.id,
-          projectId,
-          type: "FLAG_METADATA_UPDATED",
-        });
+        await syncAndPublishFlagUpdate(
+          updatedFlag.key,
+          env,
+          "FLAG_METADATA_UPDATED"
+        );
       }
 
       res.json({
@@ -1277,16 +1241,11 @@ router.delete(
 
       const environments = await db.environment.findMany({
         where: { projectId: flagToDelete.projectId },
-        select: { id: true },
+        select: { id: true, name: true, projectId: true },
       });
 
       for (const env of environments) {
-        await publishFlagUpdate({
-          flagKey: flagToDelete.key,
-          environmentId: env.id,
-          projectId: flagToDelete.projectId,
-          type: "FLAG_DELETED",
-        });
+        await syncAndPublishFlagUpdate(flagToDelete.key, env, "FLAG_DELETED");
       }
 
       res.json({ success: true, flagId });

@@ -4,7 +4,7 @@ import type {
   EvaluationContext,
   FlagConfig,
   FlagVariation,
-} from "./types";
+} from "@/types";
 
 export function evaluateConditions(
   conditions: EngineRule["conditions"],
