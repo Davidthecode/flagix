@@ -1,13 +1,36 @@
 {
   "name": "@flagix/js-sdk",
   "version": "1.0.0",
-  "description": "",
+  "description": "The JavaScript/TypeScript SDK for Flagix feature flagging.",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
   },
-  "keywords": [],
-  "author": "",
+  "scripts": {
+    "build": "pnpm run build:clean && pnpm run build:ts",
+    "build:clean": "rm -rf dist",
+    "build:ts": "tsc"
+  },
+  "keywords": [
+    "feature-flags",
+    "feature-toggles",
+    "sdk",
+    "javascript",
+    "typescript",
+    "flagix"
+  ],
+  "author": "Flagix",
   "license": "ISC",
   "dependencies": {
     "@flagix/evaluation-core": "workspace:^",
