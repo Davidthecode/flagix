@@ -2,7 +2,7 @@ import {
   getEnvironmentConfig,
   getFlagConfig,
   resolveEnvironmentId,
-} from "@flagix/flag-engine";
+} from "@flagix/data-sync";
 import { type Request, type Response, Router } from "express";
 
 const router = Router();

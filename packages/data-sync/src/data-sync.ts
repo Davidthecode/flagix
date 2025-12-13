@@ -1,7 +1,8 @@
 import { db } from "@flagix/db";
+import type { FlagConfig } from "@flagix/evaluation-core";
 import { getRedisClient } from "@/lib/redis/client";
 import { mapDbFlagToEngineConfig } from "@/parser";
-import type { DbFlagWithRules, EngineCache, FlagConfig } from "@/types";
+import type { DbFlagWithRules, EngineCache } from "@/types";
 
 const CACHE: EngineCache = new Map();
 const API_KEY_CACHE: Map<string, string> = new Map();

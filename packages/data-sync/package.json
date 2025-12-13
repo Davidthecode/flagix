@@ -1,5 +1,5 @@
 {
-  "name": "@flagix/flag-engine",
+  "name": "@flagix/data-sync",
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@flagix/db": "workspace:*",
+    "@flagix/evaluation-core": "workspace:*",
     "dotenv": "^17.2.3",
     "ioredis": "^5.8.2"
   },

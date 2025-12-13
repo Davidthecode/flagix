@@ -32,12 +32,12 @@ importers:
 
   apps/api:
     dependencies:
+      '@flagix/data-sync':
+        specifier: workspace:*
+        version: link:../../packages/data-sync
       '@flagix/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@flagix/flag-engine':
-        specifier: workspace:*
-        version: link:../../packages/flag-engine
       '@react-email/components':
         specifier: ^0.5.7
         version: 0.5.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -225,6 +225,25 @@ importers:
         specifier: 5.9.2
         version: 5.9.2
 
+  packages/data-sync:
+    dependencies:
+      '@flagix/db':
+        specifier: workspace:*
+        version: link:../db
+      '@flagix/evaluation-core':
+        specifier: workspace:*
+        version: link:../evaluation-core
+      dotenv:
+        specifier: ^17.2.3
+        version: 17.2.3
+      ioredis:
+        specifier: ^5.8.2
+        version: 5.8.2
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   packages/db:
     dependencies:
       '@neondatabase/serverless':
@@ -256,17 +275,11 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
-  packages/flag-engine:
+  packages/evaluation-core:
     dependencies:
-      '@flagix/db':
-        specifier: workspace:*
-        version: link:../db
-      dotenv:
-        specifier: ^17.2.3
-        version: 17.2.3
-      ioredis:
-        specifier: ^5.8.2
-        version: 5.8.2
+      js-sha256:
+        specifier: ^0.11.1
+        version: 0.11.1
     devDependencies:
       typescript:
         specifier: ^5.9.3
@@ -349,6 +362,22 @@ importers:
       typescript:
         specifier: 5.9.2
         version: 5.9.2
+
+  sdk/javascript:
+    dependencies:
+      '@flagix/evaluation-core':
+        specifier: workspace:^
+        version: link:../../packages/evaluation-core
+      eventsource:
+        specifier: ^4.1.0
+        version: 4.1.0
+    devDependencies:
+      '@types/node':
+        specifier: ^22.15.3
+        version: 22.18.12
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
 packages:
 
@@ -2001,6 +2030,14 @@ packages:
   eventemitter3@5.0.1:
     resolution: {integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==}
 
+  eventsource-parser@3.0.6:
+    resolution: {integrity: sha512-Vo1ab+QXPzZ4tCa8SwIHJFaSzy4R6SHf7BY79rFBDf0idraZWAkYrDjDj8uWaSm3S2TK+hJ7/t1CEmZ7jXw+pg==}
+    engines: {node: '>=18.0.0'}
+
+  eventsource@4.1.0:
+    resolution: {integrity: sha512-2GuF51iuHX6A9xdTccMTsNb7VO0lHZihApxhvQzJB5A03DvHDd2FQepodbMaztPBmBcE/ox7o2gqaxGhYB9LhQ==}
+    engines: {node: '>=20.0.0'}
+
   express@5.1.0:
     resolution: {integrity: sha512-DT9ck5YIRU+8GYzzU5kT3eHGA5iL+1Zd0EutOmTE9Dtk+Tvuzd23VBU+ec7HPNSTxXYO55gPV/hq4pSBJDjFpA==}
     engines: {node: '>= 18'}
@@ -2236,6 +2273,9 @@ packages:
 
   jose@6.1.0:
     resolution: {integrity: sha512-TTQJyoEoKcC1lscpVDCSsVgYzUDg/0Bt3WE//WiTPK6uOCQC2KZS4MpugbMWt/zyjkopgZoXhZuCi00gLudfUA==}
+
+  js-sha256@0.11.1:
+    resolution: {integrity: sha512-o6WSo/LUvY2uC4j7mO50a2ms7E/EAdbP0swigLV+nzHKTTaYnaLIWJ02VdXrsJX0vGedDESQnLsOekr94ryfjg==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -4842,6 +4882,12 @@ snapshots:
 
   eventemitter3@5.0.1: {}
 
+  eventsource-parser@3.0.6: {}
+
+  eventsource@4.1.0:
+    dependencies:
+      eventsource-parser: 3.0.6
+
   express@5.1.0:
     dependencies:
       accepts: 2.0.0
@@ -5109,6 +5155,8 @@ snapshots:
   jiti@2.6.1: {}
 
   jose@6.1.0: {}
+
+  js-sha256@0.11.1: {}
 
   js-tokens@4.0.0: {}
 

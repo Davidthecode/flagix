@@ -1,4 +1,4 @@
-import { REDIS_CHANNEL } from "@flagix/flag-engine";
+import { REDIS_CHANNEL } from "@flagix/data-sync";
 import type { Request, Response } from "express";
 import { getRedisSSESubscriber } from "@/lib/redis/sse-client";
 

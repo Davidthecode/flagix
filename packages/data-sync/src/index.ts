@@ -7,11 +7,6 @@ export {
   resolveEnvironmentId,
 } from "./data-sync";
 
-export { evaluateFlag } from "./evaluator";
 export { mapDbFlagToEngineConfig } from "./parser";
 
-export type {
-  DbFlagWithRules,
-  EvaluationContext,
-  FlagVariation,
-} from "./types";
+export type { DbFlagWithRules } from "./types";

@@ -1,10 +1,10 @@
-import crypto from "node:crypto";
+import { sha256 } from "js-sha256";
 import type {
   EngineRule,
   EvaluationContext,
   FlagConfig,
   FlagVariation,
-} from "@/types";
+} from "./types";
 
 export function evaluateConditions(
   conditions: EngineRule["conditions"],
@@ -130,7 +130,7 @@ function getNestedValue(obj: EvaluationContext, path: string): any {
  * @returns A number between 0 and 99.
  */
 function getConsistentBucket(identifier: string): number {
-  const hash = crypto.createHash("sha256").update(identifier).digest("hex");
+  const hash = sha256.hex(identifier);
 
   // Take the first 8 characters of the hex hash
   // Taking 8 chars gives us 32 bits of entropy.

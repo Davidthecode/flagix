@@ -1,4 +1,4 @@
-import { REDIS_CHANNEL, reloadFlagData } from "@flagix/flag-engine";
+import { REDIS_CHANNEL, reloadFlagData } from "@flagix/data-sync";
 import Redis from "ioredis";
 import { env } from "@/config/env";
 

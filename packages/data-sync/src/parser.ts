@@ -1,12 +1,12 @@
 import type { Variation } from "@flagix/db/client";
 import type {
-  DbFlagWithRules,
   EngineRule,
   FlagConfig,
   FlagVariation,
   VariationTypeLabel,
   VariationValue,
-} from "@/types";
+} from "@flagix/evaluation-core";
+import type { DbFlagWithRules } from "@/types";
 
 /**
  * Parses the raw value from the db based on the stored type label.

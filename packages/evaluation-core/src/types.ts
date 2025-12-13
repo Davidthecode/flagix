@@ -1,10 +1,3 @@
-import type {
-  EnvironmentRule,
-  Flag,
-  FlagState,
-  Variation,
-} from "@flagix/db/client";
-
 // biome-ignore lint/suspicious/noExplicitAny: The evaluation context must accept arbitrary user-defined attributes passed by the client.
 export type EvaluationContext = Record<string, any>;
 
@@ -41,12 +34,4 @@ export type FlagConfig = {
   defaultVariation: FlagVariation;
   variations: FlagVariation[];
   rules: EngineRule[];
-};
-
-export type EngineCache = Map<string, FlagConfig>;
-
-export type DbFlagWithRules = Flag & {
-  variations: Variation[];
-  states: FlagState[];
-  rules: EnvironmentRule[];
 };

@@ -1,9 +1,9 @@
-import { db } from "@flagix/db";
-import type { Environment } from "@flagix/db/client";
 import {
   type DbFlagWithRules,
   mapDbFlagToEngineConfig,
-} from "@flagix/flag-engine";
+} from "@flagix/data-sync";
+import { db } from "@flagix/db";
+import type { Environment } from "@flagix/db/client";
 import {
   type FlagUpdatePayload,
   getRedisClient,
