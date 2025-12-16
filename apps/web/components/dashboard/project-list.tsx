@@ -14,6 +14,7 @@ import { Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { ProjectSection } from "@/components/dashboard/project-section";
 import { CreateProjectModal } from "@/components/project/project-create-modal";
+import { useFlag } from "@/hooks/use-flag";
 import { api } from "@/lib/api";
 import { QUERY_KEYS } from "@/lib/queries/keys";
 import type { Project } from "@/types/project";
@@ -52,6 +53,9 @@ export const ProjectList = () => {
   const [starringId, setStarringId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const queryClient = useQueryClient();
+  const isNewFeatureEnabled = useFlag<boolean>("new-feature-flag");
+
+  console.log("isNewFeatureEnabled ==>", isNewFeatureEnabled);
 
   const {
     data: projects = [],
@@ -146,13 +150,17 @@ export const ProjectList = () => {
       <div className="mb-8 flex items-center justify-between">
         <div className="relative w-80">
           <Search className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 h-4 w-4 text-gray-400" />
-          <Input
-            className="h-10 w-full rounded-lg border-gray-200 bg-white pr-4 pl-10 text-sm transition-shadow placeholder:text-gray-400 focus:border-[#1D2138] focus:ring-2 focus:ring-[#1D2138]/20"
-            disabled={isListRefetching}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search..."
-            value={search}
-          />
+          {isNewFeatureEnabled ? (
+            <p>mehh isNewFeatureEnabled enabled flagix works!</p>
+          ) : (
+            <Input
+              className="h-10 w-full rounded-lg border-gray-200 bg-white pr-4 pl-10 text-sm transition-shadow placeholder:text-gray-400 focus:border-[#1D2138] focus:ring-2 focus:ring-[#1D2138]/20"
+              disabled={isListRefetching}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search..."
+              value={search}
+            />
+          )}
         </div>
 
         <Button

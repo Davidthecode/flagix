@@ -1,4 +1,5 @@
 import type { EventSourceInit } from "eventsource";
+import { log } from "@/lib/logger";
 
 export type FlagStreamConnection = {
   onopen: ((this: FlagStreamConnection, ev: Event) => void) | null;
@@ -26,7 +27,7 @@ export async function createEventSource(
       headers: { "X-Api-Key": apiKey },
     } as EventSourceInit) as FlagStreamConnection;
   } catch (error) {
-    console.error("[Flagix SDK] SSE not supported in this environment.", error);
+    log("warn", "[Flagix SDK] SSE not supported in this environment.", error);
     return null;
   }
 }

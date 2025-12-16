@@ -17,7 +17,5 @@ export function getRedisClient(): RedisClient {
       );
     });
   }
-
-  console.log("redisClient alrady available, using whats available");
   return redisClient;
 }

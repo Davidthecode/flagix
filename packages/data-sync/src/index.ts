@@ -3,7 +3,6 @@ export {
   getEnvironmentConfig,
   getFlagConfig,
   REDIS_CHANNEL,
-  reloadFlagData,
   resolveEnvironmentId,
 } from "./data-sync";
 

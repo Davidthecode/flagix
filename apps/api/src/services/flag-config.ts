@@ -66,6 +66,8 @@ export async function syncAndPublishFlagUpdate(
     environment.id
   );
 
+  console.log("updated config published ==>", config);
+
   if (config) {
     console.log("setting flag to redis");
     await redis.set(redisKey, JSON.stringify(config));

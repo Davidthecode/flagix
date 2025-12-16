@@ -2,15 +2,11 @@ import { db } from "@flagix/db";
 import type { FlagConfig } from "@flagix/evaluation-core";
 import { getRedisClient } from "@/lib/redis/client";
 import { mapDbFlagToEngineConfig } from "@/parser";
-import type { DbFlagWithRules, EngineCache } from "@/types";
+import type { DbFlagWithRules } from "@/types";
 
-const CACHE: EngineCache = new Map();
 const API_KEY_CACHE: Map<string, string> = new Map();
 
 export const REDIS_CHANNEL = "flag_updates";
-
-const getCacheKey = (environmentId: string, flagKey: string): string =>
-  `${environmentId}:${flagKey}`;
 
 const getRedisConfigKey = (environmentId: string, flagKey: string): string =>
   `config:${environmentId}:${flagKey}`;
@@ -152,20 +148,12 @@ export async function getFlagConfig(
   environmentId: string
 ): Promise<FlagConfig | undefined> {
   const redis = getRedisClient();
-  const cacheKey = getCacheKey(environmentId, key);
   const redisKey = getRedisConfigKey(environmentId, key);
-
-  let config = CACHE.get(cacheKey);
-  if (config) {
-    return config;
-  }
 
   const cachedString = await redis.get(redisKey);
   if (cachedString) {
     try {
-      config = JSON.parse(cachedString) as FlagConfig;
-      CACHE.set(cacheKey, config);
-      return config;
+      return JSON.parse(cachedString) as FlagConfig;
     } catch (error) {
       console.error(
         "[FlagEngine] Failed to parse Redis cache for key:",
@@ -176,50 +164,4 @@ export async function getFlagConfig(
   }
 
   return;
-}
-
-/**
- * Updates a specific flag in cache when there's a change to it (triggered by Pub/Sub).
- * It reads the pre-processed config from Redis and populates the in-memory cache.
- */
-export async function reloadFlagData(message: string) {
-  const redis = getRedisClient();
-  try {
-    const payload = JSON.parse(message);
-    const { flagKey, environmentId, type } = payload;
-
-    if (flagKey && environmentId) {
-      const cacheKey = getCacheKey(environmentId, flagKey);
-      const redisKey = getRedisConfigKey(environmentId, flagKey);
-
-      console.log(
-        `[FlagEngine] Received update (${type}) for ${flagKey}:${environmentId}. Syncing from Redis...`
-      );
-
-      if (type === "FLAG_DELETED" || type === "RULE_DELETED") {
-        CACHE.delete(cacheKey);
-        return;
-      }
-
-      const cachedString = await redis.get(redisKey);
-
-      if (cachedString) {
-        const config = JSON.parse(cachedString) as FlagConfig;
-        CACHE.set(cacheKey, config);
-        console.log(
-          `[FlagEngine] Successfully synced and cached config for ${flagKey}:${environmentId}.`
-        );
-      } else {
-        CACHE.delete(cacheKey);
-        console.warn(
-          `[FlagEngine] No configuration found in Redis for ${flagKey}:${environmentId} after update signal. Assuming deletion/stale key.`
-        );
-      }
-    }
-  } catch (error) {
-    console.error(
-      "[FlagEngine] Failed to parse/sync Redis message for reload:",
-      error
-    );
-  }
 }

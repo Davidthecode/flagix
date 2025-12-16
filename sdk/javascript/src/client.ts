@@ -8,7 +8,9 @@ import {
   EVENT_TO_LISTEN,
   type FlagUpdateType,
   REMOVE_TRAILING_SLASH,
-} from "@/constants";
+} from "@/lib/constants";
+import { FLAG_UPDATE_EVENT, FlagixEventEmitter } from "@/lib/emitter";
+import { log, setLogLevel } from "@/lib/logger";
 import {
   createEventSource,
   type FlagStreamConnection,
@@ -26,11 +28,34 @@ export class FlagixClient {
   private context: EvaluationContext;
   private isInitialized = false;
   private sseConnection: FlagStreamConnection | null = null;
+  private readonly emitter: FlagixEventEmitter;
 
   constructor(options: FlagixClientOptions) {
     this.apiKey = options.apiKey;
     this.apiBaseUrl = options.apiBaseUrl.replace(REMOVE_TRAILING_SLASH, "");
     this.context = options.initialContext || {};
+    this.emitter = new FlagixEventEmitter();
+    setLogLevel(options.logs?.level ?? "none");
+  }
+
+  /**
+   * Subscribes a listener to a flag update event.
+   */
+  on(
+    event: typeof FLAG_UPDATE_EVENT,
+    listener: (flagKey: string) => void
+  ): void {
+    this.emitter.on(event, listener);
+  }
+
+  /**
+   * Unsubscribes a listener from a flag update event.
+   */
+  off(
+    event: typeof FLAG_UPDATE_EVENT,
+    listener: (flagKey: string) => void
+  ): void {
+    this.emitter.off(event, listener);
   }
 
   /**
@@ -42,13 +67,13 @@ export class FlagixClient {
       return;
     }
 
-    console.log("[Flagix SDK] Starting initialization...");
+    log("info", "[Flagix SDK] Starting initialization...");
 
     await this.fetchInitialConfig();
     this.setupSSEListener();
 
     this.isInitialized = true;
-    console.log("[Flagix SDK] Initialization complete.");
+    log("info", "[Flagix SDK] Initialization complete.");
   }
 
   /**
@@ -68,7 +93,8 @@ export class FlagixClient {
     contextOverrides?: EvaluationContext
   ): T | null {
     if (!this.isInitialized) {
-      console.warn(
+      log(
+        "warn",
         `[Flagix SDK] Not initialized. Cannot evaluate flag: ${flagKey}`
       );
       return null;
@@ -93,7 +119,8 @@ export class FlagixClient {
    */
   setContext(newContext: EvaluationContext): void {
     this.context = { ...this.context, ...newContext };
-    console.log(
+    log(
+      "info",
       "[Flagix SDK] Context updated. Evaluations will use the new context."
     );
   }
@@ -118,9 +145,10 @@ export class FlagixClient {
       for (const [key, config] of Object.entries(allFlags)) {
         this.localCache.set(key, config);
       }
-      console.log(`[Flagix SDK] Loaded ${this.localCache.size} flag configs.`);
+      log("info", `[Flagix SDK] Loaded ${this.localCache.size} flag configs.`);
     } catch (error) {
-      console.error(
+      log(
+        "error",
         "[Flagix SDK] CRITICAL: Initial configuration fetch failed.",
         error
       );
@@ -138,11 +166,11 @@ export class FlagixClient {
     this.sseConnection = source;
 
     source.onopen = () => {
-      console.log("[Flagix SDK] SSE connection established.");
+      log("info", "[Flagix SDK] SSE connection established.");
     };
 
     source.onerror = (error) => {
-      console.error("[Flagix SDK] SSE error.", error);
+      log("error", "[Flagix SDK] SSE error", error);
     };
 
     source.addEventListener(EVENT_TO_LISTEN, (event) => {
@@ -153,11 +181,11 @@ export class FlagixClient {
           type: FlagUpdateType;
         };
 
-        console.log(`[Flagix SDK] Received update for ${flagKey} (${type}).`);
+        log("info", `[Flagix SDK] Received update for ${flagKey} (${type}).`);
 
         this.fetchSingleFlagConfig(flagKey, type);
       } catch (error) {
-        console.error("[Flagix SDK] Failed to parse SSE event data.", error);
+        log("error", "[Flagix SDK] Failed to parse SSE event data.", error);
       }
     });
   }
@@ -170,7 +198,8 @@ export class FlagixClient {
 
     if (type === "FLAG_DELETED" || type === "RULE_DELETED") {
       this.localCache.delete(flagKey);
-      console.log(`[Flagix SDK] Flag ${flagKey} deleted from cache.`);
+      log("info", `[Flagix SDK] Flag ${flagKey} deleted from cache.`);
+      this.emitter.emit(FLAG_UPDATE_EVENT, flagKey);
       return;
     }
 
@@ -181,9 +210,12 @@ export class FlagixClient {
 
       if (response.status === 404) {
         this.localCache.delete(flagKey);
-        console.log(
+
+        log(
+          "warn",
           `[Flagix SDK] Flag ${flagKey} not found on API, deleted from cache.`
         );
+        this.emitter.emit(FLAG_UPDATE_EVENT, flagKey);
         return;
       }
 
@@ -196,9 +228,11 @@ export class FlagixClient {
       const config = (await response.json()) as FlagConfig;
 
       this.localCache.set(flagKey, config);
-      console.log(`[Flagix SDK] Flag ${flagKey} updated/synced.`);
+      log("info", `[Flagix SDK] Flag ${flagKey} updated/synced.`);
+      this.emitter.emit(FLAG_UPDATE_EVENT, flagKey);
     } catch (error) {
-      console.error(
+      log(
+        "error",
         `[Flagix SDK] Failed to fetch update for ${flagKey}.`,
         error
       );
@@ -212,10 +246,11 @@ export class FlagixClient {
     if (this.sseConnection) {
       this.sseConnection.close();
       this.sseConnection = null;
-      console.log("[Flagix SDK] SSE connection closed.");
+      log("info", "[Flagix SDK] SSE connection closed.");
     }
 
     this.localCache.clear();
     this.isInitialized = false;
+    this.emitter.removeAllListeners();
   }
 }

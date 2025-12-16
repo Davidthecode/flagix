@@ -2,8 +2,10 @@ import type {
   EvaluationContext,
   VariationValue,
 } from "@flagix/evaluation-core";
-import { FlagixClient } from "./client";
-import type { FlagixClientOptions } from "./types";
+import { FlagixClient } from "@/client";
+import { FLAG_UPDATE_EVENT } from "@/lib/emitter";
+import { log } from "@/lib/logger";
+import type { FlagixClientOptions } from "@/types";
 
 let clientInstance: FlagixClient | null = null;
 
@@ -16,7 +18,7 @@ export const Flagix = {
    */
   async initialize(options: FlagixClientOptions): Promise<void> {
     if (clientInstance) {
-      console.warn("Flagix SDK already initialized.");
+      log("warn", "Flagix SDK already initialized. Ignoring subsequent call.");
       return;
     }
 
@@ -31,7 +33,7 @@ export const Flagix = {
       initializationPromise = clientInstance.initialize();
       await initializationPromise;
     } catch (error) {
-      console.error("Flagix SDK failed during initialization:", error);
+      log("error", "Flagix SDK failed during initialization:", error);
       throw error;
     } finally {
       isInitializing = false;
@@ -49,9 +51,11 @@ export const Flagix = {
     contextOverrides?: EvaluationContext
   ): T | null {
     if (!clientInstance || !clientInstance.getIsInitialized()) {
-      console.error(
+      log(
+        "error",
         "Flagix SDK not initialized. Call Flagix.initialize() first."
       );
+
       return null;
     }
     return clientInstance.evaluate<T>(flagKey, contextOverrides);
@@ -63,7 +67,7 @@ export const Flagix = {
    */
   setContext(newContext: EvaluationContext): void {
     if (!clientInstance) {
-      console.error("Flagix SDK not initialized.");
+      log("error", "Flagix SDK not initialized.");
       return;
     }
     clientInstance.setContext(newContext);
@@ -84,6 +88,29 @@ export const Flagix = {
    */
   isInitialized(): boolean {
     return !!clientInstance && clientInstance.getIsInitialized();
+  },
+
+  /**
+   * Subscribes a listener to updates for any flag.
+   * @param listener The callback function (receives the updated flagKey).
+   */
+  onFlagUpdate(listener: (flagKey: string) => void): void {
+    if (!clientInstance) {
+      log("warn", "Flagix SDK not initialized. Cannot subscribe to updates.");
+      return;
+    }
+    clientInstance.on(FLAG_UPDATE_EVENT, listener);
+  },
+
+  /**
+   * Unsubscribes a listener from flag updates.
+   * @param listener The callback function to remove.
+   */
+  offFlagUpdate(listener: (flagKey: string) => void): void {
+    if (!clientInstance) {
+      return;
+    }
+    clientInstance.off(FLAG_UPDATE_EVENT, listener);
   },
 };
 

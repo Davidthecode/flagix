@@ -1,10 +1,10 @@
 {
   "name": "@flagix/js-sdk",
   "version": "1.0.0",
-  "description": "The JavaScript/TypeScript SDK for Flagix feature flagging.",
-  "main": "index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "description": "The JavaScript/TypeScript SDK for Flagix feature flag.",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "import": {
@@ -18,9 +18,7 @@
     }
   },
   "scripts": {
-    "build": "pnpm run build:clean && pnpm run build:ts",
-    "build:clean": "rm -rf dist",
-    "build:ts": "tsc"
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean"
   },
   "keywords": [
     "feature-flags",
@@ -34,10 +32,12 @@
   "license": "ISC",
   "dependencies": {
     "@flagix/evaluation-core": "workspace:^",
+    "eventemitter3": "^5.0.1",
     "eventsource": "^4.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   }
 }
