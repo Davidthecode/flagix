@@ -55,8 +55,6 @@ export const ProjectList = () => {
   const queryClient = useQueryClient();
   const isNewFeatureEnabled = useFlag<boolean>("new-feature-flag");
 
-  console.log("isNewFeatureEnabled ==>", isNewFeatureEnabled);
-
   const {
     data: projects = [],
     isLoading,

@@ -350,6 +350,16 @@ router.get(
         return res.status(404).json({ error: "Project not found" });
       }
 
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+      const evaluationsCount = await db.flagEvaluation.count({
+        where: {
+          projectId,
+          evaluatedAt: { gte: oneWeekAgo },
+        },
+      });
+
       const targetingRulesCount = await db.environmentRule.count({
         where: {
           flag: {
@@ -389,7 +399,7 @@ router.get(
           totalFlags: flagsCount,
           environmentsCount,
           targetingRules: targetingRulesCount,
-          evaluations: 0, // will be updated later
+          evaluations: evaluationsCount,
         },
         environments: env,
         recentActivity: formattedLogs,

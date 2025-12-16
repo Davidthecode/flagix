@@ -9,7 +9,6 @@ import {
   DropdownMenuTrigger,
 } from "@flagix/ui/components/dropdown-menu";
 import { Bell } from "lucide-react";
-import Link from "next/link";
 
 export const NotificationsPopover = () => (
   <DropdownMenu>
@@ -29,12 +28,10 @@ export const NotificationsPopover = () => (
       <DropdownMenuSeparator />
 
       <DropdownMenuItem asChild>
-        <Link
-          className="flex w-full justify-center py-2 font-medium text-[#1D2138] text-sm hover:bg-gray-50"
-          href="/dashboard/notifications"
-        >
-          View All Notifications
-        </Link>
+        <div className="flex w-full justify-center py-2 font-medium text-[#1D2138] text-sm hover:bg-gray-50">
+          View All Notifications{" "}
+          <span className="ml-2 text-xs">(coming soon)</span>
+        </div>
       </DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>
