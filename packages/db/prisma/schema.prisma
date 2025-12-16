@@ -256,3 +256,19 @@ model ActivityLog {
   @@map("activity_log")
 }
 
+model FlagEvaluation {
+  id                    String    @id @default(cuid())
+  projectId             String
+  environmentId         String
+  flagKey               String    
+  variationName         String?  
+  variationValue        Json?
+  variationType         String?     
+  evaluationContextJson Json      
+  evaluatedAt           DateTime  @default(now())
+
+  @@index([projectId, evaluatedAt])
+  @@index([environmentId, flagKey, evaluatedAt])
+  @@map("flag_evaluation")
+}
+

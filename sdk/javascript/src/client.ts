@@ -2,6 +2,7 @@ import {
   type EvaluationContext,
   evaluateFlag,
   type FlagConfig,
+  type FlagVariation,
   type VariationValue,
 } from "@flagix/evaluation-core";
 import {
@@ -109,6 +110,10 @@ export class FlagixClient {
     const finalContext = { ...this.context, ...contextOverrides };
 
     const result = evaluateFlag(config, finalContext);
+
+    if (result) {
+      this.trackEvaluation(flagKey, result, finalContext);
+    }
 
     return (result?.value as T) ?? null;
   }
@@ -252,5 +257,58 @@ export class FlagixClient {
     this.localCache.clear();
     this.isInitialized = false;
     this.emitter.removeAllListeners();
+  }
+
+  /**
+   * Asynchronously sends an evaluation event to the backend tracking service.
+   */
+  private trackEvaluation(
+    flagKey: string,
+    result: FlagVariation,
+    context: EvaluationContext
+  ): void {
+    const url = `${this.apiBaseUrl}/api/track/evaluation`;
+
+    const payload = {
+      apiKey: this.apiKey,
+      flagKey,
+      variationName: result.name,
+      variationValue: result.value,
+      variationType: result.type,
+      evaluationContext: context,
+      evaluatedAt: new Date().toISOString(),
+    };
+
+    const payloadJson = JSON.stringify(payload);
+
+    if (typeof navigator !== "undefined" && navigator.sendBeacon) {
+      const blob = new Blob([payloadJson], { type: "application/json" });
+
+      const success = navigator.sendBeacon(url, blob);
+
+      if (success) {
+        log("info", `Successfully queued beacon for ${flagKey}.`);
+        return;
+      }
+
+      log("warn", `Beacon queue full for ${flagKey}. Falling back to fetch.`);
+      this.fireAndForgetFetch(url, payloadJson);
+    } else {
+      this.fireAndForgetFetch(url, payloadJson);
+    }
+  }
+
+  private fireAndForgetFetch(url: string, payloadJson: string): void {
+    fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: payloadJson,
+      keepalive: true,
+    }).catch((error) => {
+      log(
+        "error",
+        `Critical failure sending impression event via fetch: ${error.message}`
+      );
+    });
   }
 }

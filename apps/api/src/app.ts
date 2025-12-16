@@ -7,6 +7,7 @@ import flagRoutes from "@/routes/flag/route";
 import flagConfigRoutes from "@/routes/flag-config/route";
 import projectRoutes from "@/routes/project/route";
 import sseRoutes from "@/routes/sse/route";
+import trackRoutes from "@/routes/track/route";
 
 const createApp = (): Express => {
   const app: Express = express();
@@ -24,6 +25,7 @@ const createApp = (): Express => {
 
   app.use("/api/flag-config", flagConfigRoutes);
   app.use("/api/sse", sseRoutes);
+  app.use("/api/track", trackRoutes);
 
   app.use(requireAuth);
 

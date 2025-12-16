@@ -20,7 +20,10 @@ const SDK_OPTIONS = {
     sessionId: "session-12345",
     platform: "web",
   },
-};
+  logs: {
+    level: "info",
+  },
+} as const;
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (

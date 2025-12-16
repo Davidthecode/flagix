@@ -10,3 +10,8 @@ export type DbFlagWithRules = Flag & {
   states: FlagState[];
   rules: EnvironmentRule[];
 };
+
+export type EnvironmentAndProjectIds = {
+  environmentId: string;
+  projectId: string;
+};

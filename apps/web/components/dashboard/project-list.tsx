@@ -149,7 +149,7 @@ export const ProjectList = () => {
     <div className="py-8">
       <div className="mb-8 flex items-center justify-between">
         <div className="relative w-80">
-          <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 h-4 w-4 text-gray-400" />
           {isNewFeatureEnabled ? (
             <p>isNewFeatureEnabled enabled flagix works!</p>
           ) : (

@@ -2,9 +2,10 @@ import { db } from "@flagix/db";
 import type { FlagConfig } from "@flagix/evaluation-core";
 import { getRedisClient } from "@/lib/redis/client";
 import { mapDbFlagToEngineConfig } from "@/parser";
-import type { DbFlagWithRules } from "@/types";
+import type { DbFlagWithRules, EnvironmentAndProjectIds } from "@/types";
 
 const API_KEY_CACHE: Map<string, string> = new Map();
+const API_IDS_CACHE: Map<string, EnvironmentAndProjectIds> = new Map();
 
 export const REDIS_CHANNEL = "flag_updates";
 
@@ -108,7 +109,6 @@ export async function getEnvironmentConfig(
 export async function resolveEnvironmentId(
   apiKey: string
 ): Promise<string | undefined> {
-  console.log("resolving flag environment");
   const redis = getRedisClient();
   const redisKey = getRedisApiKeyKey(apiKey);
 
@@ -129,10 +129,47 @@ export async function resolveEnvironmentId(
 
   if (environment) {
     const id = environment.id;
+
     API_KEY_CACHE.set(apiKey, id);
     await redis.set(redisKey, id, "EX", 604_800);
     return id;
   }
+  return;
+}
+
+/**
+ * Resolves the environment ID and the associated project ID from an API key.
+ */
+export async function resolveEnvironmentAndProjectIds(
+  apiKey: string
+): Promise<EnvironmentAndProjectIds | undefined> {
+  const redis = getRedisClient();
+  const redisKey = getRedisApiKeyKey(apiKey);
+
+  if (API_IDS_CACHE.has(apiKey)) {
+    return API_IDS_CACHE.get(apiKey);
+  }
+
+  const environment = await db.environment.findUnique({
+    where: { apiKey },
+    select: {
+      id: true,
+      projectId: true,
+    },
+  });
+
+  if (environment) {
+    const result: EnvironmentAndProjectIds = {
+      environmentId: environment.id,
+      projectId: environment.projectId,
+    };
+
+    API_IDS_CACHE.set(apiKey, result);
+
+    await redis.set(redisKey, environment.id, "EX", 604_800);
+    return result;
+  }
+
   return;
 }
 
