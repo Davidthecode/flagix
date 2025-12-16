@@ -113,13 +113,11 @@ export async function resolveEnvironmentId(
   const redisKey = getRedisApiKeyKey(apiKey);
 
   if (API_KEY_CACHE.has(apiKey)) {
-    console.log("API_KEY_CACHE available");
     return API_KEY_CACHE.get(apiKey);
   }
 
   const environmentId = await redis.get(redisKey);
   if (environmentId) {
-    console.log("got API_KEY from redis");
     API_KEY_CACHE.set(apiKey, environmentId);
     return environmentId;
   }
@@ -130,7 +128,6 @@ export async function resolveEnvironmentId(
   });
 
   if (environment) {
-    console.log("got API_KEY from db");
     const id = environment.id;
     API_KEY_CACHE.set(apiKey, id);
     await redis.set(redisKey, id, "EX", 604_800);

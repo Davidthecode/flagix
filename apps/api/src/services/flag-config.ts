@@ -24,7 +24,6 @@ export async function syncAndPublishFlagUpdate(
   environment: Pick<Environment, "id" | "projectId" | "name">,
   type: FlagUpdatePayload["type"]
 ): Promise<void> {
-  console.log("reaching here");
   const flag = await db.flag.findUnique({
     where: {
       projectId_key: { projectId: environment.projectId, key: flagKey },
@@ -46,7 +45,6 @@ export async function syncAndPublishFlagUpdate(
   const redisKey = getRedisConfigKey(environment.id, flagKey);
 
   if (!flag || flag.states.length === 0) {
-    console.log("removing flag from redis");
     await redis.del(redisKey);
 
     await getRedisPublisher().publish(
@@ -69,7 +67,6 @@ export async function syncAndPublishFlagUpdate(
   console.log("updated config published ==>", config);
 
   if (config) {
-    console.log("setting flag to redis");
     await redis.set(redisKey, JSON.stringify(config));
 
     await getRedisPublisher().publish(

@@ -17,20 +17,16 @@ subscriber.subscribe(REDIS_CHANNEL, (err) => {
 
 subscriber.on("message", (_channel, message) => {
   try {
-    console.log("action made starting update through sse");
     const payload = JSON.parse(message);
     const { environmentId, flagKey, type } = payload;
 
-    /* look up all connected client response objects for the environmentId */
+    // look up all connected client response objects for the environmentId
     const environmentClients = clients.get(environmentId);
     if (environmentClients) {
       const sseData = `event: flag-update\ndata: ${JSON.stringify({ flagKey, type })}\n\n`;
 
-      console.log("sending sseData ==>", sseData);
-
       for (const res of environmentClients) {
         res.write(sseData);
-        console.log("sseData sent");
       }
     }
   } catch (error) {
