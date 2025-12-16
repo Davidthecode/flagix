@@ -8,9 +8,7 @@ export function getWorkerRedisClient(): RedisClient {
   });
 
   workerClient.on("ready", () => {
-    console.log(
-      "[Redis Worker Client] Connected successfully for blocking operations"
-    );
+    console.log("[Redis Worker Client] Connected successfully");
   });
 
   return workerClient;

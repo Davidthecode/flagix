@@ -19,13 +19,79 @@ import { sendProjectInviteEmail } from "@/utils/project";
 
 const router = Router();
 
-router.use("/:projectId", resolveRoleByProjectParams);
+/* * ROUTING ORDER GUIDELINE:
+ * Define all static, non-dynamic routes (e.g., '/', '/metrics', '/new') first.
+ * This prevents specific routes from being incorrectly matched by the
+ * generic dynamic middleware defined later (e.g., router.use('/:projectId')).
+ */
+
+router.get("/metrics", async (req: RequestWithSession, res: Response) => {
+  const session = req.session;
+
+  if (!session) {
+    return res.status(401).json({ error: "unauthenticated" });
+  }
+
+  const userId = session.user.id;
+
+  try {
+    const projects = await db.project.findMany({
+      where: {
+        OR: [{ ownerId: userId }, { members: { some: { userId } } }],
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    const projectIds = projects.map((p) => p.id);
+
+    if (projectIds.length === 0) {
+      return res.json({
+        flags: 0,
+        environments: 0,
+        evaluations: 0,
+      });
+    }
+
+    const totalFlags = await db.flag.count({
+      where: {
+        projectId: { in: projectIds },
+      },
+    });
+
+    const totalEnvironments = await db.environment.count({
+      where: {
+        projectId: { in: projectIds },
+      },
+    });
+
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const totalEvaluations = await db.flagEvaluation.count({
+      where: {
+        projectId: { in: projectIds },
+        evaluatedAt: { gte: oneWeekAgo },
+      },
+    });
+
+    res.json({
+      flags: totalFlags,
+      environments: totalEnvironments,
+      evaluations: totalEvaluations,
+    });
+  } catch (error) {
+    console.error("Failed to get project metrics:", error);
+    res.status(500).json({ error: "Failed to get project metrics" });
+  }
+});
 
 router.get("/", async (req: RequestWithSession, res: Response) => {
   const session = req.session;
 
   if (!session) {
-    return res.json({ error: "unauthenticated", status: 401 });
+    return res.status(401).json({ error: "unauthenticated" });
   }
 
   const userId = session.user.id;
@@ -75,6 +141,8 @@ router.get("/", async (req: RequestWithSession, res: Response) => {
     res.status(500).json({ error: "Failed to get projects" });
   }
 });
+
+router.use("/:projectId", resolveRoleByProjectParams);
 
 router.get(
   "/:projectId",

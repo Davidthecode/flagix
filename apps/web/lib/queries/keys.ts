@@ -1,6 +1,7 @@
 export const QUERY_KEYS = {
   PROJECTS: ["projects"],
   PROJECT: (id: string) => ["project", id],
+  PROJECT_METRICS: ["project-metrics"],
   PROJECT_DASHBOARD: (id: string) => ["project-dashboard", id],
   PROJECT_SETTINGS: (projectId: string) => ["project-settings", projectId],
 

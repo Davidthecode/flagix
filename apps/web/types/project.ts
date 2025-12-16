@@ -32,3 +32,9 @@ export type ProjectSettingsResponse = {
   userRole: ProjectRole | undefined;
   isAuthorizedToEdit: boolean;
 };
+
+export type ProjectMetricsData = {
+  flags: number;
+  environments: number;
+  evaluations: number;
+};
