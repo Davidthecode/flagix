@@ -242,7 +242,7 @@ export const DemoSection = () => {
                       }}
                     >
                       {isPremium && (
-                        <div className="-right-1 -top-1 absolute h-2 w-2 rounded-full bg-yellow-400 ring-1 ring-black/50" />
+                        <div className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-yellow-400 ring-1 ring-black/50" />
                       )}
                       {isActive && (
                         <div className="absolute inset-0 animate-ping rounded-lg bg-green-500 opacity-30" />

@@ -15,7 +15,6 @@ const getRedisApiKeyKey = (apiKey: string): string => `api_key:${apiKey}`;
 
 /**
  * Fetches all active flag configurations for a given environment ID.
- * This is used for the initial dump when an SDK connects.
  */
 export async function getEnvironmentConfig(
   environmentId: string

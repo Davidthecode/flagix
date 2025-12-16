@@ -4,7 +4,6 @@ import { Flagix, type FlagixClientOptions } from "@flagix/js-sdk";
 import type React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 
-// create context for the client and initialization status
 const FlagixContext = createContext<{
   isReady: boolean;
   client: typeof Flagix | null;

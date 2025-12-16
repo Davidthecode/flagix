@@ -78,16 +78,13 @@ function evaluateStringAndInConditions(
     const isAllNumeric = numericList.every((n) => !Number.isNaN(n));
 
     if (isAllNumeric) {
-      // Rule value is a valid list of numbers (e.g., [18, 25, 30])
       const contextNum = Number(contextValue);
       if (!Number.isNaN(contextNum)) {
-        // Context value is also a valid number
         return numericList.includes(contextNum);
       }
 
       return false;
     }
-    // If the rule value is not a clean list of numbers, fall through to string comparison.
   }
 
   const valueOne = String(contextValue).toLowerCase();
@@ -124,7 +121,7 @@ function getNestedValue(obj: EvaluationContext, path: string): any {
 }
 
 /**
- * Creates a consistent bucket number (0-99) for a given identifier (like user ID).
+ * Creates a consistent bucket number (0-99) for a given identifier
  * This ensures the same user always lands in the same A/B test bucket.
  * @param identifier The unique string ID (e.g., user.id).
  * @returns A number between 0 and 99.
