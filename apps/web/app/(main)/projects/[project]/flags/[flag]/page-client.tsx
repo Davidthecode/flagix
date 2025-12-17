@@ -107,6 +107,7 @@ function PageClient() {
     addRuleMutation.isPending ||
     editRuleMutation.isPending ||
     deleteRuleMutation.isPending ||
+    updateDefaultVariationMutation.isPending ||
     deleteFlagMutation.isPending ||
     editMetadataMutation.isPending;
 
@@ -118,7 +119,9 @@ function PageClient() {
     }));
 
   const handleUpdateDetails = useCallback(
-    ({ newKey, newDescription }) => {
+    ({ newDescription }) => {
+      setIsEditDetailsModalOpen(false);
+
       if (editMetadataMutation.isPending) {
         return;
       }
@@ -127,13 +130,9 @@ function PageClient() {
         {
           flagId,
           projectId,
-          newKey,
           newDescription,
         },
         {
-          onSuccess: () => {
-            setIsEditDetailsModalOpen(false);
-          },
           onError: () => {
             toast.error("Error editing flag metadata");
           },
@@ -164,16 +163,10 @@ function PageClient() {
 
       updateDefaultVariationMutation.mutate({
         environmentName: displayEnvironmentName,
-
         defaultVariationName: newDefaultName,
       });
     },
-    [
-      isEditable,
-      displayEnvironmentName,
-
-      updateDefaultVariationMutation,
-    ]
+    [isEditable, displayEnvironmentName, updateDefaultVariationMutation]
   );
 
   const handleToggleFlag = useCallback(() => {

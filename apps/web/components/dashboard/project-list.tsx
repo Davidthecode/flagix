@@ -147,17 +147,28 @@ export const ProjectList = () => {
     <div className="py-8">
       <div className="mb-8 flex items-center justify-between">
         <div className="relative w-80">
-          <Search className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 h-4 w-4 text-gray-400" />
-          {isNewFeatureEnabled ? (
-            <p>isNewFeatureEnabled enabled flagix works!</p>
-          ) : (
-            <Input
-              className="h-10 w-full rounded-lg border-gray-200 bg-white pr-4 pl-10 text-sm transition-shadow placeholder:text-gray-400 focus:border-[#1D2138] focus:ring-2 focus:ring-[#1D2138]/20"
-              disabled={isListRefetching}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search..."
-              value={search}
-            />
+          <Search className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 z-20 h-4 w-4 text-gray-400" />
+
+          {isNewFeatureEnabled && (
+            <div className="-inset-0.5 absolute overflow-hidden rounded-lg">
+              <div className="absolute inset-[-1000%] animate-christmas-spin bg-[conic-gradient(from_90deg_at_50%_50%,#ef4444_0%,#22c55e_25%,#ef4444_50%,#22c55e_75%,#ef4444_100%)]" />
+            </div>
+          )}
+
+          <Input
+            className={`relative z-10 h-10 w-full rounded-lg border-gray-200 bg-white pr-4 pl-10 text-sm transition-all placeholder:text-gray-400 focus:border-[#1D2138] focus:ring-2 focus:ring-[#1D2138]/20 ${
+              isNewFeatureEnabled ? "border-transparent bg-white/95" : ""
+            }`}
+            disabled={isListRefetching}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search..."
+            value={search}
+          />
+
+          {isNewFeatureEnabled && (
+            <span className="-top-2 -right-1 pointer-events-none absolute z-20 text-lg">
+              🎄
+            </span>
           )}
         </div>
 

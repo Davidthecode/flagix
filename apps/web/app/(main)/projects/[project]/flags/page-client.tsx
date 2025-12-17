@@ -55,7 +55,8 @@ function FlagsPageClient() {
       flagList.filter(
         (flag) =>
           flag.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          flag.description.toLowerCase().includes(searchTerm.toLowerCase())
+          flag.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          ""
       ),
     [flagList, searchTerm]
   );

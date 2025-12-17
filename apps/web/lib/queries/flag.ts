@@ -10,6 +10,7 @@ import { QUERY_KEYS } from "@/lib/queries/keys";
 import type {
   EnvironmentConfig,
   FlagConfig,
+  FlagType,
   FlagVariation,
   TargetingRule,
 } from "@/types/flag";
@@ -45,7 +46,7 @@ export const useFlagConfig = (
   });
 
 /**
- * Updates the flag's global metadata (key and description).
+ * Updates the flag's global metadata (description).
  */
 export const useEditFlagMetadataMutation = (projectId: string) => {
   const queryClient = useQueryClient();
@@ -54,21 +55,78 @@ export const useEditFlagMetadataMutation = (projectId: string) => {
     mutationFn: (payload: {
       flagId: string;
       projectId: string;
-      newKey: string;
       newDescription: string;
     }) =>
       api
         .put(`/api/flags/${payload.flagId}/metadata`, payload)
         .then((res) => res.data),
 
+    onMutate: async (variables) => {
+      const { flagId, newDescription } = variables;
+
+      const listKey = QUERY_KEYS.FLAGS(projectId);
+
+      // Because description is global, we need to find all environment-specific configs
+      // for this flag that are currently in the cache.
+      const configCacheQueries = queryClient.getQueryCache().findAll({
+        queryKey: [QUERY_KEYS.FLAG_CONFIG_BASE[0], projectId, flagId],
+      });
+
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: listKey }),
+        ...configCacheQueries.map((query) =>
+          queryClient.cancelQueries({ queryKey: query.queryKey })
+        ),
+      ]);
+
+      const previousListData = queryClient.getQueryData(listKey);
+      const previousConfigs = configCacheQueries.map((query) => ({
+        key: query.queryKey,
+        data: query.state.data,
+      }));
+
+      queryClient.setQueryData<FlagType[]>(listKey, (old) => {
+        if (!old) {
+          return old;
+        }
+        return old.map((f) =>
+          f.id === flagId ? { ...f, description: newDescription } : f
+        );
+      });
+
+      for (const query of configCacheQueries) {
+        queryClient.setQueryData<FlagConfig | undefined>(
+          query.queryKey,
+          (old) => {
+            if (!old) {
+              return old;
+            }
+            return { ...old, description: newDescription };
+          }
+        );
+      }
+
+      return { previousListData, previousConfigs, listKey };
+    },
+
+    onError: (_err, _variables, context) => {
+      toast.error("Failed to save flag metadata.");
+      if (context?.listKey) {
+        queryClient.setQueryData(context.listKey, context.previousListData);
+      }
+      if (context?.previousConfigs) {
+        for (const config of context.previousConfigs) {
+          queryClient.setQueryData(config.key, config.data);
+        }
+      }
+    },
+
     onSuccess: () => {
       toast.success("Flag metadata updated");
       queryClient.invalidateQueries({
-        // Invalidate all flag configs for the current project
         queryKey: [QUERY_KEYS.FLAG_CONFIG_BASE[0], projectId],
       });
     },
-    onError: () => toast.error("Failed to save flag metadata."),
   });
 };
 

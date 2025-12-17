@@ -1090,9 +1090,9 @@ router.put(
 
     const userId = req.session.user.id;
     const { flagId } = req.params;
-    const { projectId, newKey, newDescription } = req.body;
+    const { projectId, newDescription } = req.body;
 
-    if (!projectId || !newKey || !newDescription) {
+    if (!projectId || typeof newDescription !== "string") {
       return res
         .status(400)
         .json({ error: "Missing required metadata parameters." });
@@ -1107,7 +1107,7 @@ router.put(
             OR: [{ ownerId: userId }, { members: { some: { userId } } }],
           },
         },
-        select: { id: true },
+        select: { id: true, key: true, description: true },
       });
 
       if (!flag) {
@@ -1116,39 +1116,11 @@ router.put(
           .json({ error: "Unauthorized access or flag not found." });
       }
 
-      // Check for key uniqueness if the key is being changed
-      const existingFlagWithNewKey = await db.flag.findFirst({
-        where: {
-          key: newKey,
-          projectId,
-          NOT: { id: flagId }, // Exclude the current flag itself
-        },
-      });
-
-      if (existingFlagWithNewKey) {
-        return res.status(409).json({
-          error: `Flag key '${newKey}' already exists in this project.`,
-        });
-      }
-
-      const currentFlag = await db.flag.findUnique({
-        where: { id: flagId },
-        select: { key: true, description: true },
-      });
-
-      if (!currentFlag) {
-        return res.status(409).json({
-          error: "Flag does not exist",
-        });
-      }
-
       const updatedFlag = await db.flag.update({
         where: { id: flagId },
         data: {
-          key: newKey,
           description: newDescription,
         },
-        select: { key: true, description: true },
       });
 
       await db.activityLog.create({
@@ -1156,32 +1128,18 @@ router.put(
           projectId,
           userId,
           actionType: "FLAG_METADATA_UPDATED",
-          description: `Flag metadata updated. Key changed from '${currentFlag.key}' to '${newKey}'.`,
+          description: `Updated description for flag '${flag.key}'.`,
           details: {
-            oldKey: currentFlag.key,
-            newKey,
-            oldDescription: currentFlag.description,
+            flagKey: flag.key,
+            oldDescription: flag.description,
             newDescription,
           },
         },
       });
 
-      const environments = await db.environment.findMany({
-        where: { projectId },
-        select: { id: true, name: true, projectId: true },
-      });
-
-      for (const env of environments) {
-        await syncAndPublishFlagUpdate(
-          updatedFlag.key,
-          env,
-          "FLAG_METADATA_UPDATED"
-        );
-      }
-
       res.json({
         success: true,
-        newKey: updatedFlag.key,
+        key: updatedFlag.key,
         newDescription: updatedFlag.description,
       });
     } catch (error) {

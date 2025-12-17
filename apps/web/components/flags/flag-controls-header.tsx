@@ -33,7 +33,7 @@ export const FlagControlsHeader: React.FC<FlagControlsHeaderProps> = ({
 
     <div className="mb-6 flex items-center gap-4">
       <div className="relative w-80">
-        <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <Search className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 h-4 w-4 text-gray-400" />
         <Input
           className="h-10 w-full rounded-lg border-gray-200 bg-white pr-4 pl-10 text-sm transition-shadow placeholder:text-gray-400"
           disabled={isControlsDisabled}

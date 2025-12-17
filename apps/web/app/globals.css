@@ -122,3 +122,16 @@
     @apply bg-background text-foreground;
   }
 }
+
+@theme {
+  --animate-christmas-spin: border-spin 3s linear infinite;
+
+  @keyframes border-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
