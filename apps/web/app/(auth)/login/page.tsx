@@ -12,8 +12,20 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[#F4F4F5] p-4 sm:p-6">
-      <div className="w-full max-w-md rounded-xl">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#F4F4F5] p-4 sm:p-6">
+      <div className="absolute inset-0 z-0">
+        <div
+          className="absolute inset-0 opacity-[0.4]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, #D4D4D8 1px, transparent 1px), linear-gradient(to bottom, #D4D4D8 1px, transparent 1px)",
+            backgroundSize: "44px 44px",
+          }}
+        />
+        <div className="mask-[radial-gradient(ellipse_at_center,transparent_0%,black_80%)] absolute inset-0 bg-[#F4F4F5]" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-md">
         <div className="mb-6 flex flex-col items-center">
           <Link href="/">
             <Image

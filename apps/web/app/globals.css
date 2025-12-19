@@ -43,6 +43,34 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --font-sans: var(--font-raleway), var(--font-geist-sans), sans-serif;
+  @keyframes wave-continuous {
+    0% {
+      transform: skewX(-25deg) translateX(-150%);
+    }
+    100% {
+      transform: skewX(-25deg) translateX(150%);
+    }
+  }
+  @keyframes text-scan {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+  @keyframes border-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  /* Animation Utilities */
+  --animate-wave: wave-continuous 4s linear infinite;
+  --animate-text-scan: text-scan 3s linear infinite;
+  --animate-christmas-spin: border-spin 3s linear infinite;
 }
 
 :root {
@@ -132,6 +160,88 @@
     }
     to {
       transform: rotate(360deg);
+    }
+  }
+}
+
+@layer utilities {
+  .bg-grid-pattern {
+    background-image:
+      linear-gradient(to right, #d4d4d8 1px, transparent 1px),
+      linear-gradient(to bottom, #d4d4d8 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  .bg-grid-white {
+    background-image:
+      linear-gradient(to right, #ffffff 1px, transparent 1px),
+      linear-gradient(to bottom, #ffffff 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  .light-sweep-primary,
+  .light-sweep-secondary {
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(255, 255, 255, 0) 10%,
+      rgba(255, 255, 255, 1) 50%,
+      rgba(255, 255, 255, 0) 90%,
+      transparent 100%
+    );
+    filter: blur(20px);
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 10;
+  }
+
+  .light-sweep-primary {
+    @apply animate-wave;
+  }
+
+  .light-sweep-secondary {
+    opacity: 0.6;
+    @apply animate-wave;
+    animation-delay: 2s;
+  }
+
+  /* We can also move the shimmer effect here while we're at it */
+  .shimmer-text {
+    color: rgba(255, 255, 255, 0.35);
+    background: linear-gradient(
+      to right,
+      transparent 20%,
+      rgba(255, 255, 255, 1) 50%,
+      transparent 80%
+    );
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    animation: text-scan 3s linear infinite;
+  }
+
+  .shimmer-text-dark {
+    color: rgba(0, 0, 0, 0.05);
+    background: linear-gradient(
+      to right,
+      transparent 20%,
+      rgba(0, 0, 0, 0.15) 50%,
+      transparent 80%
+    );
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    @apply animate-text-scan;
+    animation-duration: 4s;
+  }
+
+  @keyframes text-scan {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
     }
   }
 }

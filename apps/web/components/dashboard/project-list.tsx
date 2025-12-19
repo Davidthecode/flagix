@@ -147,10 +147,10 @@ export const ProjectList = () => {
     <div className="py-8">
       <div className="mb-8 flex items-center justify-between">
         <div className="relative w-80">
-          <Search className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 z-20 h-4 w-4 text-gray-400" />
+          <Search className="pointer-events-none absolute top-1/2 left-3 z-20 h-4 w-4 -translate-y-1/2 text-gray-400" />
 
           {isNewFeatureEnabled && (
-            <div className="-inset-0.5 absolute overflow-hidden rounded-lg">
+            <div className="absolute -inset-0.5 overflow-hidden rounded-lg">
               <div className="absolute inset-[-1000%] animate-christmas-spin bg-[conic-gradient(from_90deg_at_50%_50%,#ef4444_0%,#22c55e_25%,#ef4444_50%,#22c55e_75%,#ef4444_100%)]" />
             </div>
           )}
@@ -166,7 +166,7 @@ export const ProjectList = () => {
           />
 
           {isNewFeatureEnabled && (
-            <span className="-top-2 -right-1 pointer-events-none absolute z-20 text-lg">
+            <span className="pointer-events-none absolute -top-2 -right-1 z-20 text-lg">
               🎄
             </span>
           )}
