@@ -31,9 +31,6 @@ export const DemoSection = () => {
             <div className="rounded-3xl border border-white/8 bg-white/2 p-8 backdrop-blur-sm">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <span className="font-bold text-[10px] text-emerald-500 uppercase tracking-widest">
-                    Environment: Production
-                  </span>
                   <h3 className="font-bold text-white text-xl tracking-tight">
                     enable-v2-interface
                   </h3>
