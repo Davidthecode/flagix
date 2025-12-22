@@ -62,6 +62,27 @@ export const Flagix = {
   },
 
   /**
+   * Records a custom event for analytics.
+   * @param eventName The name of the event.
+   * @param properties Optional custom metadata.
+   * @param contextOverrides Optional context.
+   */
+  track(
+    eventName: string,
+    properties?: Record<string, unknown>,
+    contextOverrides?: EvaluationContext
+  ): void {
+    if (!clientInstance) {
+      log(
+        "error",
+        "Flagix SDK not initialized. Call Flagix.initialize() first."
+      );
+      return;
+    }
+    clientInstance.track(eventName, properties, contextOverrides);
+  },
+
+  /**
    * Sets or updates the global evaluation context.
    * @param newContext New context attributes to merge or replace.
    */

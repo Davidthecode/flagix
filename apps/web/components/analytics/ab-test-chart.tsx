@@ -12,12 +12,8 @@ import {
   YAxis,
 } from "recharts";
 import { CHART_LINE_COLORS } from "@/lib/constants";
+import type { DailyConversionData } from "@/types/analytics";
 import { CustomTooltipForABtestMetricChart } from "@/utils/chart";
-
-type DailyConversionData = {
-  date: string;
-  [variationName: string]: number | string;
-};
 
 type ABTestChartProps = {
   dailyData: DailyConversionData[];
@@ -40,7 +36,9 @@ export function ABTestChart({
         <XAxis
           dataKey="date"
           stroke="#6b7280"
-          tickFormatter={(dateStr) => format(dateStr, "MMM dd")}
+          tickFormatter={(dateStr) =>
+            format(new Date(`${dateStr}T00:00:00`), "MMM dd")
+          }
         />
         <YAxis
           domain={[0, "auto"]}

@@ -1,0 +1,23 @@
+DESCRIPTION >
+    Stores custom events (conversions) like clicks, signups, etc.
+
+SCHEMA >
+    `timestamp` DateTime64(3) `json:$.timestamp`,
+    `project_id` String `json:$.project_id`,
+    `environment_id` String `json:$.environment_id`,
+    `event_name` LowCardinality(String) `json:$.event_name`,
+    `distinct_id` String `json:$.distinct_id`,
+    `properties` String `json:$.properties`
+
+FORWARD_QUERY >
+    SELECT 
+        timestamp, 
+        project_id, 
+        '' AS environment_id, 
+        event_name, 
+        distinct_id, 
+        properties
+
+ENGINE "MergeTree"
+ENGINE_PARTITION_KEY "toYYYYMM(timestamp)"
+ENGINE_SORTING_KEY "project_id, environment_id, event_name, timestamp"

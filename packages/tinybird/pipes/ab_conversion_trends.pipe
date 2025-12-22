@@ -1,0 +1,44 @@
+DESCRIPTION >
+    Returns daily conversion rates for each variation in an A/B test to power trend charts.
+
+NODE daily_exposures
+SQL >
+    %
+    SELECT
+        formatDateTime(toStartOfDay(timestamp), '%Y-%m-%d') as date,
+        variation_name,
+        count(DISTINCT distinct_id) as daily_exposed
+    FROM evaluations
+    WHERE project_id = {{String(proj_id)}}
+      AND flag_key = {{String(flag_key)}}
+      AND environment_id = {{String(env_id)}}
+    GROUP BY date, variation_name
+
+NODE daily_conversions
+SQL >
+    %
+    SELECT
+        formatDateTime(toStartOfDay(timestamp), '%Y-%m-%d') as date,
+        e.variation_name,
+        count(DISTINCT ev.distinct_id) as daily_converted
+    FROM evaluations e
+    LEFT JOIN events ev ON e.distinct_id = ev.distinct_id
+        AND ev.event_name = {{String(goal_event, 'click')}}
+        AND ev.timestamp > e.timestamp
+    WHERE e.project_id = {{String(proj_id)}}
+      AND e.flag_key = {{String(flag_key)}}
+    GROUP BY date, variation_name
+
+NODE trend_results
+SQL >
+    SELECT
+        e.date,
+        e.variation_name,
+        e.daily_exposed,
+        coalesce(c.daily_converted, 0) as daily_converted,
+        if(e.daily_exposed > 0, daily_converted / e.daily_exposed, 0) as conversion_rate
+    FROM daily_exposures e
+    LEFT JOIN daily_conversions c ON e.date = c.date AND e.variation_name = c.variation_name
+    ORDER BY e.date ASC
+
+TYPE endpoint

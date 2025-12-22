@@ -1,0 +1,89 @@
+NODE daily_impressions
+SQL >
+    %
+    SELECT 
+        formatDateTime(toStartOfDay(timestamp), '%Y-%m-%d') as date,
+        count() as impressions
+    FROM evaluations
+    WHERE project_id = {{String(projectId)}}
+      AND timestamp >= now() - interval {{Int(days, 7)}} day
+    GROUP BY date
+    ORDER BY date ASC
+
+NODE flag_distribution
+SQL >
+    %
+    SELECT 
+        flag_key,
+        variation_name,
+        count() as total
+    FROM evaluations
+    WHERE project_id = {{String(projectId)}}
+      AND timestamp >= now() - interval {{Int(days, 7)}} day
+    GROUP BY flag_key, variation_name
+
+NODE daily_variation_pivoted
+DESCRIPTION > Pivots variations into columns: { date, variationA: 10, variationB: 20 }
+SQL >
+    %
+    SELECT
+        formatDateTime(toStartOfDay(timestamp), '%Y-%m-%d') as date,
+        variation_name,
+        count() as val
+    FROM evaluations
+    WHERE project_id = {{String(projectId)}}
+      AND timestamp >= now() - interval {{Int(days, 7)}} day
+    GROUP BY date, variation_name
+
+NODE top_flags_pivoted
+DESCRIPTION > Pivots top flag keys into columns
+SQL >
+    %
+    SELECT
+        formatDateTime(toStartOfDay(timestamp), '%Y-%m-%d') as date,
+        flag_key,
+        count() as val
+    FROM evaluations
+    WHERE project_id = {{String(projectId)}}
+      AND timestamp >= now() - interval {{Int(days, 7)}} day
+    GROUP BY date, flag_key
+
+NODE combined_output
+SQL >
+    SELECT 
+        date, 
+        impressions, 
+        CAST(NULL, 'Nullable(String)') as flag_key, 
+        CAST(NULL, 'Nullable(String)') as variation_name, 
+        CAST(NULL, 'Nullable(UInt64)') as total, 
+        CAST(NULL, 'Nullable(UInt64)') as val
+    FROM daily_impressions
+    UNION ALL
+    SELECT 
+        CAST(NULL, 'Nullable(String)') as date, 
+        NULL as impressions, 
+        flag_key, 
+        variation_name, 
+        total, 
+        NULL as val
+    FROM flag_distribution
+    UNION ALL
+    SELECT 
+        date, 
+        NULL as impressions, 
+        CAST(NULL, 'Nullable(String)') as flag_key, 
+        variation_name, 
+        NULL as total, 
+        val
+    FROM daily_variation_pivoted
+    UNION ALL
+    SELECT 
+        date, 
+        NULL as impressions, 
+        flag_key, 
+        CAST(NULL, 'Nullable(String)') as variation_name, 
+        NULL as total, 
+        val
+    FROM top_flags_pivoted
+
+TYPE endpoint

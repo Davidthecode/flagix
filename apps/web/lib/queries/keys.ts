@@ -21,4 +21,15 @@ export const QUERY_KEYS = {
     environmentName: string | null,
     page: number
   ) => ["audit-logs", projectId, environmentName, page],
+
+  ANALYTICS_USAGE: (projectId: string, timeRange: string) => [
+    "analytics-usage",
+    projectId,
+    timeRange,
+  ],
+  ANALYTICS_AB_TESTS: (projectId: string, timeRange: string) => [
+    "analytics-ab-tests",
+    projectId,
+    timeRange,
+  ],
 };

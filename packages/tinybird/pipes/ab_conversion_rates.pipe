@@ -1,0 +1,32 @@
+DESCRIPTION >
+    Calculates conversion rates for A/B tests, ensuring events happened after flag exposure.
+
+NODE unique_exposures
+SQL >
+    %
+    SELECT
+        distinct_id,
+        variation_name,
+        min(timestamp) as first_exposed_at
+    FROM evaluations
+    WHERE project_id = {{String(proj_id)}}
+      AND flag_key = {{String(flag_key)}}
+      AND environment_id = {{String(env_id)}}
+    GROUP BY distinct_id, variation_name
+
+NODE conversion_stats
+SQL >
+    %
+    SELECT
+        e.variation_name,
+        count(DISTINCT e.distinct_id) as total_exposed,
+        count(DISTINCT ev.distinct_id) as total_converted,
+        if(total_exposed > 0, total_converted / total_exposed, 0) as conversion_rate
+    FROM unique_exposures e
+    LEFT JOIN events ev ON e.distinct_id = ev.distinct_id
+        AND ev.project_id = {{String(proj_id)}}
+        AND ev.event_name = {{String(goal_event, 'click')}}
+        AND ev.timestamp >= e.first_exposed_at
+    GROUP BY e.variation_name
+
+TYPE endpoint

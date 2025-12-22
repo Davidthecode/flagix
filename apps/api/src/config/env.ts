@@ -12,4 +12,5 @@ export const env = {
   DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID,
   DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET,
   REDIS_URL: process.env.REDIS_URL,
+  TINYBIRD_TOKEN: process.env.TINYBIRD_TOKEN,
 };

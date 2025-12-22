@@ -16,7 +16,7 @@ export const HeroSection = () => (
     </div>
 
     {/* Glow Orb */}
-    <div className="-z-10 -translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2 h-[400px] w-[600px] rounded-full bg-blue-100/50 blur-[120px]" />
+    <div className="absolute top-1/2 left-1/2 -z-10 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-100/50 blur-[120px]" />
 
     <div className="container-landing relative z-20 mx-auto px-6 text-center">
       <div className="group inline-flex items-center space-x-2 rounded-full border border-gray-300/50 bg-white/50 px-3 py-1 backdrop-blur-sm transition-all hover:border-gray-400">

@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { type Response, Router } from "express";
 import { env as environmentVariable } from "@/config/env";
 import { PROJECT_ADMIN_ROLES } from "@/constants/project";
+import { calculateAbStats } from "@/lib/analytics/stats";
 import {
   createEnvironmentSchema,
   createProjectSchema,
@@ -14,7 +15,9 @@ import {
 } from "@/lib/validations/project";
 import { resolveRoleByProjectParams } from "@/middleware/resolve-role";
 import { verifyRole } from "@/middleware/verify-role";
+import type { DailyConversionData, TinybirdRow } from "@/types/analytics";
 import type { RequestWithSession } from "@/types/request";
+import { pivotAnalyticsData } from "@/utils/analytics";
 import { sendProjectInviteEmail } from "@/utils/project";
 
 const router = Router();
@@ -1354,6 +1357,164 @@ router.post(
       res
         .status(500)
         .json({ error: "Failed to process invitation acceptance." });
+    }
+  }
+);
+
+router.get(
+  "/:projectId/analytics/usage",
+  verifyRole.VIEWER,
+  async (req: RequestWithSession, res: Response) => {
+    const { projectId } = req.params;
+    const { timeRange = "7d" } = req.query;
+    let days: number;
+    if (timeRange === "30d") {
+      days = 30;
+    } else if (timeRange === "3m") {
+      days = 90;
+    } else {
+      days = 7;
+    }
+
+    try {
+      const tbUrl = `https://api.europe-west2.gcp.tinybird.co/v0/pipes/usage_analytics.json?projectId=${projectId}&days=${days}`;
+      const response = await fetch(tbUrl, {
+        headers: { Authorization: `Bearer ${process.env.TINYBIRD_TOKEN}` },
+      });
+
+      if (!response.ok) {
+        console.error(
+          "Tinybird API error:",
+          response.status,
+          response.statusText
+        );
+        throw new Error(
+          `Tinybird API returned ${response.status}: ${response.statusText}`
+        );
+      }
+
+      const jsonResponse = await response.json();
+      const data = jsonResponse.data || [];
+
+      console.log("data from tinybird", data);
+
+      const safeData = Array.isArray(data) ? data : [];
+
+      res.json({
+        dailyImpressions:
+          safeData.filter(
+            (r: DailyConversionData) => r.impressions !== undefined
+          ) || [],
+        flagDistribution:
+          safeData.filter(
+            (r: DailyConversionData) => r.flag_key && r.total !== undefined
+          ) || [],
+        dailyVariationUsageProjectWide: pivotAnalyticsData(
+          safeData.filter(
+            (r): r is TinybirdRow & { variation_name: string } =>
+              !!r.variation_name
+          ),
+          "variation_name",
+          "val"
+        ),
+        dailyTopFlagImpressions: pivotAnalyticsData(
+          safeData.filter(
+            (r): r is TinybirdRow & { flag_key: string } => !!r.flag_key
+          ),
+          "flag_key",
+          "val"
+        ),
+      });
+    } catch (error) {
+      console.error("Failed to get usage analytics:", error);
+      res.status(500).json({ error: "Failed to get usage analytics" });
+    }
+  }
+);
+
+router.get(
+  "/:projectId/analytics/ab-tests",
+  verifyRole.VIEWER,
+  async (req: RequestWithSession, res: Response) => {
+    const { projectId } = req.params;
+
+    try {
+      const experiments = await db.environmentRule.findMany({
+        where: { flag: { projectId }, type: "a/b" },
+        include: { flag: true, environment: true },
+      });
+
+      const results = await Promise.all(
+        experiments.map(async (exp) => {
+          const summaryUrl = `https://api.europe-west2.gcp.tinybird.co/v0/pipes/ab_conversion_rates.json?proj_id=${projectId}&flag_key=${exp.flag.key}&env_id=${exp.environmentId}`;
+          const trendUrl = `https://api.europe-west2.gcp.tinybird.co/v0/pipes/ab_conversion_trends.json?proj_id=${projectId}&flag_key=${exp.flag.key}&env_id=${exp.environmentId}`;
+
+          const [summaryRes, trendRes] = await Promise.all([
+            fetch(summaryUrl, {
+              headers: {
+                Authorization: `Bearer ${process.env.TINYBIRD_TOKEN}`,
+              },
+            }),
+            fetch(trendUrl, {
+              headers: {
+                Authorization: `Bearer ${process.env.TINYBIRD_TOKEN}`,
+              },
+            }),
+          ]);
+
+          const summary = await summaryRes.json();
+          const trend = await trendRes.json();
+
+          const control = summary.data[0];
+
+          const variations = summary.data.map((v: DailyConversionData) => {
+            const stats = calculateAbStats(
+              Number(control.total_exposed),
+              Number(control.total_converted),
+              Number(v.total_exposed),
+              Number(v.total_converted)
+            );
+
+            return {
+              name: v.variation_name,
+              conversions: v.total_converted,
+              participants: v.total_exposed,
+              conversionRate: v.conversion_rate,
+              lift: stats.lift,
+              significance: stats.significance,
+              status: (() => {
+                if (stats.significance > 0.95 && stats.lift > 0) {
+                  return "winning" as const;
+                }
+                if (stats.significance > 0.95 && stats.lift < 0) {
+                  return "losing" as const;
+                }
+                return "tie" as const;
+              })(),
+            };
+          });
+
+          return {
+            experimentName: exp.flag.description || exp.flag.key,
+            flagKey: exp.flag.key,
+            metric: "Conversion Rate",
+            controlVariation: control.variation_name,
+            dailyTrend: trend.data,
+            environmentResults: [
+              {
+                environmentName: exp.environment.name,
+                environmentId: exp.environmentId,
+                variations,
+              },
+            ],
+          };
+        })
+      );
+
+      res.json(results);
+    } catch (error) {
+      console.error("Failed to get A/B test analytics:", error);
+      res.status(500).json({ error: "Failed to get A/B test analytics" });
     }
   }
 );

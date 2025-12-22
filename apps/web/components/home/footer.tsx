@@ -34,7 +34,7 @@ export const Footer = () => {
                 { icon: FaGithub, href: "https://github.com/davidthecode" },
               ].map((social) => (
                 <a
-                  className="hover:-translate-y-0.5 rounded-lg border border-black/10 bg-black/5 p-2 transition-all hover:bg-black/10"
+                  className="rounded-lg border border-black/10 bg-black/5 p-2 transition-all hover:-translate-y-0.5 hover:bg-black/10"
                   href={social.href}
                   key={social.href}
                   target="_blank"

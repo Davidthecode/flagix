@@ -1,32 +1,95 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ABTestMetrics } from "@/components/analytics/ab-test-metrics";
-import {
-  mockABTestResults,
-  mockFlagUsageData,
-} from "@/components/analytics/analytics-mocks";
+import { AnalyticsContentSkeleton } from "@/components/analytics/analytics-content-skeleton";
 import { AnalyticsTabs } from "@/components/analytics/analytics-tab";
 import { FlagUsageMetrics } from "@/components/analytics/flag-usage-metrics";
+import { useABTestMetrics, useFlagUsageMetrics } from "@/lib/queries/analytics";
+import { useProject } from "@/providers/project";
 import type { AnalyticsTab, TimeRange } from "@/types/analytics";
 
 export default function AnalyticsPageClient() {
+  const { projectId } = useProject();
   const [selectedTab, setSelectedTab] = useState<AnalyticsTab>("usage");
   const [timeRange, setTimeRange] = useState<TimeRange>("7d");
-  const [selectedFlagKey, setSelectedFlagKey] = useState<string>(
-    mockFlagUsageData.flagDistribution[0]?.flagKey || ""
-  );
+  const [selectedFlagKey, setSelectedFlagKey] = useState<string>("");
   const [selectedExperimentKey, setSelectedExperimentKey] = useState<
     string | null
   >(null);
 
-  const usageData = mockFlagUsageData;
-  const abTestResults = mockABTestResults;
-  const isLoading = false;
+  const {
+    data: usageData,
+    isLoading: isLoadingUsage,
+    isFetching: isFetchingUsage,
+  } = useFlagUsageMetrics(projectId, timeRange);
 
-  if (isLoading) {
-    return <p>Loading analytics...</p>;
-  }
+  const {
+    data: abTestResults = [],
+    isLoading: isLoadingABTests,
+    isFetching: isFetchingABTests,
+  } = useABTestMetrics(projectId, timeRange);
+
+  useEffect(() => {
+    if (
+      usageData?.flagDistribution &&
+      usageData.flagDistribution.length > 0 &&
+      !selectedFlagKey
+    ) {
+      setSelectedFlagKey(usageData.flagDistribution[0]?.flagKey || "");
+    }
+  }, [usageData, selectedFlagKey]);
+
+  const renderContent = useMemo(() => {
+    if (selectedTab === "usage") {
+      if (isLoadingUsage) {
+        return <AnalyticsContentSkeleton />;
+      }
+      if (usageData) {
+        return (
+          <FlagUsageMetrics
+            allFlags={usageData.flagDistribution}
+            data={usageData}
+            isLoading={isFetchingUsage}
+            selectedFlagKey={selectedFlagKey}
+            setSelectedFlagKey={setSelectedFlagKey}
+            setTimeRange={setTimeRange}
+            timeRange={timeRange}
+          />
+        );
+      }
+      return null;
+    }
+
+    if (selectedTab === "ab-test") {
+      if (isLoadingABTests) {
+        return <AnalyticsContentSkeleton />;
+      }
+      return (
+        <ABTestMetrics
+          isLoading={isFetchingABTests}
+          results={abTestResults}
+          selectedExperimentKey={selectedExperimentKey}
+          setSelectedExperimentKey={setSelectedExperimentKey}
+          setTimeRange={setTimeRange}
+          timeRange={timeRange}
+        />
+      );
+    }
+
+    return null;
+  }, [
+    selectedTab,
+    isLoadingUsage,
+    isLoadingABTests,
+    usageData,
+    isFetchingUsage,
+    isFetchingABTests,
+    selectedFlagKey,
+    selectedExperimentKey,
+    abTestResults,
+    timeRange,
+  ]);
 
   return (
     <div className="py-6">
@@ -47,29 +110,7 @@ export default function AnalyticsPageClient() {
           setSelectedTab={setSelectedTab}
         />
 
-        <div className="">
-          {selectedTab === "usage" && (
-            <FlagUsageMetrics
-              allFlags={usageData.flagDistribution}
-              data={usageData}
-              isLoading={isLoading}
-              selectedFlagKey={selectedFlagKey}
-              setSelectedFlagKey={setSelectedFlagKey}
-              setTimeRange={setTimeRange}
-              timeRange={timeRange}
-            />
-          )}
-          {selectedTab === "ab-test" && (
-            <ABTestMetrics
-              isLoading={isLoading}
-              results={abTestResults}
-              selectedExperimentKey={selectedExperimentKey}
-              setSelectedExperimentKey={setSelectedExperimentKey}
-              setTimeRange={setTimeRange}
-              timeRange={timeRange}
-            />
-          )}
-        </div>
+        <div>{renderContent}</div>
       </div>
     </div>
   );

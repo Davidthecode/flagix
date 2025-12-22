@@ -1,0 +1,15 @@
+DESCRIPTION >
+    Stores every feature flag evaluation from the SDKs.
+
+SCHEMA >
+    `timestamp` DateTime64(3) `json:$.timestamp`,
+    `project_id` String `json:$.project_id`,
+    `environment_id` String `json:$.environment_id`,
+    `flag_key` LowCardinality(String) `json:$.flag_key`,
+    `variation_name` String `json:$.variation_name`,
+    `distinct_id` String `json:$.distinct_id`,
+    `context` String `json:$.context`
+
+ENGINE "MergeTree"
+ENGINE_PARTITION_KEY "toYYYYMM(timestamp)"
+ENGINE_SORTING_KEY "project_id, environment_id, flag_key, timestamp"

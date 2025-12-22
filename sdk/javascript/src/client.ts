@@ -245,6 +245,40 @@ export class FlagixClient {
   }
 
   /**
+   * Records a custom event (conversion) for analytics and A/B testing.
+   */
+  track(
+    eventName: string,
+    properties?: Record<string, unknown>,
+    contextOverrides?: EvaluationContext
+  ): void {
+    const url = `${this.apiBaseUrl}/api/track/event`;
+
+    const finalContext = { ...this.context, ...contextOverrides };
+    const distinctId =
+      finalContext.userId ?? finalContext.distinctId ?? "anonymous";
+
+    const payload = {
+      apiKey: this.apiKey,
+      event_name: eventName,
+      distinctId,
+      properties: properties || {},
+      timestamp: new Date().toISOString(),
+    };
+
+    const payloadJson = JSON.stringify(payload);
+
+    if (typeof navigator !== "undefined" && navigator.sendBeacon) {
+      const blob = new Blob([payloadJson], { type: "application/json" });
+      if (navigator.sendBeacon(url, blob)) {
+        return;
+      }
+    }
+
+    this.fireAndForgetFetch(url, payloadJson);
+  }
+
+  /**
    * Closes the Server-Sent Events (SSE) connection and cleans up resources.
    */
   close(): void {
@@ -275,6 +309,7 @@ export class FlagixClient {
       variationName: result.name,
       variationValue: result.value,
       variationType: result.type,
+      distinctId: context.userId ?? context.distinctId ?? "anonymous",
       evaluationContext: context,
       evaluatedAt: new Date().toISOString(),
     };

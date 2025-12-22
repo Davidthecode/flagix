@@ -2,44 +2,21 @@
 
 import { Button } from "@flagix/ui/components/button";
 import { cn } from "@flagix/ui/lib/utils";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ABTestChart } from "@/components/analytics/ab-test-chart";
 import { ABTestVariationTable } from "@/components/analytics/ab-test-variation-table";
-import { dummyDailyConversionRates } from "@/components/analytics/analytics-mocks";
 import { TimeRangeSelector } from "@/components/analytics/time-range-selector";
-import type { TimeRange } from "@/types/analytics";
-
-type VariationMetrics = {
-  name: string;
-  conversions: number;
-  participants: number;
-  conversionRate: number;
-  lift: number;
-  significance: number;
-  status: "winning" | "losing" | "tie";
-};
-
-type EnvironmentResult = {
-  environmentName: string;
-  environmentId: string;
-  variations: VariationMetrics[];
-};
-
-type ABTestResult = {
-  experimentName: string;
-  flagKey: string;
-  metric: string;
-  controlVariation: string;
-  environmentResults: EnvironmentResult[];
-};
+import type { ABTestResult } from "@/lib/queries/analytics";
+import type { DailyConversionData, TimeRange } from "@/types/analytics";
+import { AnalyticsContentSkeleton } from "./analytics-content-skeleton";
 
 type ABTestMetricsProps = {
   results: ABTestResult[];
   isLoading: boolean;
   timeRange: TimeRange;
   setTimeRange: (value: TimeRange) => void;
-  selectedExperimentKey: string;
-  setSelectedExperimentKey: (key: string) => void;
+  selectedExperimentKey: string | null;
+  setSelectedExperimentKey: (key: string | null) => void;
 };
 
 export function ABTestMetrics({
@@ -47,15 +24,30 @@ export function ABTestMetrics({
   isLoading,
   timeRange,
   setTimeRange,
+  selectedExperimentKey,
+  setSelectedExperimentKey,
 }: ABTestMetricsProps) {
-  const [selectedFlagKey, setSelectedFlagKey] = useState<string>(
-    results[0]?.flagKey || ""
-  );
+  const [selectedFlagKey, setSelectedFlagKey] = useState<string>("");
   const [selectedEnvironmentName, setSelectedEnvironmentName] =
-    useState<string>(results[0]?.environmentResults[0]?.environmentName || "");
+    useState<string>("");
+
+  useEffect(() => {
+    if (results.length > 0) {
+      const keyToSelect = selectedExperimentKey || results[0]?.flagKey || "";
+      setSelectedFlagKey(keyToSelect);
+
+      const experiment =
+        results.find((exp) => exp.flagKey === keyToSelect) || results[0];
+      if (experiment?.environmentResults[0]) {
+        setSelectedEnvironmentName(
+          experiment.environmentResults[0].environmentName
+        );
+      }
+    }
+  }, [results, selectedExperimentKey]);
 
   if (isLoading) {
-    return <p>Loading A/B test results...</p>;
+    return <AnalyticsContentSkeleton />;
   }
 
   if (results.length === 0) {
@@ -75,10 +67,35 @@ export function ABTestMetrics({
       (env) => env.environmentName === selectedEnvironmentName
     );
 
+  const chartData = selectedExperiment?.dailyTrend
+    ? Object.values(
+        selectedExperiment.dailyTrend.reduce(
+          (
+            acc: Record<string, DailyConversionData>,
+            row: {
+              date: string;
+              variation_name: string;
+              conversion_rate: number;
+            }
+          ) => {
+            if (!acc[row.date]) {
+              acc[row.date] = { date: row.date };
+            }
+            acc[row.date][row.variation_name] = row.conversion_rate;
+            return acc;
+          },
+          {}
+        )
+      ).sort((a: DailyConversionData, b: DailyConversionData) =>
+        a.date.localeCompare(b.date)
+      )
+    : [];
+
   const TABLE_GRID_COLS = "grid grid-cols-[1.2fr_repeat(6,1fr)]";
 
   const handleFlagSelect = (flagKey: string) => {
     setSelectedFlagKey(flagKey);
+    setSelectedExperimentKey(flagKey);
     const newExperiment = results.find((exp) => exp.flagKey === flagKey);
     if (newExperiment?.environmentResults.length) {
       setSelectedEnvironmentName(
@@ -182,11 +199,12 @@ export function ABTestMetrics({
               </h4>
               <div className="rounded-lg border p-4">
                 <ABTestChart
-                  controlKey={selectedExperiment.controlVariation}
-                  dailyData={dummyDailyConversionRates}
-                  variationKeys={selectedEnvironmentResults.variations.map(
-                    (v) => v.name
-                  )}
+                  controlKey={selectedExperiment?.controlVariation || ""}
+                  dailyData={chartData}
+                  variationKeys={
+                    selectedEnvironmentResults?.variations.map((v) => v.name) ||
+                    []
+                  }
                 />
               </div>
             </div>

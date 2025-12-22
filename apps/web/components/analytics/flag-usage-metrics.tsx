@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@flagix/ui/components/select";
 import { format } from "date-fns";
-import { Clock, TrendingUp, Users, Zap } from "lucide-react";
+import { Clock, TrendingUp, Users } from "lucide-react";
 import {
   CartesianGrid,
   Legend,
@@ -23,26 +23,15 @@ import {
 } from "recharts";
 import { TimeRangeSelector } from "@/components/analytics/time-range-selector";
 import { CHART_LINE_COLORS } from "@/lib/constants";
+import type { FlagUsageData } from "@/lib/queries/analytics";
 import type { TimeRange } from "@/types/analytics";
 import { CustomTooltipForFlagUageMetrics } from "@/utils/chart";
+import { AnalyticsContentSkeleton } from "./analytics-content-skeleton";
 
 type FlagSummary = { flagKey: string; total: number };
-type DailyUsage = { date: string; impressions: number };
-type FlagVariationDistribution = {
-  flagKey: string;
-  on: number;
-  off: number;
-  total: number;
-};
-type MockUsageData = {
-  dailyImpressions: DailyUsage[];
-  flagDistribution: FlagVariationDistribution[];
-  dailyVariationUsageProjectWide: Array<{ [key: string]: number | string }>;
-  dailyTopFlagImpressions: Array<{ [key: string]: number | string }>;
-};
 
 type FlagUsageMetricsProps = {
-  data: MockUsageData;
+  data: FlagUsageData;
   isLoading: boolean;
   timeRange: TimeRange;
   setTimeRange: (value: TimeRange) => void;
@@ -68,24 +57,38 @@ export function FlagUsageMetrics({
   setTimeRange,
 }: FlagUsageMetricsProps) {
   if (isLoading) {
-    return <p>Loading usage data...</p>;
+    return <AnalyticsContentSkeleton />;
+  }
+
+  if (!data || data.flagDistribution.length === 0) {
+    return (
+      <div className="py-10 text-center text-gray-500">
+        No flag usage data available for the selected time range.
+      </div>
+    );
   }
 
   const totalImpressions = data.flagDistribution.reduce(
-    (sum, f) => sum + f.total,
+    (sum, f) => sum + (typeof f.total === "number" ? f.total : 0),
     0
   );
   const totalFlags = data.flagDistribution.length;
-  const staleFlags = data.flagDistribution.filter((f) => f.total < 1000).length;
-  const avgResponseTime = "12ms";
+
+  const staleFlags = data.flagDistribution.filter(
+    (f) => (typeof f.total === "number" ? f.total : 0) < 1000
+  ).length;
 
   const topFlagsKeys = data.flagDistribution
-    .sort((a, b) => b.total - a.total)
+    .sort(
+      (a, b) =>
+        (typeof b.total === "number" ? b.total : 0) -
+        (typeof a.total === "number" ? a.total : 0)
+    )
     .slice(0, 5)
     .map((f) => f.flagKey);
 
-  const topFlagsChartData = data.dailyTopFlagImpressions;
-  const chartData = data.dailyVariationUsageProjectWide;
+  const topFlagsChartData = data.dailyTopFlagImpressions || [];
+  const chartData = data.dailyVariationUsageProjectWide || [];
   let chartTitle = "Project-Wide Impressions by Variation";
   let variationKeys: string[] = [];
 
@@ -104,30 +107,24 @@ export function FlagUsageMetrics({
       <div className="mb-4 flex justify-end">
         <TimeRangeSelector setTimeRange={setTimeRange} timeRange={timeRange} />
       </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <MetricCard
-          description="Total flag evaluation requests in the last 7 days."
+          description={`Total flag evaluation requests in the selected time range (${timeRange}).`}
           icon={Users}
           title="Total Impressions"
           value={totalImpressions.toLocaleString()}
         />
         <MetricCard
-          description="Number of flags with traffic in the last 7 days."
+          description={`Number of flags with traffic in the selected time range (${timeRange}).`}
           icon={TrendingUp}
           title="Active Flags"
           value={totalFlags.toString()}
         />
         <MetricCard
-          description="Flags with traffic below the threshold (candidates for deletion)."
+          description="Flags with traffic below 1,000 impressions (candidates for deletion)."
           icon={Clock}
           title="Stale Flags"
           value={staleFlags.toString()}
-        />
-        <MetricCard
-          description="Average response time for flag evaluation SDK requests."
-          icon={Zap}
-          title="Avg Response Time"
-          value={avgResponseTime}
         />
       </div>
 
