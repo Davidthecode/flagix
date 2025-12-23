@@ -36,7 +36,7 @@ export default function AnalyticsPageClient() {
       usageData.flagDistribution.length > 0 &&
       !selectedFlagKey
     ) {
-      setSelectedFlagKey(usageData.flagDistribution[0]?.flagKey || "");
+      setSelectedFlagKey(usageData.flagDistribution[0]?.flag_key || "");
     }
   }, [usageData, selectedFlagKey]);
 

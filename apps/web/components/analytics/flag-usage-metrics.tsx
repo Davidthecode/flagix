@@ -30,7 +30,7 @@ import { pivotAnalyticsData } from "@/utils/analytics";
 import { CustomTooltipForFlagUageMetrics } from "@/utils/chart";
 import { AnalyticsContentSkeleton } from "./analytics-content-skeleton";
 
-type FlagSummary = { flagKey: string; total: number };
+type FlagSummary = { flag_key: string; total: number };
 
 type FlagUsageMetricsProps = {
   data: FlagUsageData;
@@ -79,7 +79,18 @@ export function FlagUsageMetrics({
     if (variationChartData.length === 0) {
       return [];
     }
-    return Object.keys(variationChartData[0]).filter((k) => k !== "date");
+
+    const keys = new Set<string>();
+
+    for (const day of variationChartData) {
+      for (const key of Object.keys(day)) {
+        if (key !== "date") {
+          keys.add(key);
+        }
+      }
+    }
+
+    return Array.from(keys);
   }, [variationChartData]);
 
   if (isLoading) {
@@ -94,7 +105,7 @@ export function FlagUsageMetrics({
   const topFlagsKeys = data.flagDistribution
     .sort((a, b) => (Number(b.total) || 0) - (Number(a.total) || 0))
     .slice(0, 5)
-    .map((f) => f.flagKey);
+    .map((f) => f.flag_key);
 
   const chartTitle =
     !selectedFlagKey || selectedFlagKey === "project-wide"
@@ -169,8 +180,8 @@ export function FlagUsageMetrics({
                 Project-Wide Aggregate
               </SelectItem>
               {allFlags.map((flag) => (
-                <SelectItem key={flag.flagKey} value={flag.flagKey}>
-                  {flag.flagKey}
+                <SelectItem key={flag.flag_key} value={flag.flag_key}>
+                  {flag.flag_key}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -188,8 +199,9 @@ export function FlagUsageMetrics({
               <Legend />
               {variationKeys.map((key, index) => (
                 <Line
+                  connectNulls
                   dataKey={key}
-                  dot={false}
+                  dot={true}
                   key={key}
                   name={key}
                   stroke={CHART_LINE_COLORS[index % CHART_LINE_COLORS.length]}
@@ -215,8 +227,9 @@ export function FlagUsageMetrics({
               <Legend />
               {topFlagsKeys.map((key, index) => (
                 <Line
+                  connectNulls
                   dataKey={key}
-                  dot={false}
+                  dot={true}
                   key={key}
                   stroke={CHART_LINE_COLORS[index % CHART_LINE_COLORS.length]}
                   type="monotone"

@@ -10,7 +10,7 @@ import type { TimeRange } from "@/types/analytics";
 export type DailyUsage = { date: string; impressions: number };
 
 export type FlagVariationDistribution = {
-  flagKey: string;
+  flag_key: string;
   [variationName: string]: string | number;
   total: number;
 };
