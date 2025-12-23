@@ -1,4 +1,7 @@
 NODE daily_impressions
+DESCRIPTION >
+    Calculates the total number of evaluation requests per day for the selected project and time range.
+
 SQL >
     %
     SELECT 
@@ -11,6 +14,9 @@ SQL >
     ORDER BY date ASC
 
 NODE flag_distribution
+DESCRIPTION >
+    Provides a summary of total traffic per flag and variation.
+
 SQL >
     %
     SELECT 
@@ -23,20 +29,25 @@ SQL >
     GROUP BY flag_key, variation_name
 
 NODE daily_variation_pivoted
-DESCRIPTION > Pivots variations into columns: { date, variationA: 10, variationB: 20 }
+DESCRIPTION >
+    Breakdown of traffic by date, flag, and variation.
+
 SQL >
     %
     SELECT
         formatDateTime(toStartOfDay(timestamp), '%Y-%m-%d') as date,
+        flag_key,
         variation_name,
         count() as val
     FROM evaluations
     WHERE project_id = {{String(projectId)}}
       AND timestamp >= now() - interval {{Int(days, 7)}} day
-    GROUP BY date, variation_name
+    GROUP BY date, flag_key, variation_name
 
 NODE top_flags_pivoted
-DESCRIPTION > Pivots top flag keys into columns
+DESCRIPTION >
+    Aggregates daily traffic per flag key. 
+
 SQL >
     %
     SELECT
@@ -49,6 +60,9 @@ SQL >
     GROUP BY date, flag_key
 
 NODE combined_output
+DESCRIPTION >
+    Uses UNION ALL to combine all metrics into a single response stream.
+
 SQL >
     SELECT 
         date, 
@@ -71,7 +85,7 @@ SQL >
     SELECT 
         date, 
         NULL as impressions, 
-        CAST(NULL, 'Nullable(String)') as flag_key, 
+        flag_key, 
         variation_name, 
         NULL as total, 
         val

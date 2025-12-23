@@ -46,30 +46,3 @@ export function pivotAnalyticsData(
     a.date.localeCompare(b.date)
   );
 }
-
-export function fillMissingDates(
-  rows: AnalyticsRow[],
-  days: number
-): Array<{ date: string; impressions: number }> {
-  const endDate = new Date();
-  const startDate = subDays(endDate, days - 1);
-  const dateRange = eachDayOfInterval({ start: startDate, end: endDate });
-
-  const resultObj: Record<string, { date: string; impressions: number }> = {};
-
-  for (const day of dateRange) {
-    const dateStr = format(day, "yyyy-MM-dd");
-    resultObj[dateStr] = { date: dateStr, impressions: 0 };
-  }
-
-  if (rows && Array.isArray(rows)) {
-    for (const row of rows) {
-      const date = row.date;
-      if (date && resultObj[date]) {
-        resultObj[date].impressions = Number(row.impressions) || 0;
-      }
-    }
-  }
-
-  return Object.values(resultObj).sort((a, b) => a.date.localeCompare(b.date));
-}

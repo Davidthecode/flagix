@@ -18,7 +18,12 @@ export type FlagVariationDistribution = {
 export type FlagUsageData = {
   dailyImpressions: DailyUsage[];
   flagDistribution: FlagVariationDistribution[];
-  dailyVariationUsageProjectWide: Array<{ [key: string]: number | string }>;
+  dailyVariationUsage: Array<{
+    date: string;
+    flag_key: string;
+    variation_name: string;
+    val: number;
+  }>;
   dailyTopFlagImpressions: Array<{ [key: string]: number | string }>;
 };
 

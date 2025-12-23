@@ -15,9 +15,9 @@ import {
 } from "@/lib/validations/project";
 import { resolveRoleByProjectParams } from "@/middleware/resolve-role";
 import { verifyRole } from "@/middleware/verify-role";
-import type { DailyConversionData, TinybirdRow } from "@/types/analytics";
+import type { DailyConversionData } from "@/types/analytics";
 import type { RequestWithSession } from "@/types/request";
-import { pivotAnalyticsData } from "@/utils/analytics";
+import { fillMissingDates, pivotAnalyticsData } from "@/utils/analytics";
 import { sendProjectInviteEmail } from "@/utils/project";
 
 const router = Router();
@@ -1367,6 +1367,7 @@ router.get(
   async (req: RequestWithSession, res: Response) => {
     const { projectId } = req.params;
     const { timeRange = "7d" } = req.query;
+
     let days: number;
     if (timeRange === "30d") {
       days = 30;
@@ -1400,30 +1401,31 @@ router.get(
 
       const safeData = Array.isArray(data) ? data : [];
 
+      const dailyImpressions = fillMissingDates(
+        safeData.filter((r) => r.impressions !== null),
+        days
+      );
+
+      const flagDistribution = safeData.filter(
+        (r) => r.flag_key !== null && r.total !== null
+      );
+
+      const dailyTopFlagImpressions = pivotAnalyticsData(
+        safeData.filter((r) => r.flag_key && r.val && !r.variation_name),
+        "flag_key",
+        "val",
+        days
+      );
+
+      const dailyVariationUsage = safeData.filter(
+        (r) => r.variation_name !== null && r.val !== null
+      );
+
       res.json({
-        dailyImpressions:
-          safeData.filter(
-            (r: DailyConversionData) => r.impressions !== undefined
-          ) || [],
-        flagDistribution:
-          safeData.filter(
-            (r: DailyConversionData) => r.flag_key && r.total !== undefined
-          ) || [],
-        dailyVariationUsageProjectWide: pivotAnalyticsData(
-          safeData.filter(
-            (r): r is TinybirdRow & { variation_name: string } =>
-              !!r.variation_name
-          ),
-          "variation_name",
-          "val"
-        ),
-        dailyTopFlagImpressions: pivotAnalyticsData(
-          safeData.filter(
-            (r): r is TinybirdRow & { flag_key: string } => !!r.flag_key
-          ),
-          "flag_key",
-          "val"
-        ),
+        dailyImpressions,
+        flagDistribution,
+        dailyVariationUsage,
+        dailyTopFlagImpressions,
       });
     } catch (error) {
       console.error("Failed to get usage analytics:", error);

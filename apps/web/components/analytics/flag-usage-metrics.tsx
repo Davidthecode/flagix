@@ -11,6 +11,7 @@ import {
 } from "@flagix/ui/components/select";
 import { format } from "date-fns";
 import { Clock, TrendingUp, Users } from "lucide-react";
+import { useMemo } from "react";
 import {
   CartesianGrid,
   Legend,
@@ -25,6 +26,7 @@ import { TimeRangeSelector } from "@/components/analytics/time-range-selector";
 import { CHART_LINE_COLORS } from "@/lib/constants";
 import type { FlagUsageData } from "@/lib/queries/analytics";
 import type { TimeRange } from "@/types/analytics";
+import { pivotAnalyticsData } from "@/utils/analytics";
 import { CustomTooltipForFlagUageMetrics } from "@/utils/chart";
 import { AnalyticsContentSkeleton } from "./analytics-content-skeleton";
 
@@ -40,12 +42,7 @@ type FlagUsageMetricsProps = {
   setSelectedFlagKey: (key: string) => void;
 };
 
-const VARIATION_COLORS = {
-  on: CHART_LINE_COLORS[0],
-  off: CHART_LINE_COLORS[1],
-  primary: CHART_LINE_COLORS[0],
-  secondary: "#34D399",
-};
+const STALE_THRESHOLD = 100;
 
 export function FlagUsageMetrics({
   data,
@@ -56,75 +53,80 @@ export function FlagUsageMetrics({
   timeRange,
   setTimeRange,
 }: FlagUsageMetricsProps) {
+  let days = 7;
+  if (timeRange === "30d") {
+    days = 30;
+  } else if (timeRange === "3m") {
+    days = 90;
+  }
+
+  const variationChartData = useMemo(() => {
+    if (!data?.dailyVariationUsage) {
+      return [];
+    }
+
+    const isProjectWide =
+      !selectedFlagKey || selectedFlagKey === "project-wide";
+
+    const filteredRows = isProjectWide
+      ? data.dailyVariationUsage
+      : data.dailyVariationUsage.filter((r) => r.flag_key === selectedFlagKey);
+
+    return pivotAnalyticsData(filteredRows, "variation_name", "val", days);
+  }, [data.dailyVariationUsage, selectedFlagKey, days]);
+
+  const variationKeys = useMemo(() => {
+    if (variationChartData.length === 0) {
+      return [];
+    }
+    return Object.keys(variationChartData[0]).filter((k) => k !== "date");
+  }, [variationChartData]);
+
   if (isLoading) {
     return <AnalyticsContentSkeleton />;
   }
 
-  if (!data || data.flagDistribution.length === 0) {
-    return (
-      <div className="py-10 text-center text-gray-500">
-        No flag usage data available for the selected time range.
-      </div>
-    );
-  }
-
   const totalImpressions = data.flagDistribution.reduce(
-    (sum, f) => sum + (typeof f.total === "number" ? f.total : 0),
+    (sum, f) => sum + (Number(f.total) || 0),
     0
   );
-  const totalFlags = data.flagDistribution.length;
-
-  const staleFlags = data.flagDistribution.filter(
-    (f) => (typeof f.total === "number" ? f.total : 0) < 1000
-  ).length;
 
   const topFlagsKeys = data.flagDistribution
-    .sort(
-      (a, b) =>
-        (typeof b.total === "number" ? b.total : 0) -
-        (typeof a.total === "number" ? a.total : 0)
-    )
+    .sort((a, b) => (Number(b.total) || 0) - (Number(a.total) || 0))
     .slice(0, 5)
     .map((f) => f.flagKey);
 
-  const topFlagsChartData = data.dailyTopFlagImpressions || [];
-  const chartData = data.dailyVariationUsageProjectWide || [];
-  let chartTitle = "Project-Wide Impressions by Variation";
-  let variationKeys: string[] = [];
-
-  const allVariationKeys = Object.keys(
-    data.dailyVariationUsageProjectWide[0] || {}
-  ).filter((key) => key !== "date");
-
-  if (selectedFlagKey && selectedFlagKey !== "project-wide") {
-    chartTitle = `Impressions by Variation: '${selectedFlagKey}'`;
-  }
-
-  variationKeys = allVariationKeys;
+  const chartTitle =
+    !selectedFlagKey || selectedFlagKey === "project-wide"
+      ? "Project-Wide Impressions by Variation"
+      : `Impressions by Variation: '${selectedFlagKey}'`;
 
   return (
     <div className="space-y-6">
       <div className="mb-4 flex justify-end">
         <TimeRangeSelector setTimeRange={setTimeRange} timeRange={timeRange} />
       </div>
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <MetricCard
-          description={`Total flag evaluation requests in the selected time range (${timeRange}).`}
+          description={"Total requests in the selected time range."}
           icon={Users}
           title="Total Impressions"
           value={totalImpressions.toLocaleString()}
         />
         <MetricCard
-          description={`Number of flags with traffic in the selected time range (${timeRange}).`}
+          description={"Flags with traffic in this period."}
           icon={TrendingUp}
           title="Active Flags"
-          value={totalFlags.toString()}
+          value={data.flagDistribution.length.toString()}
         />
         <MetricCard
-          description="Flags with traffic below 1,000 impressions (candidates for deletion)."
+          description="Traffic below 100 impressions."
           icon={Clock}
           title="Stale Flags"
-          value={staleFlags.toString()}
+          value={data.flagDistribution
+            .filter((f) => (Number(f.total) || 0) < STALE_THRESHOLD)
+            .length.toString()}
         />
       </div>
 
@@ -134,27 +136,18 @@ export function FlagUsageMetrics({
             Overall Project Impression Trend
           </h3>
           <ResponsiveContainer height={300} width="100%">
-            <LineChart
-              data={data.dailyImpressions}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
+            <LineChart data={data.dailyImpressions}>
               <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" />
               <XAxis
                 dataKey="date"
-                stroke="#6b7280"
-                tickFormatter={(dateStr) => format(dateStr, "MMM dd")}
+                tickFormatter={(str) => format(str, "MMM dd")}
               />
-              <YAxis
-                domain={["auto", "auto"]}
-                stroke="#6b7280"
-                tickFormatter={(value) => value.toLocaleString()}
-              />
+              <YAxis tickFormatter={(val) => val.toLocaleString()} />
               <Tooltip content={CustomTooltipForFlagUageMetrics} />
               <Line
                 dataKey="impressions"
                 dot={false}
-                name="All Impressions"
-                stroke={VARIATION_COLORS.primary}
+                stroke={CHART_LINE_COLORS[0]}
                 strokeWidth={2}
                 type="monotone"
               />
@@ -164,40 +157,33 @@ export function FlagUsageMetrics({
 
         <AnalyticsCard className="flex flex-col space-y-4 p-5">
           <h3 className="font-semibold text-lg">{chartTitle}</h3>
-          <div className="w-fit">
-            <Select onValueChange={setSelectedFlagKey} value={selectedFlagKey}>
-              <SelectTrigger className="w-[220px]">
-                <SelectValue placeholder="Select Flag for Detail" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="project-wide">
-                  Project-Wide Aggregate
+          <Select
+            onValueChange={setSelectedFlagKey}
+            value={selectedFlagKey || "project-wide"}
+          >
+            <SelectTrigger className="w-[220px]">
+              <SelectValue placeholder="Select Flag" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="project-wide">
+                Project-Wide Aggregate
+              </SelectItem>
+              {allFlags.map((flag) => (
+                <SelectItem key={flag.flagKey} value={flag.flagKey}>
+                  {flag.flagKey}
                 </SelectItem>
-                {allFlags.map((flag) => (
-                  <SelectItem key={flag.flagKey} value={flag.flagKey}>
-                    {flag.flagKey}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              ))}
+            </SelectContent>
+          </Select>
 
           <ResponsiveContainer height={300} width="100%">
-            <LineChart
-              data={chartData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
+            <LineChart data={variationChartData}>
               <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" />
               <XAxis
                 dataKey="date"
-                stroke="#6b7280"
-                tickFormatter={(dateStr) => format(dateStr, "MMM dd")}
+                tickFormatter={(str) => format(str, "MMM dd")}
               />
-              <YAxis
-                domain={["auto", "auto"]}
-                stroke="#6b7280"
-                tickFormatter={(value) => value.toLocaleString()}
-              />
+              <YAxis />
               <Tooltip content={CustomTooltipForFlagUageMetrics} />
               <Legend />
               {variationKeys.map((key, index) => (
@@ -205,7 +191,7 @@ export function FlagUsageMetrics({
                   dataKey={key}
                   dot={false}
                   key={key}
-                  name={`Variation: ${key}`}
+                  name={key}
                   stroke={CHART_LINE_COLORS[index % CHART_LINE_COLORS.length]}
                   strokeWidth={2}
                   type="monotone"
@@ -216,28 +202,15 @@ export function FlagUsageMetrics({
         </AnalyticsCard>
 
         <AnalyticsCard className="p-5">
-          <h3 className="mb-4 font-semibold text-lg">
-            Top 5 Most Used Flags (Impression Volume)
-          </h3>
-          <div className="mb-2 text-gray-500 text-sm">
-            Showing: {topFlagsKeys.join(", ")}
-          </div>
+          <h3 className="mb-4 font-semibold text-lg">Top 5 Most Used Flags</h3>
           <ResponsiveContainer height={300} width="100%">
-            <LineChart
-              data={topFlagsChartData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
+            <LineChart data={data.dailyTopFlagImpressions}>
               <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" />
               <XAxis
                 dataKey="date"
-                stroke="#6b7280"
-                tickFormatter={(dateStr) => format(dateStr, "MMM dd")}
+                tickFormatter={(str) => format(str, "MMM dd")}
               />
-              <YAxis
-                domain={["auto", "auto"]}
-                stroke="#6b7280"
-                tickFormatter={(value) => value.toLocaleString()}
-              />
+              <YAxis />
               <Tooltip content={CustomTooltipForFlagUageMetrics} />
               <Legend />
               {topFlagsKeys.map((key, index) => (
@@ -245,7 +218,6 @@ export function FlagUsageMetrics({
                   dataKey={key}
                   dot={false}
                   key={key}
-                  name={key}
                   stroke={CHART_LINE_COLORS[index % CHART_LINE_COLORS.length]}
                   type="monotone"
                 />
