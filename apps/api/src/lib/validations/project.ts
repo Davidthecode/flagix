@@ -31,5 +31,8 @@ export const updateRoleSchema = z.object({
 });
 
 export const feedbackSchema = z.object({
-  feedback: z.string().min(1, "Feedback is required").max(5000, "Feedback must be less than 5000 characters"),
+  feedback: z
+    .string()
+    .min(1, "Feedback is required")
+    .max(5000, "Feedback must be less than 5000 characters"),
 });

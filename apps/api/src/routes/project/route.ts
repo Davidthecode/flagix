@@ -136,37 +136,36 @@ router.get("/", async (req: RequestWithSession, res: Response) => {
   }
 });
 
-router.post(
-  "/feedback",
-  async (req: RequestWithSession, res: Response) => {
-    const session = req.session;
+router.post("/feedback", async (req: RequestWithSession, res: Response) => {
+  const session = req.session;
 
-    if (!session || !session.user) {
-      return res.status(401).json({ error: "unauthenticated" });
-    }
-
-    const userEmail = session.user.email;
-    const userName = session.user.name;
-
-    try {
-      const body = feedbackSchema.parse(req.body);
-
-      await sendFeedbackEmail({
-        userEmail,
-        userName,
-        feedback: body.feedback,
-      });
-
-      res.status(200).json({ success: true, message: "Feedback submitted successfully" });
-    } catch (error) {
-      console.error("Failed to submit feedback:", error);
-      if (error instanceof Error && error.name === "ZodError") {
-        return res.status(400).json({ error: "Invalid feedback data" });
-      }
-      res.status(500).json({ error: "Failed to submit feedback" });
-    }
+  if (!session || !session.user) {
+    return res.status(401).json({ error: "unauthenticated" });
   }
-);
+
+  const userEmail = session.user.email;
+  const userName = session.user.name;
+
+  try {
+    const body = feedbackSchema.parse(req.body);
+
+    await sendFeedbackEmail({
+      userEmail,
+      userName,
+      feedback: body.feedback,
+    });
+
+    res
+      .status(200)
+      .json({ success: true, message: "Feedback submitted successfully" });
+  } catch (error) {
+    console.error("Failed to submit feedback:", error);
+    if (error instanceof Error && error.name === "ZodError") {
+      return res.status(400).json({ error: "Invalid feedback data" });
+    }
+    res.status(500).json({ error: "Failed to submit feedback" });
+  }
+});
 
 router.use("/:projectId", resolveRoleByProjectParams);
 
