@@ -1417,7 +1417,7 @@ router.get(
         dailyTopFlagImpressions,
       };
 
-      console.log("Final API Response:", JSON.stringify(finalResult, null, 2));
+      // console.log("Final API Response:", JSON.stringify(finalResult, null, 2));
 
       res.json(finalResult);
     } catch (error) {
@@ -1449,7 +1449,7 @@ router.get(
         include: { flag: true, environment: true },
       });
 
-      console.log("experiments in a/b analytics ==>", experiments);
+      // console.log("experiments in a/b analytics ==>", experiments);
 
       const results = await Promise.all(
         experiments.map(async (exp) => {
@@ -1491,8 +1491,8 @@ router.get(
             };
           }
 
-          console.log("summary data form tinybird ==>", summary);
-          console.log("trend data form tinybird ==>", trend);
+          // console.log("summary data form tinybird ==>", summary);
+          // console.log("trend data form tinybird ==>", trend);
 
           // Try to find variation named 'off' or 'control', otherwise take index 0
           const control =
@@ -1563,10 +1563,10 @@ router.get(
         new Set(results.map((r) => r.environmentResults[0].environmentName))
       ).sort();
 
-      console.log(
-        "results from a/b metrics ==>",
-        JSON.stringify(results, null, 2)
-      );
+      // console.log(
+      //   "results from a/b metrics ==>",
+      //   JSON.stringify(results, null, 2)
+      // );
 
       res.json({
         experiments: results,

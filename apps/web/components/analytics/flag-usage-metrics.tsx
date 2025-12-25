@@ -60,8 +60,6 @@ export function FlagUsageMetrics({
     days = 90;
   }
 
-  console.log("data in FlagUsageMetrics ==>", data);
-
   const variationChartData = useMemo(() => {
     if (!data?.dailyVariationUsage) {
       return [];

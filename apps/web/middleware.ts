@@ -34,8 +34,6 @@ export async function middleware(request: NextRequest) {
     session = null;
   }
 
-  console.log("session ==>", session);
-
   const path = request.nextUrl.pathname;
   const isAuthPage = path.startsWith("/login") || path.startsWith("/signup");
   const isPublicPath = path === "/";
