@@ -18,6 +18,7 @@ import { TargetingConfig } from "@/components/flags/rule/targeting-config";
 import type {
   Condition,
   FlagVariation,
+  OldVariationSplit,
   TargetingRule,
   VariationSplit,
 } from "@/types/flag";
@@ -70,7 +71,19 @@ export const TargetingRuleModal = ({
         );
         setRolloutPercentage(editingRule.rolloutPercentage ?? 100);
       } else {
-        setVariationSplits(editingRule.variationSplits ?? []);
+        const rawSplits = (editingRule.variationSplits ||
+          []) as OldVariationSplit[];
+        // we do this cause in the past we stored the experiments distribution as
+        // {variation and percentage}
+        // but now we do -> {variationId and weight}
+        const normalizedSplits: VariationSplit[] = rawSplits.map((s) => ({
+          variationId:
+            s.variationId ||
+            availableVariations.find((v) => v.name === s.variation)?.id ||
+            "",
+          weight: s.weight ?? s.percentage ?? 0,
+        }));
+        setVariationSplits(normalizedSplits);
       }
     } else {
       setRuleType("targeting");
@@ -79,9 +92,9 @@ export const TargetingRuleModal = ({
       setRolloutPercentage(100);
       setConditions([]);
       setVariationSplits(
-        availableVariations.slice(0, 2).map((v, i) => ({
-          variation: v.name,
-          percentage: i === 0 ? 50 : 50,
+        availableVariations.slice(0, 2).map((v) => ({
+          variationId: v.id,
+          weight: 50,
         }))
       );
     }
@@ -89,8 +102,8 @@ export const TargetingRuleModal = ({
     setErrors({});
   }, [isOpen, editingRule, availableVariations]);
 
-  const getTotalSplitPercentage = () =>
-    variationSplits.reduce((s, v) => s + v.percentage, 0);
+  const getTotalSplitWeight = () =>
+    variationSplits.reduce((s, v) => s + v.weight, 0);
 
   const addCondition = () => {
     setConditions([
@@ -116,22 +129,25 @@ export const TargetingRuleModal = ({
     }
   };
 
-  const updateVariationSplit = (i: number, p: number) => {
-    const newS = [...variationSplits];
-    newS[i].percentage = Math.max(0, Math.min(100, p));
-    setVariationSplits(newS);
+  const updateVariationSplitWeight = (index: number, w: number) => {
+    const newSplits = [...variationSplits];
+    newSplits[index] = {
+      ...newSplits[index],
+      weight: Math.max(0, Math.min(100, w)),
+    };
+    setVariationSplits(newSplits);
     if (errors.splits) {
       setErrors({ ...errors, splits: undefined });
     }
   };
 
   const addVariationSplit = () => {
-    const used = variationSplits.map((s) => s.variation);
-    const next = availableVariations.find((v) => !used.includes(v.name));
+    const usedIds = variationSplits.map((s) => s.variationId);
+    const next = availableVariations.find((v) => !usedIds.includes(v.id));
     if (next) {
       setVariationSplits([
         ...variationSplits,
-        { variation: next.name, percentage: 0 },
+        { variationId: next.id, weight: 0 },
       ]);
     }
   };
@@ -140,12 +156,10 @@ export const TargetingRuleModal = ({
     variationSplits.length > 2 &&
     setVariationSplits(variationSplits.filter((_, x) => x !== i));
 
-  const updateVariationSplitName = (index: number, name: string) => {
-    setVariationSplits(
-      variationSplits.map((s, i) =>
-        i === index ? { ...s, variation: name } : s
-      )
-    );
+  const updateVariationSplitId = (index: number, id: string) => {
+    const newSplits = [...variationSplits];
+    newSplits[index] = { ...newSplits[index], variationId: id };
+    setVariationSplits(newSplits);
   };
 
   const validateAndSave = () => {
@@ -159,8 +173,8 @@ export const TargetingRuleModal = ({
       newErrors.conditions = "Complete all conditions";
     }
 
-    if (ruleType === "experiment" && getTotalSplitPercentage() !== 100) {
-      newErrors.splits = `Must total 100% (currently ${getTotalSplitPercentage()}%)`;
+    if (ruleType === "experiment" && getTotalSplitWeight() !== 100) {
+      newErrors.splits = `Must total 100% (currently ${getTotalSplitWeight()}%)`;
     }
 
     if (Object.keys(newErrors).length) {
@@ -175,7 +189,7 @@ export const TargetingRuleModal = ({
       conditions: conditions.filter((c) => c.attribute && c.value),
       ...(ruleType === "targeting"
         ? { targetVariation, rolloutPercentage }
-        : { variationSplits: variationSplits.filter((s) => s.percentage > 0) }),
+        : { variationSplits: variationSplits.filter((s) => s.weight > 0) }),
     };
 
     onSave(saved);
@@ -232,9 +246,9 @@ export const TargetingRuleModal = ({
               error={errors.splits}
               onAddSplit={addVariationSplit}
               onRemoveSplit={removeVariationSplit}
-              onUpdateSplit={updateVariationSplit}
-              onUpdateSplitName={updateVariationSplitName}
-              totalPercentage={getTotalSplitPercentage()}
+              onUpdateSplitWeight={updateVariationSplitWeight}
+              onUpdateVariationId={updateVariationSplitId}
+              totalPercentage={getTotalSplitWeight()}
               variationSplits={variationSplits}
             />
           )}

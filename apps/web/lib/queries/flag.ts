@@ -250,7 +250,7 @@ export const useToggleFlagMutation = (projectId: string, flagId: string) => {
           context.previousFlag
         );
       }
-      toast.error(`Failed to toggle flag in ${context.environmentName}.`);
+      toast.error(`Failed to toggle flag in ${context?.environmentName}.`);
     },
 
     onSettled: (_data, _error, variables) => {

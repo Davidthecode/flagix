@@ -140,6 +140,7 @@ export function FlagEnvironmentConfig({
         otherEnvStatuses={otherEnvStatuses}
         setViewingEnvironmentName={setViewingEnvironmentName}
         targetingRules={config.targetingRules}
+        variations={variations}
       />
 
       <FlagDefaultVariationSection

@@ -60,6 +60,8 @@ export function FlagUsageMetrics({
     days = 90;
   }
 
+  console.log("data in FlagUsageMetrics ==>", data);
+
   const variationChartData = useMemo(() => {
     if (!data?.dailyVariationUsage) {
       return [];
@@ -93,6 +95,15 @@ export function FlagUsageMetrics({
     return Array.from(keys);
   }, [variationChartData]);
 
+  const topFlagsKeys = useMemo(
+    () =>
+      data.flagDistribution
+        .sort((a, b) => (Number(b.total) || 0) - (Number(a.total) || 0))
+        .slice(0, 5)
+        .map((f) => f.flag_key),
+    [data.flagDistribution]
+  );
+
   if (isLoading) {
     return <AnalyticsContentSkeleton />;
   }
@@ -101,11 +112,6 @@ export function FlagUsageMetrics({
     (sum, f) => sum + (Number(f.total) || 0),
     0
   );
-
-  const topFlagsKeys = data.flagDistribution
-    .sort((a, b) => (Number(b.total) || 0) - (Number(a.total) || 0))
-    .slice(0, 5)
-    .map((f) => f.flag_key);
 
   const chartTitle =
     !selectedFlagKey || selectedFlagKey === "project-wide"

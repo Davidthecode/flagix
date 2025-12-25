@@ -12,6 +12,7 @@ SQL >
     WHERE project_id = {{String(proj_id)}}
       AND flag_key = {{String(flag_key)}}
       AND environment_id = {{String(env_id)}}
+      AND timestamp >= now() - interval {{Int(days, 7)}} day
     GROUP BY distinct_id, variation_name
 
 NODE conversion_stats

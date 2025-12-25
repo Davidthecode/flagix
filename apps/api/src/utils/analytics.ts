@@ -1,4 +1,5 @@
 import { eachDayOfInterval, format, subDays } from "date-fns";
+import { env } from "@/config/env";
 
 type AnalyticsRow = {
   date?: string | null;
@@ -72,4 +73,32 @@ export function fillMissingDates(
   }
 
   return Object.values(resultObj).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export async function getTinybirdCount(
+  projectIds: string[],
+  days = 30
+): Promise<number> {
+  const params = new URLSearchParams();
+  for (const id of projectIds) {
+    params.append("projectIds", id);
+  }
+  params.append("days", days.toString());
+
+  const url = `https://api.europe-west2.gcp.tinybird.co/v0/pipes/total_evaluations.json?${params.toString()}`;
+  try {
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${env.TINYBIRD_TOKEN}` },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Tinybird error: ${response.statusText}`);
+    }
+
+    const json = await response.json();
+    return json.data[0]?.total || 0;
+  } catch (error) {
+    console.error("Failed to fetch Tinybird evaluation counts:", error);
+    return 0;
+  }
 }

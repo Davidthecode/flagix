@@ -3,7 +3,7 @@ import { Toggle } from "@flagix/ui/components/toggle";
 import { Lock } from "lucide-react";
 import { SortableRuleList } from "@/components/flags/main/sortable-rule-list";
 import type { BaseEnvironment } from "@/types/environment";
-import type { StatusSummary, TargetingRule } from "@/types/flag";
+import type { FlagVariation, StatusSummary, TargetingRule } from "@/types/flag";
 
 type FlagConfigSectionProps = {
   allEnvironments: BaseEnvironment[];
@@ -20,6 +20,7 @@ type FlagConfigSectionProps = {
   handleEditRuleClick: (rule: TargetingRule) => void;
   onAddRuleClick: () => void;
   isDeletingRule: boolean;
+  variations: FlagVariation[];
 };
 
 export function FlagConfigSection({
@@ -37,6 +38,7 @@ export function FlagConfigSection({
   handleEditRuleClick,
   onAddRuleClick,
   isDeletingRule,
+  variations,
 }: FlagConfigSectionProps) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-stone-100">
@@ -138,6 +140,7 @@ export function FlagConfigSection({
             onEdit={handleEditRuleClick}
             onRuleOrderChange={handleRuleOrderUpdate}
             rules={targetingRules}
+            variations={variations}
           />
         </div>
 

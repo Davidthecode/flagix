@@ -4,10 +4,11 @@ import { Button } from "@flagix/ui/components/button";
 import { Edit, GripVertical, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { DeleteRuleModal } from "@/components/flags/rule/delete-rule-modal";
-import type { TargetingRule } from "@/types/flag";
+import type { FlagVariation, TargetingRule } from "@/types/flag";
 
 export function FlagRuleCard({
   rule,
+  variations,
   isEditable,
   onEdit,
   onDelete,
@@ -15,6 +16,7 @@ export function FlagRuleCard({
   dragHandleProps,
 }: {
   rule: TargetingRule;
+  variations: FlagVariation[];
   isEditable: boolean;
   onEdit: (rule: TargetingRule) => void;
   onDelete: (ruleId: string, onSuccess?: () => void) => void;
@@ -28,9 +30,14 @@ export function FlagRuleCard({
 }) {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
+  const getVariationName = (id?: string) =>
+    variations.find((v) => v.id === id)?.name || id || "Unknown";
+
   const targetVariation =
     rule.ruleType === "experiment"
-      ? `A/B Test (${rule.variationSplits?.map((s) => `${s.variation}: ${s.percentage}%`).join(", ")})`
+      ? `A/B Test (${rule.variationSplits
+          ?.map((s) => `${getVariationName(s.variationId)}: ${s.weight}%`)
+          .join(", ")})`
       : rule.targetVariation;
 
   const rollout =

@@ -1,0 +1,13 @@
+DESCRIPTION >
+  Aggregates the total number of flag evaluations for a given set of project IDs
+
+NODE endpoint
+SQL >
+    %
+    SELECT 
+        count() as total
+    FROM evaluations
+    WHERE project_id IN {{Array(projectIds, String)}}
+      AND timestamp >= now() - interval {{Int(days, 30)}} day
+
+TYPE endpoint

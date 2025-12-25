@@ -301,12 +301,8 @@ router.get(
         targetVariation: rule.variation?.name, // Target variation for 'targeting' rules
         rolloutPercentage: rule.rolloutPercentage,
         variationSplits: // Distribution for 'experiment' rules
-          rule.type === "experiment"
-            ? JSON.parse(rule.distribution as string)
-            : undefined,
-        conditions: rule.conditions
-          ? JSON.parse(rule.conditions as string)
-          : [],
+          rule.type === "experiment" ? rule.distribution : undefined,
+        conditions: rule.conditions ? rule.conditions : [],
       }));
 
       // Format the final output structure
@@ -316,8 +312,9 @@ router.get(
         description: flagData.description,
         createdAt: flagData.createdAt.toISOString().split("T")[0],
         variations: flagData.variations.map((variation) => ({
+          id: variation.id,
           name: variation.name,
-          value: JSON.parse(variation.value as string),
+          value: variation.value,
           type: variation.type,
         })),
 
@@ -708,7 +705,7 @@ router.post(
           rolloutPercentage = rule.rolloutPercentage;
         } else {
           // experiment
-          distributionJson = JSON.stringify(rule.variationSplits);
+          distributionJson = rule.variationSplits;
         }
 
         const newRule = await tx.environmentRule.create({
@@ -719,9 +716,7 @@ router.post(
             type: rule.ruleType,
             description: rule.description,
             conditions:
-              rule.conditions.length > 0
-                ? JSON.stringify(rule.conditions)
-                : Prisma.JsonNull,
+              rule.conditions.length > 0 ? rule.conditions : Prisma.JsonNull,
             rolloutPercentage,
             variationId,
             distribution: distributionJson,
@@ -922,7 +917,7 @@ router.put(
         rolloutPercentage = rule.rolloutPercentage;
       } else {
         // experiment
-        distributionData = JSON.stringify(rule.variationSplits);
+        distributionData = rule.variationSplits;
       }
 
       await db.environmentRule.update({
@@ -930,9 +925,7 @@ router.put(
         data: {
           description: rule.description,
           conditions:
-            rule.conditions.length > 0
-              ? JSON.stringify(rule.conditions)
-              : Prisma.JsonNull,
+            rule.conditions.length > 0 ? rule.conditions : Prisma.JsonNull,
           rolloutPercentage: rolloutPercentage ?? null,
           variationId: variationId ?? null,
           distribution: distributionData,

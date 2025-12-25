@@ -25,10 +25,15 @@ export default function AnalyticsPageClient() {
   } = useFlagUsageMetrics(projectId, timeRange);
 
   const {
-    data: abTestResults = [],
+    data: abTestData,
     isLoading: isLoadingABTests,
     isFetching: isFetchingABTests,
   } = useABTestMetrics(projectId, timeRange);
+
+  const abTestResults = abTestData || {
+    experiments: [],
+    activeEnvironments: [],
+  };
 
   useEffect(() => {
     if (

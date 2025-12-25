@@ -37,20 +37,17 @@ const getStatusIcon = (status: "winning" | "losing" | "tie") => {
   }
 };
 
-const getRowClassName = (
-  variationName: string,
-  controlVariation: string,
-  status: "winning" | "losing" | "tie"
-): string => {
-  if (variationName === controlVariation) {
-    return "bg-gray-50";
+const getStatusColorClass = (status: "winning" | "losing" | "tie"): string => {
+  switch (status) {
+    case "winning":
+      return "text-emerald-700";
+    case "losing":
+      return "text-red-700";
+    case "tie":
+      return "text-gray-500";
+    default:
+      return "text-gray-500";
   }
-
-  if (status === "winning") {
-    return "transition-colors hover:bg-emerald-50";
-  }
-
-  return "";
 };
 
 const getLiftColorClass = (lift: number): string => {
@@ -69,28 +66,28 @@ export function ABTestVariationTable({
   TABLE_GRID_COLS,
 }: ABTestVariationTableProps) {
   return (
-    <Table>
-      <TableHeader className="bg-[#F4F4F5] px-0 py-0">
-        <div className={cn(TABLE_GRID_COLS, "items-center gap-4 px-3")}>
-          <TableCell className="font-semibold text-gray-600 text-xs uppercase">
+    <Table className="rounded-none border-none">
+      <TableHeader className="border-gray-100 border-b bg-[#F4F4F5] px-0 py-0">
+        <div className={cn(TABLE_GRID_COLS, "items-center gap-4 px-6 py-3")}>
+          <TableCell className="font-bold text-[10px] text-gray-500 uppercase tracking-wider">
             Variation
           </TableCell>
-          <TableCell className="text-right font-semibold text-gray-600 text-xs uppercase">
-            Participants
+          <TableCell className="text-right font-bold text-[10px] text-gray-500 uppercase tracking-wider">
+            Users
           </TableCell>
-          <TableCell className="text-right font-semibold text-gray-600 text-xs uppercase">
+          <TableCell className="text-right font-bold text-[10px] text-gray-500 uppercase tracking-wider">
             Conversions
           </TableCell>
-          <TableCell className="text-right font-semibold text-gray-600 text-xs uppercase">
-            Conv. Rate
+          <TableCell className="text-right font-bold text-[10px] text-gray-500 uppercase tracking-wider">
+            Rate
           </TableCell>
-          <TableCell className="text-right font-semibold text-gray-600 text-xs uppercase">
-            Lift vs. Control
+          <TableCell className="text-right font-bold text-[10px] text-gray-500 uppercase tracking-wider">
+            Lift
           </TableCell>
-          <TableCell className="text-right font-semibold text-gray-600 text-xs uppercase">
-            Significance
+          <TableCell className="text-right font-bold text-[10px] text-gray-500 uppercase tracking-wider">
+            Conf.
           </TableCell>
-          <TableCell className="text-right font-semibold text-gray-600 text-xs uppercase">
+          <TableCell className="text-right font-bold text-[10px] text-gray-500 uppercase tracking-wider">
             Status
           </TableCell>
         </div>
@@ -99,59 +96,60 @@ export function ABTestVariationTable({
       <TableBody>
         {variations.map((variation) => (
           <TableRow
-            className={cn(
-              TABLE_GRID_COLS,
-              "items-center gap-4",
-              getRowClassName(
-                variation.name,
-                controlVariation,
-                variation.status
-              )
-            )}
+            className={cn(TABLE_GRID_COLS, "items-center gap-4 px-6 py-4")}
             hoverable={variation.name !== controlVariation}
             key={variation.name}
           >
-            <TableCell className="flex items-center gap-2 font-medium">
+            <TableCell className="flex items-center gap-2 font-semibold text-gray-900">
+              {variation.name}
               {variation.name === controlVariation && (
-                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-700 text-xs">
+                <span className="rounded-md bg-[#F4F4F5] px-1.5 py-0.5 font-bold text-[10px] uppercase">
                   Control
                 </span>
               )}
-              {variation.name}
             </TableCell>
-            <TableCell className="text-right">
+            <TableCell className="text-right text-gray-600">
               {variation.participants.toLocaleString()}
             </TableCell>
-            <TableCell className="text-right">
+            <TableCell className="text-right text-gray-600">
               {variation.conversions.toLocaleString()}
             </TableCell>
-            <TableCell className="text-right font-medium">
+            <TableCell className="text-right font-medium text-gray-900">
               {`${(variation.conversionRate * 100).toFixed(2)}%`}
             </TableCell>
             <TableCell
               className={cn(
-                "text-right font-semibold",
+                "text-right font-bold",
                 getLiftColorClass(variation.lift)
               )}
             >
               {variation.name === controlVariation
-                ? "N/A"
-                : `${variation.lift > 0 ? "+" : ""}${(variation.lift * 100).toFixed(2)}%`}
+                ? "—"
+                : `${variation.lift > 0 ? "+" : ""}${variation.lift.toFixed(1)}%`}
             </TableCell>
-            <TableCell
-              className={cn(
-                "text-right",
-                variation.significance >= 0.95
-                  ? "font-bold text-emerald-700"
-                  : "text-gray-700"
-              )}
-            >
-              {`${(variation.significance * 100).toFixed(1)}%`}
+            <TableCell className="text-right">
+              <div
+                className={cn(
+                  "inline-flex items-center justify-end font-medium",
+                  variation.significance >= 0.95
+                    ? "text-emerald-700"
+                    : "text-gray-500"
+                )}
+              >
+                {`${(variation.significance * 100).toFixed(1)}%`}
+              </div>
             </TableCell>
             <TableCell className="text-right">
               <div className="flex items-center justify-end gap-2">
                 {getStatusIcon(variation.status)}
-                <span className="capitalize">{variation.status}</span>
+                <span
+                  className={cn(
+                    "font-medium text-xs capitalize",
+                    getStatusColorClass(variation.status)
+                  )}
+                >
+                  {variation.status}
+                </span>
               </div>
             </TableCell>
           </TableRow>

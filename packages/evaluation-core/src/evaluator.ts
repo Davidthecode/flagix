@@ -112,6 +112,19 @@ function evaluateStringAndInConditions(
 }
 
 /**
+ * Resolves the primary identifier for a user from the context.
+ */
+export function resolveIdentifier(context: EvaluationContext): string {
+  return (
+    getNestedValue(context, "user.id") ||
+    context.userId ||
+    context.distinctId ||
+    context.sessionId ||
+    "anonymous"
+  );
+}
+
+/**
  * Safely retrieves a nested property value from an object using a dot-separated path (e.g., 'user.country').
  * Returns undefined if any intermediate property in the path is missing.
  */
@@ -148,8 +161,7 @@ function resolveRuleVariation(
   config: FlagConfig,
   context: EvaluationContext
 ): FlagVariation | null {
-  const bucketingId =
-    getNestedValue(context, "user.id") || context.sessionId || rule.id;
+  const bucketingId = resolveIdentifier(context);
 
   const bucket = getConsistentBucket(String(bucketingId));
 

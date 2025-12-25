@@ -1,4 +1,5 @@
 export type FlagVariation = {
+  id: string;
   name: string;
   value: string;
   type: string;
@@ -12,9 +13,17 @@ export type Condition = {
 };
 
 export type VariationSplit = {
-  variation: string;
-  percentage: number;
+  variationId: string;
+  weight: number;
 };
+
+// we have this cause we previously stored variation split as
+// variation and percentage
+// but weve since changed to `VariationSplit` type -> variationId and weight as it represents it better
+export type OldVariationSplit = {
+  variation?: string;
+  percentage?: number;
+} & Partial<VariationSplit>;
 
 export type TargetingRule = {
   id?: string;
@@ -38,7 +47,6 @@ export type FlagConfig = {
   description: string;
   createdAt: string;
   variations: FlagVariation[];
-  defaultVariation: FlagVariation;
   environments: Record<string, EnvironmentConfig>;
 };
 

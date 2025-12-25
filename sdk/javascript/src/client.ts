@@ -3,6 +3,7 @@ import {
   evaluateFlag,
   type FlagConfig,
   type FlagVariation,
+  resolveIdentifier,
   type VariationValue,
 } from "@flagix/evaluation-core";
 import {
@@ -255,8 +256,7 @@ export class FlagixClient {
     const url = `${this.apiBaseUrl}/api/track/event`;
 
     const finalContext = { ...this.context, ...contextOverrides };
-    const distinctId =
-      finalContext.userId ?? finalContext.distinctId ?? "anonymous";
+    const distinctId = resolveIdentifier(finalContext);
 
     const payload = {
       apiKey: this.apiKey,
@@ -303,13 +303,15 @@ export class FlagixClient {
   ): void {
     const url = `${this.apiBaseUrl}/api/track/evaluation`;
 
+    const distinctId = resolveIdentifier(context);
+
     const payload = {
       apiKey: this.apiKey,
       flagKey,
       variationName: result.name,
       variationValue: result.value,
       variationType: result.type,
-      distinctId: context.userId ?? context.distinctId ?? "anonymous",
+      distinctId,
       evaluationContext: context,
       evaluatedAt: new Date().toISOString(),
     };

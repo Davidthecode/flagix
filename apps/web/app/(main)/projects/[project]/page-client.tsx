@@ -48,7 +48,7 @@ export default function ProjectDashboardPage() {
       href: `/projects/${projectId}/analytics`,
     },
     evaluations: {
-      title: "Evaluations (last 7D)",
+      title: "Evaluations (last 30D)",
       description: "SDK Evaluations for all environments",
       action: "View Analytics",
       href: `/projects/${projectId}/analytics`,

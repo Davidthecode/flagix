@@ -3,7 +3,7 @@ import { db } from "@flagix/db";
 import type { Prisma } from "@flagix/db/client";
 import { formatDistanceToNow } from "date-fns";
 import { type Response, Router } from "express";
-import { env as environmentVariable } from "@/config/env";
+import { env, env as environmentVariable } from "@/config/env";
 import { PROJECT_ADMIN_ROLES } from "@/constants/project";
 import { calculateAbStats } from "@/lib/analytics/stats";
 import {
@@ -15,9 +15,13 @@ import {
 } from "@/lib/validations/project";
 import { resolveRoleByProjectParams } from "@/middleware/resolve-role";
 import { verifyRole } from "@/middleware/verify-role";
-import type { DailyConversionData } from "@/types/analytics";
+import type { ABTestSummaryRow, TinybirdUsageRow } from "@/types/analytics";
 import type { RequestWithSession } from "@/types/request";
-import { fillMissingDates, pivotAnalyticsData } from "@/utils/analytics";
+import {
+  fillMissingDates,
+  getTinybirdCount,
+  pivotAnalyticsData,
+} from "@/utils/analytics";
 import { sendProjectInviteEmail } from "@/utils/project";
 
 const router = Router();
@@ -57,27 +61,13 @@ router.get("/metrics", async (req: RequestWithSession, res: Response) => {
       });
     }
 
-    const totalFlags = await db.flag.count({
-      where: {
-        projectId: { in: projectIds },
-      },
-    });
-
-    const totalEnvironments = await db.environment.count({
-      where: {
-        projectId: { in: projectIds },
-      },
-    });
-
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
-    const totalEvaluations = await db.flagEvaluation.count({
-      where: {
-        projectId: { in: projectIds },
-        evaluatedAt: { gte: oneWeekAgo },
-      },
-    });
+    const [totalFlags, totalEnvironments, totalEvaluations] = await Promise.all(
+      [
+        db.flag.count({ where: { projectId: { in: projectIds } } }),
+        db.environment.count({ where: { projectId: { in: projectIds } } }),
+        getTinybirdCount(projectIds, 30),
+      ]
+    );
 
     res.json({
       flags: totalFlags,
@@ -353,43 +343,31 @@ router.get(
         return res.status(404).json({ error: "Project not found" });
       }
 
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
-      const evaluationsCount = await db.flagEvaluation.count({
-        where: {
-          projectId,
-          evaluatedAt: { gte: oneWeekAgo },
-        },
-      });
-
-      const targetingRulesCount = await db.environmentRule.count({
-        where: {
-          flag: {
-            projectId,
-          },
-        },
-      });
-
-      const recentLogs = await db.activityLog.findMany({
-        where: { projectId },
-        orderBy: { createdAt: "desc" },
-        take: 3,
-        select: {
-          id: true,
-          description: true,
-          createdAt: true,
-        },
-      });
+      const [evaluationsCount, targetingRulesCount, recentLogs] =
+        await Promise.all([
+          getTinybirdCount([projectId], 30),
+          db.environmentRule.count({
+            where: {
+              flag: { projectId },
+            },
+          }),
+          db.activityLog.findMany({
+            where: { projectId },
+            orderBy: { createdAt: "desc" },
+            take: 3,
+            select: {
+              id: true,
+              description: true,
+              createdAt: true,
+            },
+          }),
+        ]);
 
       const formattedLogs = recentLogs.map((log) => ({
         id: log.id,
         time: formatDistanceToNow(log.createdAt, { addSuffix: true }),
         description: log.description,
       }));
-
-      const flagsCount = projectData._count.flags;
-      const environmentsCount = projectData._count.environments;
 
       const env = projectData.environments.map((e) => ({
         name: e.name,
@@ -399,8 +377,8 @@ router.get(
 
       const projectDashboardData = {
         metrics: {
-          totalFlags: flagsCount,
-          environmentsCount,
+          totalFlags: projectData._count.flags,
+          environmentsCount: projectData._count.environments,
           targetingRules: targetingRulesCount,
           evaluations: evaluationsCount,
         },
@@ -1380,7 +1358,7 @@ router.get(
     try {
       const tbUrl = `https://api.europe-west2.gcp.tinybird.co/v0/pipes/usage_analytics.json?projectId=${projectId}&days=${days}`;
       const response = await fetch(tbUrl, {
-        headers: { Authorization: `Bearer ${process.env.TINYBIRD_TOKEN}` },
+        headers: { Authorization: `Bearer ${env.TINYBIRD_TOKEN}` },
       });
 
       if (!response.ok) {
@@ -1395,38 +1373,53 @@ router.get(
       }
 
       const jsonResponse = await response.json();
-      const data = jsonResponse.data || [];
+      const rawData: TinybirdUsageRow[] = Array.isArray(jsonResponse.data)
+        ? jsonResponse.data
+        : [];
 
-      console.log("data from tinybird", data);
+      // Grop Flag Distribution (Unique Flags)
+      // Collapse variations into a single Flag identity
+      const flagMap = new Map<string, number>();
+      for (const row of rawData) {
+        if (row.flag_key && row.total !== null && row.date === null) {
+          const current = flagMap.get(row.flag_key) || 0;
+          flagMap.set(row.flag_key, current + Number(row.total));
+        }
+      }
 
-      const safeData = Array.isArray(data) ? data : [];
+      const flagDistribution = Array.from(flagMap.entries()).map(
+        ([key, total]) => ({
+          flag_key: key,
+          total,
+        })
+      );
 
       const dailyImpressions = fillMissingDates(
-        safeData.filter((r) => r.impressions !== null),
+        rawData.filter((r) => r.impressions !== null),
         days
       );
 
-      const flagDistribution = safeData.filter(
-        (r) => r.flag_key !== null && r.total !== null
-      );
-
       const dailyTopFlagImpressions = pivotAnalyticsData(
-        safeData.filter((r) => r.flag_key && r.val && !r.variation_name),
+        rawData.filter((r) => r.flag_key && r.val && r.variation_name === null),
         "flag_key",
         "val",
         days
       );
 
-      const dailyVariationUsage = safeData.filter(
+      const dailyVariationUsage = rawData.filter(
         (r) => r.variation_name !== null && r.val !== null
       );
 
-      res.json({
+      const finalResult = {
         dailyImpressions,
         flagDistribution,
         dailyVariationUsage,
         dailyTopFlagImpressions,
-      });
+      };
+
+      console.log("Final API Response:", JSON.stringify(finalResult, null, 2));
+
+      res.json(finalResult);
     } catch (error) {
       console.error("Failed to get usage analytics:", error);
       res.status(500).json({ error: "Failed to get usage analytics" });
@@ -1439,27 +1432,39 @@ router.get(
   verifyRole.VIEWER,
   async (req: RequestWithSession, res: Response) => {
     const { projectId } = req.params;
+    const { timeRange = "7d" } = req.query;
+
+    let days: number;
+    if (timeRange === "30d") {
+      days = 30;
+    } else if (timeRange === "3m") {
+      days = 90;
+    } else {
+      days = 7;
+    }
 
     try {
       const experiments = await db.environmentRule.findMany({
-        where: { flag: { projectId }, type: "a/b" },
+        where: { flag: { projectId }, type: "experiment" },
         include: { flag: true, environment: true },
       });
 
+      console.log("experiments in a/b analytics ==>", experiments);
+
       const results = await Promise.all(
         experiments.map(async (exp) => {
-          const summaryUrl = `https://api.europe-west2.gcp.tinybird.co/v0/pipes/ab_conversion_rates.json?proj_id=${projectId}&flag_key=${exp.flag.key}&env_id=${exp.environmentId}`;
-          const trendUrl = `https://api.europe-west2.gcp.tinybird.co/v0/pipes/ab_conversion_trends.json?proj_id=${projectId}&flag_key=${exp.flag.key}&env_id=${exp.environmentId}`;
+          const summaryUrl = `https://api.europe-west2.gcp.tinybird.co/v0/pipes/ab_conversion_rates.json?proj_id=${projectId}&flag_key=${exp.flag.key}&env_id=${exp.environmentId}&days=${days}`;
+          const trendUrl = `https://api.europe-west2.gcp.tinybird.co/v0/pipes/ab_conversion_trends.json?proj_id=${projectId}&flag_key=${exp.flag.key}&env_id=${exp.environmentId}&days=${days}`;
 
           const [summaryRes, trendRes] = await Promise.all([
             fetch(summaryUrl, {
               headers: {
-                Authorization: `Bearer ${process.env.TINYBIRD_TOKEN}`,
+                Authorization: `Bearer ${env.TINYBIRD_TOKEN}`,
               },
             }),
             fetch(trendUrl, {
               headers: {
-                Authorization: `Bearer ${process.env.TINYBIRD_TOKEN}`,
+                Authorization: `Bearer ${env.TINYBIRD_TOKEN}`,
               },
             }),
           ]);
@@ -1467,9 +1472,50 @@ router.get(
           const summary = await summaryRes.json();
           const trend = await trendRes.json();
 
-          const control = summary.data[0];
+          const summaryData: ABTestSummaryRow[] = summary.data || [];
 
-          const variations = summary.data.map((v: DailyConversionData) => {
+          if (summaryData.length === 0) {
+            return {
+              experimentName: exp.flag.description || exp.flag.key,
+              flagKey: exp.flag.key,
+              metric: "Conversion Rate",
+              status: "no_data",
+              dailyTrend: [],
+              environmentResults: [
+                {
+                  environmentName: exp.environment.name,
+                  environmentId: exp.environmentId,
+                  variations: [],
+                },
+              ],
+            };
+          }
+
+          console.log("summary data form tinybird ==>", summary);
+          console.log("trend data form tinybird ==>", trend);
+
+          // Try to find variation named 'off' or 'control', otherwise take index 0
+          const control =
+            summaryData.find(
+              (v) =>
+                v.variation_name.toLowerCase() === "off" ||
+                v.variation_name.toLowerCase() === "control"
+            ) || summaryData[0];
+
+          const variations = summaryData.map((v: ABTestSummaryRow) => {
+            // If this is the control variation itself, lift is 0
+            if (v.variation_name === control.variation_name) {
+              return {
+                name: v.variation_name,
+                conversions: v.total_converted,
+                participants: v.total_exposed,
+                conversionRate: v.conversion_rate,
+                lift: 0,
+                significance: 0,
+                status: "control",
+              };
+            }
+
             const stats = calculateAbStats(
               Number(control.total_exposed),
               Number(control.total_converted),
@@ -1513,7 +1559,19 @@ router.get(
         })
       );
 
-      res.json(results);
+      const activeEnvironments = Array.from(
+        new Set(results.map((r) => r.environmentResults[0].environmentName))
+      ).sort();
+
+      console.log(
+        "results from a/b metrics ==>",
+        JSON.stringify(results, null, 2)
+      );
+
+      res.json({
+        experiments: results,
+        activeEnvironments,
+      });
     } catch (error) {
       console.error("Failed to get A/B test analytics:", error);
       res.status(500).json({ error: "Failed to get A/B test analytics" });

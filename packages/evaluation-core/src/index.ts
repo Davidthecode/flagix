@@ -1,5 +1,5 @@
 // biome-ignore lint/performance/noBarrelFile: <>
-export { evaluateFlag } from "./evaluator";
+export { evaluateFlag, resolveIdentifier } from "./evaluator";
 
 export type {
   EngineRule,

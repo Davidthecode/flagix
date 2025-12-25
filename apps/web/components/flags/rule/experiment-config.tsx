@@ -4,12 +4,13 @@ import { Button } from "@flagix/ui/components/button";
 import { Input } from "@flagix/ui/components/input";
 import { Label } from "@flagix/ui/components/label";
 import { AlertCircle, Plus, X } from "lucide-react";
+import type { FlagVariation, VariationSplit } from "@/types/flag";
 
 type ExperimentConfigProps = {
-  variationSplits: { variation: string; percentage: number }[];
-  availableVariations: { name: string; value: string }[];
-  onUpdateSplit: (index: number, percentage: number) => void;
-  onUpdateSplitName: (index: number, name: string) => void;
+  variationSplits: VariationSplit[];
+  availableVariations: FlagVariation[];
+  onUpdateSplitWeight: (index: number, weight: number) => void;
+  onUpdateVariationId: (index: number, id: string) => void;
   onAddSplit: () => void;
   onRemoveSplit: (index: number) => void;
   totalPercentage: number;
@@ -19,10 +20,10 @@ type ExperimentConfigProps = {
 export const ExperimentConfig = ({
   variationSplits,
   availableVariations,
-  onUpdateSplit,
+  onUpdateSplitWeight,
   onAddSplit,
   onRemoveSplit,
-  onUpdateSplitName,
+  onUpdateVariationId,
   totalPercentage,
   error,
 }: ExperimentConfigProps) => (
@@ -47,18 +48,18 @@ export const ExperimentConfig = ({
       {variationSplits.map((split, i) => (
         <div
           className="flex items-center gap-3 rounded-md bg-white p-3 shadow-sm"
-          key={split.variation}
+          key={split.variationId}
         >
           <div className="flex-1">
             <select
               className="w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-sm capitalize"
               onChange={(e) => {
-                onUpdateSplitName(i, e.target.value);
+                onUpdateVariationId(i, e.target.value);
               }}
-              value={split.variation}
+              value={split.variationId}
             >
               {availableVariations.map((v) => (
-                <option key={v.name} value={v.name}>
+                <option key={v.id} value={v.id}>
                   {v.name} ("{v.value.toString()}")
                 </option>
               ))}
@@ -69,9 +70,9 @@ export const ExperimentConfig = ({
               className="w-16 text-center"
               max={100}
               min={0}
-              onChange={(e) => onUpdateSplit(i, Number(e.target.value))}
+              onChange={(e) => onUpdateSplitWeight(i, Number(e.target.value))}
               type="number"
-              value={split.percentage}
+              value={split.weight}
             />
             <span className="text-gray-600 text-sm">%</span>
           </div>

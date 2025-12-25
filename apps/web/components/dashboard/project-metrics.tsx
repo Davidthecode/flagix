@@ -58,7 +58,7 @@ export const ProjectMetrics = () => {
 
           <div className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-4">
             <div className="font-medium text-gray-500 text-sm uppercase">
-              EVALUATIONS (last 7D)
+              EVALUATIONS (last 30D)
             </div>
             <div className="mt-1 font-semibold text-gray-900 text-medium opacity-90">
               {evaluations.toLocaleString()}

@@ -55,8 +55,9 @@ export function ABTestChart({
 
           return (
             <Line
+              connectNulls
               dataKey={key}
-              dot={false}
+              dot={true}
               key={key}
               name={key}
               stroke={strokeColor}

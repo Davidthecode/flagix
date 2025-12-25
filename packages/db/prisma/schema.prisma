@@ -215,7 +215,7 @@ model EnvironmentRule {
   description   String
 
   order         Int     // rule evaluation order (0,1,2 etc)
-  type          String  // "targeting" | "a/b" 
+  type          String  // "targeting" | "experiment" 
 
   conditions    Json?
 
@@ -254,21 +254,5 @@ model ActivityLog {
 
   @@index([projectId])
   @@map("activity_log")
-}
-
-model FlagEvaluation {
-  id                    String    @id @default(cuid())
-  projectId             String
-  environmentId         String
-  flagKey               String    
-  variationName         String?  
-  variationValue        Json?
-  variationType         String?     
-  evaluationContextJson Json      
-  evaluatedAt           DateTime  @default(now())
-
-  @@index([projectId, evaluatedAt])
-  @@index([environmentId, flagKey, evaluatedAt])
-  @@map("flag_evaluation")
 }
 

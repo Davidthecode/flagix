@@ -1,7 +1,8 @@
 import { Resend } from "resend";
+import { env } from "@/config/env";
 import { WelcomeEmail } from "@/lib/emails/WelcomeEmail";
 
-const resendApiKey = process.env.RESEND_API_KEY;
+const resendApiKey = env.RESEND_API_KEY;
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 export async function sendWelcomeEmail({ userEmail }: { userEmail: string }) {

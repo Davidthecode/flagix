@@ -6,7 +6,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { FlagRuleCard } from "@/components/flags/flag-rule-card";
-import type { TargetingRule } from "@/types/flag";
+import type { FlagVariation, TargetingRule } from "@/types/flag";
 
 const arrayMove = <T,>(arr: T[], from: number, to: number): T[] => {
   const newArr = [...arr];
@@ -18,6 +18,7 @@ const arrayMove = <T,>(arr: T[], from: number, to: number): T[] => {
 
 type SortableItemProps = {
   rule: TargetingRule;
+  variations: FlagVariation[];
   isEditable: boolean;
   isDeletingRule: boolean;
   onEdit: (rule: TargetingRule) => void;
@@ -27,6 +28,7 @@ type SortableItemProps = {
 interface RuleCardActionProps {
   isEditable: boolean;
   isDeletingRule: boolean;
+  variations: FlagVariation[];
   onEdit: (rule: TargetingRule) => void;
   onDelete: (ruleId: string, onSuccess?: () => void) => void;
 }
@@ -38,6 +40,7 @@ interface SortableRuleListProps extends RuleCardActionProps {
 
 const SortableItem = ({
   rule,
+  variations,
   isEditable,
   isDeletingRule,
   onEdit,
@@ -68,6 +71,7 @@ const SortableItem = ({
         onDelete={onDelete}
         onEdit={onEdit}
         rule={rule}
+        variations={variations}
       />
     </div>
   );

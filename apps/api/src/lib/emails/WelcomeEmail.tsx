@@ -12,12 +12,13 @@ import {
   Tailwind,
   Text,
 } from "@react-email/components";
+import { env } from "@/config/env";
 
 type WelcomeEmailProps = {
   userEmail: string;
 };
 
-const appBaseUrl = process.env.APP_URL;
+const appBaseUrl = env.APP_URL;
 
 export const WelcomeEmail = ({ userEmail }: WelcomeEmailProps) => {
   const previewText = "Flagix is ready. Start shipping features with control!";

@@ -56,6 +56,11 @@ export type ABTestResult = {
   environmentResults: EnvironmentResult[];
 };
 
+export type ABTestResponse = {
+  experiments: ABTestResult[];
+  activeEnvironments: string[];
+};
+
 export const useFlagUsageMetrics = (
   projectId: string,
   timeRange: TimeRange
@@ -77,14 +82,14 @@ export const useFlagUsageMetrics = (
 export const useABTestMetrics = (
   projectId: string,
   timeRange: TimeRange
-): UseQueryResult<ABTestResult[]> => {
-  const fetcher = async (): Promise<ABTestResult[]> => {
+): UseQueryResult<ABTestResponse> => {
+  const fetcher = async (): Promise<ABTestResponse> => {
     const url = `/api/projects/${projectId}/analytics/ab-tests?timeRange=${timeRange}`;
     const response = await api.get(url);
     return response.data;
   };
 
-  return useQuery<ABTestResult[]>({
+  return useQuery<ABTestResponse>({
     queryKey: QUERY_KEYS.ANALYTICS_AB_TESTS(projectId, timeRange),
     queryFn: fetcher,
     enabled: !!projectId,
