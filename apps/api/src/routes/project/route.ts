@@ -3,12 +3,13 @@ import { db } from "@flagix/db";
 import type { Prisma } from "@flagix/db/client";
 import { formatDistanceToNow } from "date-fns";
 import { type Response, Router } from "express";
-import { env, env as environmentVariable } from "@/config/env";
+import { env as environmentVariable } from "@/config/env";
 import { PROJECT_ADMIN_ROLES } from "@/constants/project";
 import { calculateAbStats } from "@/lib/analytics/stats";
 import {
   createEnvironmentSchema,
   createProjectSchema,
+  feedbackSchema,
   inviteSchema,
   updateProjectSchema,
   updateRoleSchema,
@@ -22,7 +23,7 @@ import {
   getTinybirdCount,
   pivotAnalyticsData,
 } from "@/utils/analytics";
-import { sendProjectInviteEmail } from "@/utils/project";
+import { sendFeedbackEmail, sendProjectInviteEmail } from "@/utils/project";
 
 const router = Router();
 
@@ -134,6 +135,38 @@ router.get("/", async (req: RequestWithSession, res: Response) => {
     res.status(500).json({ error: "Failed to get projects" });
   }
 });
+
+router.post(
+  "/feedback",
+  async (req: RequestWithSession, res: Response) => {
+    const session = req.session;
+
+    if (!session || !session.user) {
+      return res.status(401).json({ error: "unauthenticated" });
+    }
+
+    const userEmail = session.user.email;
+    const userName = session.user.name;
+
+    try {
+      const body = feedbackSchema.parse(req.body);
+
+      await sendFeedbackEmail({
+        userEmail,
+        userName,
+        feedback: body.feedback,
+      });
+
+      res.status(200).json({ success: true, message: "Feedback submitted successfully" });
+    } catch (error) {
+      console.error("Failed to submit feedback:", error);
+      if (error instanceof Error && error.name === "ZodError") {
+        return res.status(400).json({ error: "Invalid feedback data" });
+      }
+      res.status(500).json({ error: "Failed to submit feedback" });
+    }
+  }
+);
 
 router.use("/:projectId", resolveRoleByProjectParams);
 
@@ -1358,7 +1391,9 @@ router.get(
     try {
       const tbUrl = `https://api.europe-west2.gcp.tinybird.co/v0/pipes/usage_analytics.json?projectId=${projectId}&days=${days}`;
       const response = await fetch(tbUrl, {
-        headers: { Authorization: `Bearer ${env.TINYBIRD_TOKEN}` },
+        headers: {
+          Authorization: `Bearer ${environmentVariable.TINYBIRD_TOKEN}`,
+        },
       });
 
       if (!response.ok) {
@@ -1459,12 +1494,12 @@ router.get(
           const [summaryRes, trendRes] = await Promise.all([
             fetch(summaryUrl, {
               headers: {
-                Authorization: `Bearer ${env.TINYBIRD_TOKEN}`,
+                Authorization: `Bearer ${environmentVariable.TINYBIRD_TOKEN}`,
               },
             }),
             fetch(trendUrl, {
               headers: {
-                Authorization: `Bearer ${env.TINYBIRD_TOKEN}`,
+                Authorization: `Bearer ${environmentVariable.TINYBIRD_TOKEN}`,
               },
             }),
           ]);

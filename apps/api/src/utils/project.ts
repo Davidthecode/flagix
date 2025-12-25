@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { env } from "@/config/env";
+import { FeedbackEmail } from "@/lib/emails/FeedbackEmail";
 import { ProjectInviteEmail } from "@/lib/emails/ProjectInviteEmail";
 
 const resend = new Resend(env.RESEND_API_KEY);
@@ -26,6 +27,29 @@ export async function sendProjectInviteEmail({
       projectInviteLink: inviteLink,
       invitedRole: role,
       invitedEmail: to,
+    }),
+  });
+}
+
+type sendFeedbackEmailPropsType = {
+  userEmail: string;
+  userName: string | null;
+  feedback: string;
+};
+
+export async function sendFeedbackEmail({
+  userEmail,
+  userName,
+  feedback,
+}: sendFeedbackEmailPropsType) {
+  await resend.emails.send({
+    from: "onboarding@resend.dev",
+    to: "ajiboladavid0963@gmail.com",
+    subject: `New Feedback from ${userName || userEmail}`,
+    react: FeedbackEmail({
+      userEmail,
+      userName,
+      feedback,
     }),
   });
 }

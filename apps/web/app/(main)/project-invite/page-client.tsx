@@ -49,7 +49,7 @@ export default function PageClient() {
 
   const renderMissingTokenState = () => (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4 text-center">
-      <XCircle className="h-10 w-10 text-red-500" />
+      <XCircle className="h-6 w-6" />
       <h1 className="mt-4 font-bold text-2xl text-gray-800">
         Invalid Invitation Link
       </h1>
@@ -85,7 +85,7 @@ export default function PageClient() {
 
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4 text-center">
-        <XCircle className="h-10 w-10 text-red-500" />
+        <XCircle className="h-6 w-6" />
         <h1 className="mt-4 font-bold text-2xl text-gray-800">
           Invitation Failed
         </h1>

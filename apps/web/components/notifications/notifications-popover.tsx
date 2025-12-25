@@ -13,7 +13,7 @@ import { Bell } from "lucide-react";
 export const NotificationsPopover = () => (
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
-      <Button aria-label="Notifications" size="icon" variant="ghost">
+      <Button aria-label="Notifications" size="icon">
         <Bell className="h-5 w-5" />
       </Button>
     </DropdownMenuTrigger>

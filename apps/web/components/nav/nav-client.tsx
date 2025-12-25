@@ -14,6 +14,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { FeedbackModal } from "@/components/feedback/feedback-modal";
 import { NotificationsPopover } from "@/components/notifications/notifications-popover";
 import { useAuth } from "@/hooks/use-auth";
 import { useProject } from "@/providers/project";
@@ -26,6 +27,7 @@ export const Nav = () => {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const projectRoutes = projectId ? getProjectRoutes(projectId) : [];
   const isActive = (href: string) => pathname.startsWith(href);
 
@@ -83,6 +85,13 @@ export const Nav = () => {
                 <p className="text-gray-500 text-xs">{user?.email}</p>
               </div>
               <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => setIsFeedbackModalOpen(true)}
+              >
+                Submit Feedback
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem className="cursor-pointer" onClick={logout}>
                 Log out
               </DropdownMenuItem>
@@ -120,6 +129,11 @@ export const Nav = () => {
           ))}
         </nav>
       )}
+
+      <FeedbackModal
+        isOpen={isFeedbackModalOpen}
+        onClose={() => setIsFeedbackModalOpen(false)}
+      />
     </header>
   );
 };
