@@ -32,7 +32,11 @@ export const Nav = () => {
   const isActive = (href: string) => pathname.startsWith(href);
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-[#18181B] text-white">
+    <header
+      className={`border-b bg-[#18181B] text-white ${
+        isProjectRoute ? "" : "sticky top-0 z-50"
+      }`}
+    >
       <div className="container-wrapper flex h-20 items-center justify-between">
         <Link className="flex w-fit items-center gap-2" href="/dashboard">
           <div className="flex items-center space-x-3">
