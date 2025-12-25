@@ -64,7 +64,7 @@ export const DangerZone = ({
           )}
         </div>
         <Button
-          className="ml-4 flex-shrink-0 bg-red-600 p-2 text-sm text-white hover:bg-red-700 disabled:bg-gray-400"
+          className="ml-4 shrink-0 bg-red-600 p-2 text-sm text-white hover:bg-red-700 disabled:bg-gray-400"
           disabled={!isOwner || isPending}
           onClick={handleDeleteClick}
         >

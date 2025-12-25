@@ -6,12 +6,13 @@ import type React from "react";
 import { useMemo, useState } from "react";
 import { DangerZone } from "@/components/settings/danger-zone";
 import { GeneralSettings } from "@/components/settings/general-settings";
+import { IntegrationSettings } from "@/components/settings/integrations";
 import { MemberSettings } from "@/components/settings/member/member-settings";
 import PageLoader from "@/components/shared/page-loader";
 import { useProjectSettings } from "@/lib/queries/project";
 import { useProject } from "@/providers/project";
 
-type SettingTab = "general" | "members" | "danger";
+type SettingTab = "general" | "members" | "integrations" | "danger";
 
 export default function PageClient() {
   const { projectId } = useProject();
@@ -28,6 +29,7 @@ export default function PageClient() {
       () => [
         { key: "general", label: "General", Icon: Settings },
         { key: "members", label: "Members", Icon: Users },
+        { key: "integrations", label: "Integrations", Icon: Users },
         { key: "danger", label: "Danger Zone", Icon: Trash2 },
       ],
       []
@@ -59,6 +61,8 @@ export default function PageClient() {
         );
       case "members":
         return <MemberSettings members={members} />;
+      case "integrations":
+        return <IntegrationSettings />;
       case "danger":
         return (
           <DangerZone
