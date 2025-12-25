@@ -92,7 +92,7 @@ export const GeneralSettings = ({
 
       <div className="border-gray-100 border-t pt-4">
         <Button
-          className="flex-shrink-0 bg-emerald-600 p-2 text-sm text-white hover:bg-emerald-700 disabled:bg-gray-400"
+          className="shrink-0 bg-emerald-600 p-2 text-sm text-white hover:bg-emerald-700 disabled:bg-gray-400"
           disabled={!hasChanges || isPending || !isAuthorizedToEdit}
           type="submit"
         >

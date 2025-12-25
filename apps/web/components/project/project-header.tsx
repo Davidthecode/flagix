@@ -32,11 +32,13 @@ export const ProjectHeader = ({
   const isAuditLogPage = pathname.endsWith("/audit");
   const isEnvironmentPage = pathname.endsWith("/environments");
   const isSettingsPage = pathname.endsWith("/settings");
+  const isAnalyticsPage = pathname.endsWith("/analytics");
 
   const showEnvironmentSelector =
     !isProjectDashboard &&
     !isAuditLogPage &&
     !isSettingsPage &&
+    !isAnalyticsPage &&
     !isEnvironmentPage;
 
   if (!currentEnvironment) {
