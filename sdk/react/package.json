@@ -1,7 +1,7 @@
 {
-  "name": "@flagix/js-sdk",
+  "name": "@flagix/react",
   "version": "1.0.0",
-  "description": "Flagix Javascript SDK",
+  "description": "Flagix React SDK",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -25,19 +25,24 @@
     "feature-toggles",
     "sdk",
     "javascript",
-    "typescript",
+    "react",
     "flagix"
   ],
-  "author": "Flagix",
+  "author": "",
   "license": "ISC",
   "dependencies": {
-    "@flagix/evaluation-core": "workspace:^",
-    "eventemitter3": "^5.0.1",
-    "eventsource": "^4.1.0"
+    "@flagix/js-sdk": "workspace:^"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
   },
   "devDependencies": {
-    "@types/node": "^22.15.3",
-    "tsup": "^8.5.1",
-    "typescript": "^5.9.3"
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
   }
 }

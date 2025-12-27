@@ -1,11 +1,4 @@
-import {
-  type EvaluationContext,
-  evaluateFlag,
-  type FlagConfig,
-  type FlagVariation,
-  resolveIdentifier,
-  type VariationValue,
-} from "@flagix/evaluation-core";
+import { evaluateFlag, resolveIdentifier } from "@flagix/evaluation-core";
 import {
   EVENT_TO_LISTEN,
   type FlagUpdateType,
@@ -17,7 +10,13 @@ import {
   createEventSource,
   type FlagStreamConnection,
 } from "@/sse/create-event-source";
-import type { FlagixClientOptions } from "@/types";
+import type {
+  EvaluationContext,
+  FlagConfig,
+  FlagixClientOptions,
+  FlagVariation,
+  VariationValue,
+} from "@/types";
 
 /**
  * The primary class for the Flagix SDK. Manages configuration state,

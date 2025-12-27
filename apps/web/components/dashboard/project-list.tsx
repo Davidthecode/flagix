@@ -1,5 +1,6 @@
 "use client";
 
+import { useFlag } from "@flagix/react";
 import { Button } from "@flagix/ui/components/button";
 import { Input } from "@flagix/ui/components/input";
 import { Skeleton } from "@flagix/ui/components/skeleton";
@@ -14,7 +15,6 @@ import { Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { ProjectSection } from "@/components/dashboard/project-section";
 import { CreateProjectModal } from "@/components/project/project-create-modal";
-import { useFlag } from "@/hooks/use-flag";
 import { api } from "@/lib/api";
 import { QUERY_KEYS } from "@/lib/queries/keys";
 import type { Project } from "@/types/project";

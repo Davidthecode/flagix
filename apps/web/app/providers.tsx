@@ -1,8 +1,8 @@
 "use client";
 
+import { FlagixProvider } from "@flagix/react";
 import { Toaster } from "@flagix/ui/components/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { FlagixProvider } from "@/providers/flagix";
 
 const queryClient = new QueryClient({
   defaultOptions: {

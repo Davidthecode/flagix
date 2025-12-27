@@ -1,11 +1,11 @@
-import type {
-  EvaluationContext,
-  VariationValue,
-} from "@flagix/evaluation-core";
 import { FlagixClient } from "@/client";
 import { FLAG_UPDATE_EVENT } from "@/lib/emitter";
 import { log } from "@/lib/logger";
-import type { FlagixClientOptions } from "@/types";
+import type {
+  EvaluationContext,
+  FlagixClientOptions,
+  VariationValue,
+} from "@/types";
 
 let clientInstance: FlagixClient | null = null;
 

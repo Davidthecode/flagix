@@ -6,6 +6,7 @@ import { CreateEnvironmentModal } from "@/components/environment/create-environm
 import { DeleteEnvironmentModal } from "@/components/environment/delete-environment-modal";
 import { EnvironmentDetails } from "@/components/environment/environment-details";
 import { EnvironmentTabs } from "@/components/environment/environment-tabs";
+import { SetupGuide } from "@/components/environment/setup-guide";
 import { EnvironmentPageSkeleton } from "@/components/environment/skeleton";
 import {
   useCreateEnvironment,
@@ -168,6 +169,12 @@ export default function PageClient() {
           </div>
         )}
       </div>
+
+      {selectedEnv && (
+        <div className="mt-6 flex flex-col space-y-4 overflow-hidden rounded-lg border border-gray-200 bg-white px-6 py-6 shadow-sm">
+          <SetupGuide environment={selectedEnv} />
+        </div>
+      )}
 
       <CreateEnvironmentModal
         isOpen={isCreateModalOpen}
