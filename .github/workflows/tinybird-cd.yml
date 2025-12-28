@@ -6,6 +6,8 @@ on:
     branches:
       - main
       - master
+    paths:
+      - 'packages/tinybird/**'
 
 concurrency: ${{ github.workflow }}-${{ github.event.ref }}
 
@@ -21,4 +23,6 @@ jobs:
       - name: Install Tinybird CLI
         run: curl https://tinybird.co | sh
       - name: Deploy project
-        run: tb --cloud --host ${{ env.TINYBIRD_HOST }} --token ${{ env.TINYBIRD_TOKEN }} deploy
+        run: |
+          export PATH="/home/runner/.local/bin:$PATH"
+          tb --cloud --host ${{ env.TINYBIRD_HOST }} --token ${{ env.TINYBIRD_TOKEN }} deploy --path packages/tinybird --max-depth 5

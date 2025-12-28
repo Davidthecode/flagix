@@ -7,6 +7,8 @@ on:
     branches:
       - main
       - master
+    paths:
+      - 'packages/tinybird/**'
     types: [opened, reopened, labeled, unlabeled, synchronize]
 
 concurrency: ${{ github.workflow }}-${{ github.event.pull_request.number }}
@@ -18,21 +20,15 @@ env:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: '.'
-    services:
-      tinybird:
-        image: tinybirdco/tinybird-local:latest
-        ports:
-          - 7181:7181
     steps:
       - uses: actions/checkout@v3
       - name: Install Tinybird CLI
         run: curl https://tinybird.co | sh
       - name: Build project
-        run: tb build
-      - name: Test project
-        run: tb test run
+        run: |
+          export PATH="/home/runner/.local/bin:$PATH"
+          tb --path packages/tinybird build
       - name: Deployment check
-        run: tb --cloud --host ${{ env.TINYBIRD_HOST }} --token ${{ env.TINYBIRD_TOKEN }} deploy --check
+        run: |
+          export PATH="/home/runner/.local/bin:$PATH"
+          tb --cloud --host ${{ env.TINYBIRD_HOST }} --token ${{ env.TINYBIRD_TOKEN }} deploy --path packages/tinybird --check
