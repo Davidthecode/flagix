@@ -1,5 +1,5 @@
 DESCRIPTION >
-    Stores every feature flag evaluation from the SDKs. 
+    Stores every feature flag evaluation from the SDKs.
 
 SCHEMA >
     `timestamp` DateTime64(3) `json:$.timestamp`,
