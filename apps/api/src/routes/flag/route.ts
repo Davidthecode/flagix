@@ -953,9 +953,8 @@ router.put(
         select: { key: true },
       });
 
-      if (flag) {
+      if (flag)
         await syncAndPublishFlagUpdate(flag.key, environment, "RULE_UPDATED");
-      }
 
       const updatedRule = {
         id: ruleId,
