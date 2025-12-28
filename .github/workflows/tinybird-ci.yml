@@ -27,8 +27,10 @@ jobs:
       - name: Build project
         run: |
           export PATH="/home/runner/.local/bin:$PATH"
-          tb --path packages/tinybird build
+          cd packages/tinybird
+          tb build
       - name: Deployment check
         run: |
           export PATH="/home/runner/.local/bin:$PATH"
-          tb --cloud --host ${{ env.TINYBIRD_HOST }} --token ${{ env.TINYBIRD_TOKEN }} deploy --path packages/tinybird --check
+          cd packages/tinybird
+          tb --cloud --host ${{ env.TINYBIRD_HOST }} --token ${{ env.TINYBIRD_TOKEN }} deploy --check
