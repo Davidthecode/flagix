@@ -26,4 +26,4 @@ jobs:
         run: |
           export PATH="/home/runner/.local/bin:$PATH"
           cd packages/tinybird
-          tb --cloud --host ${{ env.TINYBIRD_HOST }} --token ${{ env.TINYBIRD_TOKEN }} deploy --max-depth 5
+          tb --cloud --host ${{ env.TINYBIRD_HOST }} --token ${{ env.TINYBIRD_TOKEN }} deploy
