@@ -21,6 +21,26 @@ export default function ProjectDashboardPage() {
     enabled: !!projectId,
   });
 
+  if (isLoading) {
+    return (
+      <div>
+        <DashboardSkeleton />
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center text-red-600">
+        <h2 className="mb-2 font-semibold text-xl">Failed to Load Dashboard</h2>
+        <p className="text-gray-600">
+          We couldn't retrieve the project metrics. Please check your connection
+          or try again.
+        </p>
+      </div>
+    );
+  }
+
   const METRICS_MAP: {
     [key in keyof typeof data.metrics]: {
       title: string;
@@ -54,26 +74,6 @@ export default function ProjectDashboardPage() {
       href: `/projects/${projectId}/analytics`,
     },
   };
-
-  if (isLoading) {
-    return (
-      <div>
-        <DashboardSkeleton />
-      </div>
-    );
-  }
-
-  if (isError || !data) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center text-red-600">
-        <h2 className="mb-2 font-semibold text-xl">Failed to Load Dashboard</h2>
-        <p className="text-gray-600">
-          We couldn't retrieve the project metrics. Please check your connection
-          or try again.
-        </p>
-      </div>
-    );
-  }
 
   const dashboardMetrics = (
     Object.keys(data.metrics) as Array<keyof typeof data.metrics>

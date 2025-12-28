@@ -28,7 +28,7 @@ function FlagsPageClient() {
     isLoading,
     isError,
   } = useQuery<FlagType[]>({
-    queryKey: projectId ? QUERY_KEYS.FLAGS(projectId) : undefined,
+    queryKey: QUERY_KEYS.FLAGS(projectId),
     queryFn: () =>
       api.get(`/api/flags?projectId=${projectId}`).then((res) => res.data),
     enabled: Boolean(projectId),
@@ -62,7 +62,7 @@ function FlagsPageClient() {
   );
 
   const handleCreateFlag = (key: string, description: string) => {
-    if (flags.some((flag) => flag.key === key)) {
+    if (flagList.some((flag) => flag.key === key)) {
       toast.error(`Flag with key '${key}' already exists.`);
       return;
     }

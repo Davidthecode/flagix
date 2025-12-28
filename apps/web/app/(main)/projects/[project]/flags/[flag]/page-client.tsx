@@ -36,7 +36,7 @@ function PageClient() {
   const { currentEnvironment, allEnvironments } = useCurrentEnvironment();
 
   // This is the project/workspace active environment, the actual Writable Environment
-  const USER_WORKSPACE_ENV = currentEnvironment.name;
+  const USER_WORKSPACE_ENV = currentEnvironment?.name;
 
   // This tracks the environment currently displayed in the CONFIG section dropdown.
   const [viewingEnvironmentName, setViewingEnvironmentName] = useState<
@@ -45,7 +45,7 @@ function PageClient() {
 
   // This derives the environment name used for the API call and display.
   const displayEnvironmentName =
-    viewingEnvironmentName || currentEnvironment?.name;
+    viewingEnvironmentName || currentEnvironment?.name || "development";
 
   const isEditable = displayEnvironmentName === USER_WORKSPACE_ENV;
 
@@ -239,7 +239,10 @@ function PageClient() {
 
   const handleRuleOrderUpdate = useCallback(
     (newRules: TargetingRule[]) => {
-      const ruleIdsInNewOrder = newRules.map((r) => r.id);
+      const ruleIdsInNewOrder = newRules
+        .map((r) => r.id)
+        .filter((id): id is string => Boolean(id));
+
       reorderRulesMutation.mutate({ ruleIdsInNewOrder });
     },
     [reorderRulesMutation]

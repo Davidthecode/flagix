@@ -17,7 +17,7 @@ const arrayMove = <T,>(arr: T[], from: number, to: number): T[] => {
 };
 
 type SortableItemProps = {
-  rule: TargetingRule;
+  rule: TargetingRule & { id: string };
   variations: FlagVariation[];
   isEditable: boolean;
   isDeletingRule: boolean;
@@ -82,7 +82,10 @@ export const SortableRuleList = ({
   onRuleOrderChange,
   ...cardProps
 }: SortableRuleListProps) => {
-  const ruleIds = rules.map((r) => r.id);
+  const validRules = rules.filter((r): r is TargetingRule & { id: string } =>
+    Boolean(r.id)
+  );
+  const ruleIds = validRules.map((r) => r.id);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -101,7 +104,7 @@ export const SortableRuleList = ({
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={ruleIds} strategy={verticalListSortingStrategy}>
         <div className="space-y-3">
-          {rules.map((rule) => (
+          {validRules.map((rule) => (
             <SortableItem key={rule.id} rule={rule} {...cardProps} />
           ))}
         </div>
