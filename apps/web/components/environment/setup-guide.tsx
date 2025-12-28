@@ -12,9 +12,9 @@ import type { FullEnvironment } from "@/types/environment";
 type Framework = "nextjs" | "react" | "js";
 
 const frameworkNames: Record<Framework, string> = {
-  js: "JavaScript",
-  react: "React",
   nextjs: "Next.js",
+  react: "React",
+  js: "Node.js / JS",
 };
 
 export function SetupGuide({ environment }: { environment: FullEnvironment }) {
@@ -30,14 +30,6 @@ export function SetupGuide({ environment }: { environment: FullEnvironment }) {
 
   const withDirective = (code: string) => {
     return selectedFramework === "nextjs" ? `"use client";\n\n${code}` : code;
-  };
-
-  const getProviderTitle = () => {
-    if (selectedFramework === "nextjs") {
-      return "2. Configure the Provider (app/providers.tsx)";
-    }
-
-    return "2. Configure the Provider (main.tsx)";
   };
 
   const CodeBlock = ({
@@ -66,8 +58,8 @@ export function SetupGuide({ environment }: { environment: FullEnvironment }) {
             className={cn(
               "h-7 rounded px-2 text-xs transition-all",
               isCopied
-                ? "bg-emerald-50 text-emerald-600"
-                : "bg-gray-100 text-gray-600"
+                ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             )}
             onClick={() => handleCopy(code, section)}
             variant="ghost"
@@ -116,7 +108,7 @@ export function SetupGuide({ environment }: { environment: FullEnvironment }) {
       </div>
 
       <div className="flex items-center space-x-6 border-gray-100 border-b">
-        {(Object.keys(frameworkNames) as Framework[]).map((fw) => {
+        {(["nextjs", "react", "js"] as Framework[]).map((fw) => {
           const isActive = selectedFramework === fw;
           return (
             <Button
@@ -150,14 +142,18 @@ export function SetupGuide({ environment }: { environment: FullEnvironment }) {
           <CodeBlock
             code={SNIPPETS.vanilla(environment.apiKey)}
             section="vanilla"
-            title="2. Initialize & Use"
+            title="2. Initialize & Use (Browser or Node.js)"
           />
         ) : (
           <>
             <CodeBlock
               code={withDirective(SNIPPETS.provider(environment.apiKey))}
               section="provider"
-              title={getProviderTitle()}
+              title={
+                selectedFramework === "nextjs"
+                  ? "2. Configure the Provider (app/providers.tsx)"
+                  : "2. Configure the Provider (main.tsx)"
+              }
             />
             <CodeBlock
               code={withDirective(SNIPPETS.usage)}

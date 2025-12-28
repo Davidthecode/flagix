@@ -42,11 +42,17 @@ export default function MyComponent() {
 
   vanilla: (apiKey: string) => `import { Flagix } from "@flagix/js-sdk";
 
-// Initialize the SDK
+/**
+ * Initialize the SDK. 
+ * Works in Browser and Node.js (v18+).
+ */
 await Flagix.initialize({
   apiKey: "${apiKey}",
   apiBaseUrl: "http://localhost:5000",
-  initialContext: { userId: "user_123" }
+  initialContext: { 
+    userId: "server_user_01",
+    internal: true 
+  }
 });
 
 // Evaluate a flag
@@ -54,12 +60,10 @@ const isEnabled = Flagix.evaluate("my-feature-flag");
 
 // Listen for real-time updates
 Flagix.onFlagUpdate((key) => {
-  if (key === "my-feature-flag") {
-    const updatedValue = Flagix.evaluate(key);
-    console.log("Flag updated to:", updatedValue);
-  }
+  const updatedValue = Flagix.evaluate(key);
+  console.log(\`Flag \${key} updated to:\`, updatedValue);
 });
 
-// Track events
-Flagix.track("conversion_event", { source: "web" });`,
+// Track events (Conversions)
+Flagix.track("server_init", { environment: process.env.NODE_ENV });`,
 };
