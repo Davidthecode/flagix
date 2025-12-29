@@ -17,7 +17,7 @@
   },
   "scripts": {
     "migrate:backfill": "ts-node scripts/backfill-owners.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "db:generate": "prisma generate",
     "db:push": "prisma db push --skip-generate",
     "db:studio": "prisma studio",
