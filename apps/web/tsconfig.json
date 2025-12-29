@@ -16,6 +16,12 @@
     "isolatedModules": true,
     "strictNullChecks": true
   },
-  "include": ["**/*.ts", "**/*.tsx", "next-env.d.ts", ".next/types/**/*.ts"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    "proxy.ts"
+  ],
   "exclude": ["node_modules"]
 }

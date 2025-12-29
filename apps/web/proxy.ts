@@ -17,7 +17,7 @@ interface Session {
   };
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let session: Session | null = null;
 
   try {
