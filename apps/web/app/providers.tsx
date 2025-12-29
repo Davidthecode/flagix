@@ -3,6 +3,7 @@
 import { FlagixProvider } from "@flagix/react";
 import { Toaster } from "@flagix/ui/components/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { env } from "@/config/env";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -14,8 +15,8 @@ const queryClient = new QueryClient({
 });
 
 const SDK_OPTIONS = {
-  apiKey: "44f19025-072d-4e7c-b24e-3d27aa95b95b",
-  apiBaseUrl: "http://localhost:5000",
+  apiKey: env.FLAGIX_SDK_API_KEY as string,
+  apiBaseUrl: env.FLAGIX_SDK_BASE_URL as string,
   initialContext: {
     sessionId: "session-12345",
     platform: "web",
