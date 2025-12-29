@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
     "ts-node-runner": "ts-node -r tsconfig-paths/register -r dotenv/config",
     "nodemon-runner": "nodemon --exec \"npm run ts-node-runner --\"",
     "start:api": "node dist/index.js",
