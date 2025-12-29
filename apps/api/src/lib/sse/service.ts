@@ -41,6 +41,7 @@ export function sseHandler(req: Request, res: Response, environmentId: string) {
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no"); // Disable nginx buffering if present
   res.flushHeaders();
 
   if (!clients.has(environmentId)) {
@@ -50,9 +51,47 @@ export function sseHandler(req: Request, res: Response, environmentId: string) {
 
   res.write("event: connected\ndata: {}\n\n");
 
+  const keepaliveInterval = setInterval(() => {
+    try {
+      if (!res.writable || res.destroyed) {
+        clearInterval(keepaliveInterval);
+        clients.get(environmentId)?.delete(res);
+        if (clients.get(environmentId)?.size === 0) {
+          clients.delete(environmentId);
+        }
+        return;
+      }
+
+      res.write(": keepalive\n\n");
+    } catch (error) {
+      console.error(
+        `[SSE] Error sending keepalive to environment ${environmentId}:`,
+        error
+      );
+      clearInterval(keepaliveInterval);
+      clients.get(environmentId)?.delete(res);
+      if (clients.get(environmentId)?.size === 0) {
+        clients.delete(environmentId);
+      }
+    }
+  }, 30_000);
+
   req.on("close", () => {
+    clearInterval(keepaliveInterval);
     console.log(`[SSE] Client disconnected from environment: ${environmentId}`);
+
     clients.get(environmentId)?.delete(res);
+
+    if (clients.get(environmentId)?.size === 0) {
+      clients.delete(environmentId);
+    }
+  });
+
+  req.on("error", (_error) => {
+    clearInterval(keepaliveInterval);
+
+    clients.get(environmentId)?.delete(res);
+
     if (clients.get(environmentId)?.size === 0) {
       clients.delete(environmentId);
     }

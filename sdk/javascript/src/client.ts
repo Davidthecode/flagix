@@ -30,6 +30,13 @@ export class FlagixClient {
   private isInitialized = false;
   private sseConnection: FlagStreamConnection | null = null;
   private readonly emitter: FlagixEventEmitter;
+  private reconnectAttempts = 0;
+  private reconnectTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private isReconnecting = false;
+  private hasEstablishedConnection = false;
+  private readonly maxReconnectAttempts = Number.POSITIVE_INFINITY;
+  private readonly baseReconnectDelay = 1000;
+  private readonly maxReconnectDelay = 30_000;
 
   constructor(options: FlagixClientOptions) {
     this.apiKey = options.apiKey;
@@ -161,22 +168,86 @@ export class FlagixClient {
   }
 
   private async setupSSEListener(): Promise<void> {
+    if (this.sseConnection) {
+      try {
+        this.sseConnection.close();
+      } catch (error) {
+        log(
+          "warn",
+          "[Flagix SDK] Error closing existing SSE connection",
+          error
+        );
+      }
+      this.sseConnection = null;
+    }
+
     const url = `${this.apiBaseUrl}/api/sse/stream`;
 
     const source = await createEventSource(url, this.apiKey);
     if (!source) {
+      log("warn", "[Flagix SDK] Failed to create EventSource. Retrying...");
+      this.scheduleReconnect();
       return;
     }
 
     this.sseConnection = source;
 
     source.onopen = () => {
+      this.reconnectAttempts = 0;
+      this.isReconnecting = false;
+      if (this.reconnectTimeoutId) {
+        clearTimeout(this.reconnectTimeoutId);
+        this.reconnectTimeoutId = null;
+      }
+
+      // If this is a reconnection and not the first connection, refresh the cache
+      // this ensures we have the latest flag values that may have changed while disconnected
+      if (this.hasEstablishedConnection && this.isInitialized) {
+        log(
+          "info",
+          "[Flagix SDK] SSE reconnected. Refreshing cache to sync with server..."
+        );
+        this.fetchInitialConfig().catch((error) => {
+          log(
+            "error",
+            "[Flagix SDK] Failed to refresh cache after reconnection",
+            error
+          );
+        });
+      } else {
+        this.hasEstablishedConnection = true;
+      }
+
       log("info", "[Flagix SDK] SSE connection established.");
     };
 
     source.onerror = (error) => {
-      log("error", "[Flagix SDK] SSE error", error);
+      const eventSource = error.target as EventSource;
+      const readyState = eventSource?.readyState;
+
+      // EventSource.readyState: 0 = CONNECTING, 1 = OPEN, 2 = CLOSED
+      if (readyState === 2) {
+        log(
+          "warn",
+          "[Flagix SDK] SSE connection closed. Attempting to reconnect..."
+        );
+        this.handleReconnect();
+      } else if (readyState === 0) {
+        log(
+          "warn",
+          "[Flagix SDK] SSE connection error (connecting state)",
+          error
+        );
+      } else {
+        log("error", "[Flagix SDK] SSE error", error);
+        this.handleReconnect();
+      }
     };
+
+    // Listen for the "connected" event from the server
+    source.addEventListener("connected", () => {
+      log("info", "[Flagix SDK] SSE connection confirmed by server.");
+    });
 
     source.addEventListener(EVENT_TO_LISTEN, (event) => {
       try {
@@ -193,6 +264,54 @@ export class FlagixClient {
         log("error", "[Flagix SDK] Failed to parse SSE event data.", error);
       }
     });
+  }
+
+  private handleReconnect(): void {
+    if (this.isReconnecting || !this.isInitialized) {
+      return;
+    }
+
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      log(
+        "error",
+        "[Flagix SDK] Max reconnection attempts reached. Stopping reconnection."
+      );
+      return;
+    }
+
+    this.isReconnecting = true;
+    this.scheduleReconnect();
+  }
+
+  private scheduleReconnect(): void {
+    if (this.reconnectTimeoutId) {
+      clearTimeout(this.reconnectTimeoutId);
+    }
+
+    // Calculate exponential backoff delay with jitter
+    const delay = Math.min(
+      this.baseReconnectDelay * 2 ** this.reconnectAttempts,
+      this.maxReconnectDelay
+    );
+    // Add ±25% jitter to prevent thundering herd
+    const jitter = delay * 0.25 * (Math.random() * 2 - 1);
+    const finalDelay = Math.max(100, delay + jitter);
+
+    this.reconnectAttempts++;
+
+    log(
+      "info",
+      `[Flagix SDK] Scheduling SSE reconnection attempt ${this.reconnectAttempts} in ${Math.round(finalDelay)}ms...`
+    );
+
+    this.reconnectTimeoutId = setTimeout(() => {
+      this.isReconnecting = false;
+      this.reconnectTimeoutId = null;
+      this.setupSSEListener().catch((error) => {
+        log("error", "[Flagix SDK] Failed to reconnect SSE", error);
+        this.handleReconnect();
+      });
+    }, finalDelay);
   }
 
   private async fetchSingleFlagConfig(
@@ -281,8 +400,21 @@ export class FlagixClient {
    * Closes the Server-Sent Events (SSE) connection and cleans up resources.
    */
   close(): void {
+    if (this.reconnectTimeoutId) {
+      clearTimeout(this.reconnectTimeoutId);
+      this.reconnectTimeoutId = null;
+    }
+
+    this.isReconnecting = false;
+    this.reconnectAttempts = 0;
+    this.hasEstablishedConnection = false;
+
     if (this.sseConnection) {
-      this.sseConnection.close();
+      try {
+        this.sseConnection.close();
+      } catch (error) {
+        log("warn", "[Flagix SDK] Error closing SSE connection", error);
+      }
       this.sseConnection = null;
       log("info", "[Flagix SDK] SSE connection closed.");
     }

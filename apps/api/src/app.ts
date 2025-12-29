@@ -1,6 +1,7 @@
 import { toNodeHandler } from "better-auth/node";
 import cors from "cors";
 import express, { type Express } from "express";
+import { corsOptions } from "@/config/cors";
 import { auth } from "@/lib/auth/auth";
 import { requireAuth } from "@/middleware/auth";
 import flagRoutes from "@/routes/flag/route";
@@ -12,12 +13,7 @@ import trackRoutes from "@/routes/track/route";
 const createApp = (): Express => {
   const app: Express = express();
 
-  app.use(
-    cors({
-      origin: "http://localhost:3000",
-      credentials: true,
-    })
-  );
+  app.use(cors(corsOptions));
 
   app.all("/api/auth/*splat", toNodeHandler(auth));
 
