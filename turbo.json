@@ -5,22 +5,27 @@
     "build": {
       "dependsOn": ["^build", "^db:generate"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
-      "env": ["DATABASE_URL"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**", "build/**"],
+      "env": ["DATABASE_URL", "NODE_ENV", "NEXT_PUBLIC_*"]
     },
     "db:generate": {
       "cache": false,
       "env": ["DATABASE_URL"]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "outputs": []
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": ["^build"],
+      "outputs": []
     },
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "db:deploy": {
+      "cache": false,
+      "interactive": true
     }
   }
 }

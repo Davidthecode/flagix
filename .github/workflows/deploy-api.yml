@@ -1,0 +1,16 @@
+name: Deploy API
+
+on:
+  repository_dispatch:
+    types: [deploy-api]
+
+jobs:
+  deploy:
+    name: Deploy API to Render
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deploy
+        uses: johnnymanz/github-render-deploy@v1.0.0
+        with:
+          service-id: ${{ secrets.RENDER_API_SERVICE_ID }}
+          api-key: ${{ secrets.RENDER_API_KEY }}
