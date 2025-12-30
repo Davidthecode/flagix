@@ -13,6 +13,8 @@ import trackRoutes from "@/routes/track/route";
 const createApp = (): Express => {
   const app: Express = express();
 
+  app.set("trust proxy", true);
+
   app.use(cors(corsOptions));
 
   app.all("/api/auth/*splat", toNodeHandler(auth));
