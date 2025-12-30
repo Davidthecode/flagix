@@ -19,8 +19,8 @@ export async function sendProjectInviteEmail({
   inviteLink,
 }: sendProjectInviteEmailPropsType) {
   await resend.emails.send({
-    from: "onboarding@resend.dev",
-    to: "ajiboladavid0963@gmail.com", //email
+    from: "Flagix <invites@flagix.com>",
+    to: "ajiboladavid0963@gmail.com",
     subject: `Invitation to join project ${projectName}`,
     react: ProjectInviteEmail({
       projectName,
@@ -43,7 +43,7 @@ export async function sendFeedbackEmail({
   feedback,
 }: sendFeedbackEmailPropsType) {
   await resend.emails.send({
-    from: "onboarding@resend.dev",
+    from: "Flagix System <system@flagix.com>",
     to: "ajiboladavid0963@gmail.com",
     subject: `New Feedback from ${userName || userEmail}`,
     react: FeedbackEmail({
