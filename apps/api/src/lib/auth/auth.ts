@@ -18,13 +18,9 @@ export const auth = betterAuth({
   },
   advanced: {
     useSecureCookies: isProd,
-    cookies: {
-      state: {
-        attributes: {
-          sameSite: isProd ? "none" : "lax",
-          secure: isProd,
-        },
-      },
+    crossSubDomainCookies: {
+      enabled: isProd,
+      domain: "flagix.com",
     },
   },
   socialProviders: {
