@@ -31,22 +31,31 @@ jobs:
   test:
     needs: changes
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: "postgresql://test:test@localhost:5432/test"
     steps:
       - uses: actions/checkout@v4
+      
       - uses: pnpm/action-setup@v2
         with:
           version: 9
+          
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
-      - run: pnpm install
-      - run: pnpm lint
-      - run: pnpm check-types
-      - name: Build All (with dummy DB)
+          
+      - name: Install Dependencies
+        run: pnpm install
+        
+      - name: Lint
+        run: pnpm lint
+        
+      - name: Type Check
+        run: pnpm check-types
+        
+      - name: Build All Packages
         run: pnpm build
-        env:
-          DATABASE_URL: "postgresql://test:test@localhost:5432/test"
   deploy-trigger:
     needs: [test, changes]
     if: github.ref == 'refs/heads/main'
