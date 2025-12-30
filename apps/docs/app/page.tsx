@@ -1,4 +1,4 @@
-import { Button } from "@flagix/ui/button";
+import { Button } from "@flagix/ui/components/button";
 import Image, { type ImageProps } from "next/image";
 import styles from "./page.module.css";
 
@@ -63,9 +63,7 @@ export default function Home() {
             Read our docs
           </a>
         </div>
-        <Button appName="docs" className={styles.secondary}>
-          Open alert
-        </Button>
+        <Button className={styles.secondary}>Open alert</Button>
       </main>
       <footer className={styles.footer}>
         <a

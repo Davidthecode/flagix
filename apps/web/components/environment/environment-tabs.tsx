@@ -14,7 +14,7 @@ type EnvironmentTabsProps = {
   isLoading: boolean;
   isSubmitting: boolean;
   setIsCreateModalOpen: (isOpen: boolean) => void;
-  tabsContainerRef: React.RefObject<HTMLDivElement>;
+  tabsContainerRef: React.RefObject<HTMLDivElement | null>;
 };
 
 export function EnvironmentTabs({
@@ -59,7 +59,7 @@ export function EnvironmentTabs({
         )}
       </div>
       <Button
-        className="ml-4 flex-shrink-0 bg-emerald-600 p-2 text-sm text-white hover:bg-emerald-700"
+        className="ml-4 shrink-0 bg-emerald-600 p-2 text-sm text-white hover:bg-emerald-700"
         disabled={isSubmitting}
         onClick={() => setIsCreateModalOpen(true)}
       >
