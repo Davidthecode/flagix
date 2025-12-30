@@ -56,28 +56,20 @@ jobs:
         
       - name: Build All Packages
         run: pnpm build
-  deploy-trigger:
+  deploy-frontend:
     needs: [test, changes]
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger Frontend
-        if: needs.changes.outputs.web == 'true' || needs.changes.outputs.sdk == 'true'
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: deploy-frontend
+    if: github.ref == 'refs/heads/main' && (needs.changes.outputs.web == 'true' || needs.changes.outputs.sdk == 'true')
+    uses: ./.github/workflows/deploy-frontend.yml
+    secrets: inherit
 
-      - name: Trigger API
-        if: needs.changes.outputs.api == 'true'
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: deploy-api
+  deploy-api:
+    needs: [test, changes]
+    if: github.ref == 'refs/heads/main' && needs.changes.outputs.api == 'true'
+    uses: ./.github/workflows/deploy-api.yml
+    secrets: inherit
 
-      - name: Trigger Worker
-        if: needs.changes.outputs.api == 'true'
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: deploy-worker
+  deploy-worker:
+    needs: [test, changes]
+    if: github.ref == 'refs/heads/main' && needs.changes.outputs.api == 'true'
+    uses: ./.github/workflows/deploy-worker.yml
+    secrets: inherit

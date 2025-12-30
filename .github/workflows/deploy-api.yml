@@ -1,6 +1,7 @@
 name: Deploy API
 
 on:
+  workflow_call:
   repository_dispatch:
     types: [deploy-api]
 
