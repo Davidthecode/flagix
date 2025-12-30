@@ -9,6 +9,13 @@ jobs:
   deploy:
     name: Deploy to Vercel
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      deployments: write    
+      pull-requests: write  
+      statuses: write
+
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -21,4 +28,4 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: '--prod'
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          github-deployment-outcall: true
+          github-deployment: true
