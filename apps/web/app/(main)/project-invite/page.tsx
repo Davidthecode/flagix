@@ -3,7 +3,7 @@ import PageClient from "./page-client";
 
 export const metadata = {
   title: "Project Invite",
-  description: "project invite",
+  description: "Project Invite",
 };
 
 function Page() {

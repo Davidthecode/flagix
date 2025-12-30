@@ -11,7 +11,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Render Deploy
-        uses: johnnymanz/github-render-deploy@v1.0.0
-        with:
-          service-id: ${{ secrets.RENDER_API_SERVICE_ID }}
-          api-key: ${{ secrets.RENDER_API_KEY }}
+        run: curl -X POST ${{ secrets.RENDER_API_DEPLOY_HOOK }}
