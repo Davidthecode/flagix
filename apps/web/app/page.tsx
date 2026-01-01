@@ -7,7 +7,7 @@ import { HeroSection } from "@/components/home/hero";
 
 const Page = () => (
   <div className="flex w-full items-center justify-center">
-    <div className="flex min-h-screen w-full flex-col bg-[#F4F4F5]">
+    <div className="flex min-h-screen w-full flex-col">
       <Header />
       <main>
         <HeroSection />

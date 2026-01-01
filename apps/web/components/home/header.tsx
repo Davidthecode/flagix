@@ -14,7 +14,7 @@ export const Header = () => {
     "transition-colors hover:text-gray-900 dark:hover:text-white py-1";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-white/10 border-b bg-white/70 backdrop-blur-xl dark:bg-black/70">
+    <header className="sticky top-0 z-50 w-full border-white/10 border-b bg-[#F4F4F5] backdrop-blur-xl dark:bg-black/70">
       <div className="container-landing mx-auto flex h-16 items-center justify-between px-6">
         <div className="flex items-center space-x-3">
           <Image
@@ -59,9 +59,6 @@ export const Header = () => {
               target="_blank"
             >
               <Github className="h-4 w-4" />
-              <div className="rounded-full border border-gray-200 bg-gray-100 px-2 py-0.5 dark:border-white/10 dark:bg-white/5">
-                <span className="text-[11px]">Star</span>
-              </div>
             </a>
             <Link
               className="font-medium text-gray-700 text-sm dark:text-gray-300"

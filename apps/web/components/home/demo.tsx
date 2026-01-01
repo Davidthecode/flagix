@@ -8,16 +8,19 @@ export const DemoSection = () => {
   const [flagEnabled, setFlagEnabled] = useState(false);
 
   return (
-    <section className="relative overflow-hidden bg-[#09090b] py-24 md:py-32">
+    <section
+      className="relative overflow-hidden bg-[#09090b] py-24 md:py-32"
+      style={{ contain: "paint" }}
+    >
       {/* Background & Patterns */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-grid-white opacity-[0.05]" />
-        <div className="mask-[radial-gradient(ellipse_at_center,transparent_20%,black)] absolute inset-0 bg-[#09090b]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,#09090b_70%)]" />
       </div>
 
       <div className="container-landing relative z-10 mx-auto px-6">
         <div className="mb-16 text-center">
-          <h2 className="shimmer-text mx-auto max-w-4xl font-extrabold text-4xl tracking-tight sm:text-5xl md:text-6xl">
+          <h2 className="shimmer-text contain-[paint] mx-auto max-w-4xl font-extrabold text-4xl tracking-tight sm:text-5xl md:text-6xl">
             Instant Control. Zero Redeploys.
           </h2>
           <p className="mx-auto mt-6 max-w-2xl text-gray-400 text-lg leading-relaxed">

@@ -37,7 +37,7 @@ export const LoginForm = () => {
         </p>
       </div>
 
-      <div className="mt-6 flex flex-col gap-3">
+      <div className="mt-6 flex flex-col gap-4">
         <SocialButton
           disabled={isLoading}
           icon={<FcGoogle size={20} />}

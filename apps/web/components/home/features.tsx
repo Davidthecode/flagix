@@ -41,7 +41,7 @@ const features = [
   {
     title: "Observability Integration",
     description:
-      "Connect flag changes directly to your APM/logging tools (Datadog, New Relic) to instantly detect performance impacts or errors.",
+      "Connect flag changes directly to your APM/logging tools (Datadog, New Relic) to instantly detect performance impacts or errors. (coming soon)",
     icon: Monitor,
   },
 ];
@@ -51,16 +51,17 @@ export const FeaturesSection = () => {
     <section
       className="relative overflow-hidden bg-[#09090b] py-24 md:py-32"
       id="features"
+      style={{ contain: "paint" }}
     >
       {/* Background & Patterns */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-grid-white opacity-[0.05]" />
-        <div className="mask-[radial-gradient(ellipse_at_center,transparent_20%,black)] absolute inset-0 bg-[#09090b]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,#09090b_70%)]" />
       </div>
 
       <div className="container-landing relative z-10 mx-auto px-6">
         <div className="text-center">
-          <h2 className="shimmer-text mx-auto max-w-4xl font-extrabold text-4xl tracking-tight sm:text-5xl md:text-6xl">
+          <h2 className="shimmer-text contain-[paint] mx-auto max-w-4xl font-extrabold text-4xl tracking-tight sm:text-5xl md:text-6xl">
             Engineered for Developer Velocity
           </h2>
 

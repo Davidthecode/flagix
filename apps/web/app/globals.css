@@ -187,42 +187,48 @@
     background: linear-gradient(
       to right,
       transparent 0%,
-      rgba(255, 255, 255, 0) 10%,
+      rgba(255, 255, 255, 0) 20%,
       rgba(255, 255, 255, 1) 50%,
-      rgba(255, 255, 255, 0) 90%,
+      rgba(255, 255, 255, 0) 80%,
       transparent 100%
     );
-    filter: blur(20px);
+
+    mix-blend-mode: overlay;
+
+    filter: blur(15px);
+
     pointer-events: none;
     position: absolute;
     inset: 0;
     height: 100%;
     width: 100%;
-    z-index: 10;
+    z-index: 5;
   }
 
   .light-sweep-primary {
     @apply animate-wave;
+    opacity: 1;
   }
 
   .light-sweep-secondary {
-    opacity: 0.6;
     @apply animate-wave;
-    animation-delay: 2s;
+    animation-delay: 2.5s;
+    opacity: 0.7;
   }
 
-  /* We can also move the shimmer effect here while we're at it */
   .shimmer-text {
-    color: rgba(255, 255, 255, 0.35);
-    background: linear-gradient(
-      to right,
-      transparent 20%,
-      rgba(255, 255, 255, 1) 50%,
-      transparent 80%
-    );
-    background-size: 200% 100%;
-    background-clip: text;
+    color: white;
+
+    isolation: isolate;
+    backface-visibility: hidden;
+
+    background: linear-gradient(to right, #888 20%, #fff 50%, #888 80%);
+    background-size: 200% auto;
     -webkit-background-clip: text;
+    background-clip: text;
+
+    -webkit-text-fill-color: transparent;
+
     animation: text-scan 3s linear infinite;
   }
 
