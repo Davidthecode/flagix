@@ -136,6 +136,75 @@ router.get("/", async (req: RequestWithSession, res: Response) => {
   }
 });
 
+router.post("/", async (req: RequestWithSession, res: Response) => {
+  const session = req.session;
+  if (!session) {
+    return res.status(401).json({ error: "unauthenticated" });
+  }
+
+  const userId = session.user.id;
+
+  try {
+    const body = createProjectSchema.parse(req.body);
+
+    const project = await db.$transaction(async (tx) => {
+      const proj = await tx.project.create({
+        data: {
+          name: body.name,
+          description: body.description ?? null,
+          ownerId: userId,
+        },
+      });
+
+      await tx.projectMember.create({
+        data: {
+          userId,
+          projectId: proj.id,
+          role: "OWNER",
+        },
+      });
+
+      const defaultEnvs = ["development", "staging", "production"];
+      await Promise.all(
+        defaultEnvs.map((name) =>
+          tx.environment.create({
+            data: {
+              name,
+              apiKey: crypto.randomUUID(),
+              projectId: proj.id,
+            },
+          })
+        )
+      );
+
+      await tx.activityLog.create({
+        data: {
+          projectId: proj.id,
+          userId,
+          actionType: "PROJECT_CREATED",
+          description: `Project created: "${proj.name}".`,
+          details: body,
+        },
+      });
+
+      return proj;
+    });
+
+    res.status(201).json({
+      id: project.id,
+      name: project.name,
+      subtitle: project.description || "No description",
+      flags: 0,
+      environments: 3,
+      lastUpdated: "Just now",
+      isFavorite: false,
+    });
+  } catch (error) {
+    console.error("Failed to create project:", error);
+    res.status(500).json({ error: "Failed to create project" });
+  }
+});
+
 router.post("/feedback", async (req: RequestWithSession, res: Response) => {
   const session = req.session;
 
@@ -219,79 +288,6 @@ router.get(
     } catch (error) {
       console.error(`Failed to get project ${projectId} details:`, error);
       res.status(500).json({ error: "Failed to get project details" });
-    }
-  }
-);
-
-router.post(
-  "/",
-  verifyRole.MEMBER,
-  async (req: RequestWithSession, res: Response) => {
-    const session = req.session;
-    if (!session) {
-      return res.json({ error: "unauthenticated", status: 401 });
-    }
-
-    const userId = session.user.id;
-
-    try {
-      const body = createProjectSchema.parse(req.body);
-
-      const project = await db.$transaction(async (tx) => {
-        const proj = await tx.project.create({
-          data: {
-            name: body.name,
-            description: body.description ?? null,
-            ownerId: userId,
-          },
-        });
-
-        await tx.projectMember.create({
-          data: {
-            userId,
-            projectId: proj.id,
-            role: "OWNER",
-          },
-        });
-
-        const defaultEnvs = ["development", "staging", "production"];
-        await Promise.all(
-          defaultEnvs.map((name) =>
-            tx.environment.create({
-              data: {
-                name,
-                apiKey: crypto.randomUUID(),
-                projectId: proj.id,
-              },
-            })
-          )
-        );
-
-        await tx.activityLog.create({
-          data: {
-            projectId: proj.id,
-            userId,
-            actionType: "PROJECT_CREATED",
-            description: `Project created: "${proj.name}".`,
-            details: body,
-          },
-        });
-
-        return proj;
-      });
-
-      res.status(201).json({
-        id: project.id,
-        name: project.name,
-        subtitle: project.description || "No description",
-        flags: 0,
-        environments: 3,
-        lastUpdated: "Just now",
-        isFavorite: false,
-      });
-    } catch (error) {
-      console.error("Failed to create project:", error);
-      res.status(500).json({ error: "Failed to create project" });
     }
   }
 );

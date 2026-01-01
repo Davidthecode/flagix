@@ -131,8 +131,13 @@ export const ProjectList = () => {
     starMutation.mutate(id);
   };
 
-  const handleCreateProject = (name: string, description: string) => {
-    createMutation.mutate({ name, description });
+  const handleCreateProject = async (name: string, description: string) => {
+    try {
+      await createMutation.mutateAsync({ name, description });
+      return true;
+    } catch (_error) {
+      return false;
+    }
   };
 
   if (isListLoading) {

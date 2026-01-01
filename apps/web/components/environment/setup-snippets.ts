@@ -8,7 +8,7 @@ export const SNIPPETS = {
 
 const options = {
   apiKey: "${apiKey}",
-  apiBaseUrl: "http://localhost:5000",
+  apiBaseUrl: "https://api.flagix.com",
   initialContext: {
     userId: "user_123", 
     platform: "web",
@@ -48,7 +48,7 @@ export default function MyComponent() {
  */
 await Flagix.initialize({
   apiKey: "${apiKey}",
-  apiBaseUrl: "http://localhost:5000",
+  apiBaseUrl: "https://api.flagix.com",
   initialContext: { 
     userId: "server_user_01",
     internal: true 

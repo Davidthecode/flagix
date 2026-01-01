@@ -15,7 +15,7 @@ import { useState } from "react";
 type CreateProjectModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreate: (name: string, description: string) => void;
+  onCreate: (name: string, description: string) => Promise<boolean>;
   isSubmitting: boolean;
 };
 
@@ -28,12 +28,16 @@ export const CreateProjectModal = ({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      onCreate(name, description);
-      setName("");
-      setDescription("");
+      const success = await onCreate(name, description);
+
+      if (success) {
+        setName("");
+        setDescription("");
+        onOpenChange(false);
+      }
     }
   };
 
