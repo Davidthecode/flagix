@@ -1,135 +1,126 @@
-# Turborepo starter
+<h1 align="center">Flagix</h1>
 
-This Turborepo starter is maintained by the Turborepo core team.
+<p align="center">
+  <img src="apps/web/public/icon.png" alt="Flagix logo" />
+</p>
 
-## Using this example
+<p align="center"><em>A simple feature flag service that supports gradual rollouts, A/B testing, and user targeting for teams.</em></p>
 
-Run the following command:
+---
 
-```sh
-npx create-turbo@latest
+## Overview
+
+Flagix is a lightweight feature flag management platform designed to help teams safely deploy and control features. With support for gradual rollouts, A/B testing, and user targeting, Flagix enables you to ship features faster while maintaining control over your releases.
+
+## Features
+
+- **Feature Flags**: Enable or disable features instantly without deploying code
+- **Gradual Rollouts**: Roll out features to a percentage of your users
+- **A/B Testing**: Run experiments with weighted variations
+- **User Targeting**: Target specific users, segments, or attributes
+- **Real-time Updates**: Changes reflect instantly in your applications
+- **Multi-environment**: Manage flags across development, staging, production, and more.
+- **SDKs**: Native JavaScript and React SDKs for easy integration
+- **Analytics**: Track flag usage and experiment results
+
+## Architecture
+
+Flagix is built as a monorepo using Turborepo with the following key components:
+
+- **Web App**: Next.js dashboard for managing flags and viewing analytics
+- **API**: Express.js backend serving the REST API and real-time updates
+- **Database**: PostgreSQL with Prisma ORM for data persistence
+- **SDKs**: JavaScript and React libraries for client integration
+- **Evaluation Core**: Core logic for flag evaluation and targeting
+
+## Quick Start
+
+### Using the SDKs
+
+Install the appropriate SDK for your application:
+
+```bash
+# JavaScript SDK
+npm install @flagix/js-sdk
+
+# React SDK
+npm install @flagix/react
 ```
 
-## What's inside?
+```javascript
+// JavaScript SDK
+import { Flagix } from "@flagix/js-sdk";
 
-This Turborepo includes the following packages/apps:
+// Initialize the SDK. 
+await Flagix.initialize({
+  apiKey: "<YOUR_API_KEY>",
+  apiBaseUrl: "https://api.flagix.com",
+  initialContext: { 
+    userId: "server_user_01",
+    internal: true 
+  }
+});
 
-### Apps and Packages
+// Evaluate a flag
+const isEnabled = Flagix.evaluate("my-feature-flag");
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+// Listen for real-time updates
+Flagix.onFlagUpdate((key) => {
+  const updatedValue = Flagix.evaluate(key);
+  console.log(`Flag ${key} updated to:`, updatedValue);
+});
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+// Track events (Conversions)
+Flagix.track("server_init", { environment: process.env.NODE_ENV });
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+```jsx
+// React SDK
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+// Configure the provider
+import { FlagixProvider } from "@flagix/react";
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+const options = {
+  apiKey: "<YOUR_API_KEY>",
+  apiBaseUrl: "https://api.flagix.com",
+  initialContext: {
+    userId: "user_123", 
+    platform: "web",
+  },
+};
 
-### Develop
+export default function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <FlagixProvider options={options}>
+      {children}
+    </FlagixProvider>
+  );
+}
 
-To develop all apps and packages, run the following command:
 
-```
-cd my-turborepo
+// Use in component
+import { useFlag, useFlagixActions } from "@flagix/react";
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+export default function MyComponent() {
+  const isFeatureEnabled = useFlag<boolean>("my-feature-flag");
+  const { track } = useFlagixActions();
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+  if (isFeatureEnabled) {
+    return (
+      <button onClick={() => track("button_click")}>
+        New Feature
+      </button>
+    );
+  }
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+  return <div>Old Feature</div>;
+}
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+## Getting Started
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+Want to run Flagix locally or contribute a feature? Check out our [Contributing Guide](./.github/CONTRIBUTING.md) for a step-by-step guide.
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+## License
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+Flagix is released under the **MIT License** - see the [LICENSE](./LICENSE) file for details.
