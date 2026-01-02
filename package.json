@@ -4,8 +4,8 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "web:dev": "turbo dev --filter=web",
-    "api:dev": "turbo dev --filter=api",
+    "web:dev": "turbo dev --filter=@flagix/web",
+    "api:dev": "turbo dev --filter=@flagix/api",
     "db:migrate": "pnpm --filter @flagix/db db:migrate",
     "db:deploy": "pnpm --filter @flagix/db db:deploy",
     "db:generate": "pnpm --filter @flagix/db db:generate",
@@ -14,7 +14,7 @@
     "check-types": "turbo run check-types",
     "lint": "npx ultracite@latest check",
     "format": "npx ultracite@latest fix",
-    "release": "turbo run build && changeset publish",
+    "release": "turbo run build --filter=\"@flagix/js-sdk\" --filter=\"@flagix/react\" --filter=\"@flagix/evaluation-core\" && changeset publish",
     "prepare": "husky || true"
   },
   "devDependencies": {
