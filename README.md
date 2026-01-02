@@ -1,7 +1,7 @@
 <h1 align="center">Flagix</h1>
 
 <p align="center">
-  <img src="apps/web/public/icon.png" alt="Flagix logo" />
+  <img src="apps/web/public/icon.png" alt="Flagix logo" width="64" height="64" />
 </p>
 
 <p align="center"><em>A simple feature flag service that supports gradual rollouts, A/B testing, and user targeting for teams.</em></p>
