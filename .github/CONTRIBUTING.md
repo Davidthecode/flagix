@@ -79,14 +79,14 @@ Visit the Flagix repository and click the "Fork" button in the top right.
 ### 2. Clone the fork to your local device
 
 ```bash
-git clone https://github.com/flagix-io/flagix.git
+git clone https://github.com/Davidthecode/flagix.git
 cd flagix
 ```
 
 ### 3. Add the original repo as upstream
 
 ```bash
-git remote add upstream https://github.com/flagix-io/flagix.git
+git remote add upstream https://github.com/Davidthecode/flagix.git
 ```
 
 ### 4. Install Dependencies
