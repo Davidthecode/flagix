@@ -7,5 +7,11 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@flagix/web", "@flagix/api"]
+  "ignore": [
+    "@flagix/api",
+    "@flagix/db",
+    "@flagix/data-sync",
+    "@flagix/web",
+    "@flagix/docs"
+  ]
 }

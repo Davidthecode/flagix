@@ -1,6 +1,7 @@
 {
   "name": "@flagix/data-sync",
   "version": "1.0.1",
+  "private": true,
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
