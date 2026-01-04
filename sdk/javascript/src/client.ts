@@ -135,6 +135,10 @@ export class FlagixClient {
       "info",
       "[Flagix SDK] Context updated. Evaluations will use the new context."
     );
+
+    for (const flagKey of this.localCache.keys()) {
+      this.emitter.emit(FLAG_UPDATE_EVENT, flagKey);
+    }
   }
 
   private async fetchInitialConfig(): Promise<void> {

@@ -1,6 +1,10 @@
 "use client";
 
-import { Flagix, type FlagixClientOptions } from "@flagix/js-sdk";
+import {
+  type EvaluationContext,
+  Flagix,
+  type FlagixClientOptions,
+} from "@flagix/js-sdk";
 import type React from "react";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
@@ -14,12 +18,19 @@ const FlagixContext = createContext<FlagixContextType | null>(null);
 export interface FlagixProviderProps {
   children: React.ReactNode;
   options: FlagixClientOptions;
+  context?: EvaluationContext;
 }
 
-export const FlagixProvider = ({ children, options }: FlagixProviderProps) => {
+export const FlagixProvider = ({
+  children,
+  options,
+  context,
+}: FlagixProviderProps) => {
   const [isReady, setIsReady] = useState(() => Flagix.isInitialized());
   const [error, setError] = useState<Error | null>(null);
+  const { apiKey, apiBaseUrl } = options;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <>
   useEffect(() => {
     let mounted = true;
 
@@ -40,7 +51,13 @@ export const FlagixProvider = ({ children, options }: FlagixProviderProps) => {
     return () => {
       mounted = false;
     };
-  }, [options]);
+  }, [apiKey, apiBaseUrl]);
+
+  useEffect(() => {
+    if (isReady && context) {
+      Flagix.setContext(context);
+    }
+  }, [isReady, context]);
 
   const value = useMemo(() => ({ isReady, error }), [isReady, error]);
 
