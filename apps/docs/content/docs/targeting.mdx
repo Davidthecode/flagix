@@ -1,0 +1,237 @@
+---
+title: User Targeting & Rules
+description: Master advanced targeting rules, conditions, and A/B testing strategies
+---
+
+Flagix provides powerful targeting capabilities to deliver features to the right users at the right time. Using rules, you can target specific user segments, gradually roll out features, or run A/B tests.
+
+## Understanding the Rule System
+
+Every flag in Flagix has an ordered list of **rules** that determine which users see which variations. Rules are evaluated in order from top to bottom—the first rule that matches determines the result.
+
+### Rule Types
+
+Flagix supports two main types of rules:
+
+#### 1. Targeting Rules
+
+Serve a specific variation to users who match certain conditions.
+
+**Use cases:**
+- Show premium features only to premium users
+- Target specific users for early access
+- Region-based feature delivery
+- Role-based feature access
+
+**Example:**
+```
+Rule: "Premium Users"
+  Conditions: plan == "premium"
+  Rollout: 100%
+  Target Variation: "new-ui-premium"
+```
+
+**With rollout percentage:**
+```
+Rule: "Gradual Rollout to All Users"
+  Conditions: (none - applies to everyone)
+  Rollout: 25%
+  Target Variation: "new-ui"
+```
+
+#### 2. Experiment Rules (A/B Tests)
+
+Split traffic between multiple variations to compare their performance.
+
+**Use cases:**
+- A/B test different UX designs
+- Compare feature implementations
+- Test different pricing strategies
+- Optimize conversion rates
+
+**Example:**
+```
+Rule: "Checkout Flow Experiment"
+  Variation A (Control): 50% traffic
+  Variation B (Test): 50% traffic
+```
+
+### Rule Evaluation Order
+
+Rules are evaluated top-to-bottom. The first rule that matches determines the result:
+
+```
+1. Is user a beta tester? → Show "beta-features"
+2. Is user premium? → Show "premium-features"  
+3. Gradual rollout (50%)? → Show "new-ui"
+4. Default → Show "old-ui"
+```
+
+If none of the rules match, Flagix returns the **default variation**.
+
+## Rule Conditions
+
+Conditions are the criteria that determine if a rule applies to a user. All conditions in a rule must be true (AND logic).
+
+### Available Operators
+
+| Operator | Type | Description | Example |
+|----------|------|-------------|---------|
+| `==` | String/Number | Exact match | `plan == "premium"` |
+| `!=` | String/Number | Not equal | `status != "inactive"` |
+| `contains` | String | String contains substring | `email contains "@company.com"` |
+| `startsWith` | String | String starts with | `username startsWith "admin_"` |
+| `endsWith` | String | String ends with | `domain endsWith ".co.uk"` |
+| `in` | List | Value in list | `role in ["admin", "moderator"]` |
+| `>` | Number | Greater than | `accountAge > 30` |
+| `>=` | Number | Greater than or equal | `score >= 100` |
+| `<` | Number | Less than | `age < 18` |
+| `<=` | Number | Less than or equal | `credits <= 0` |
+
+### Condition Examples
+
+```javascript
+// String conditions
+{ attribute: "plan", operator: "==", value: "premium" }
+{ attribute: "email", operator: "contains", value: "@company.com" }
+
+// Numeric conditions
+{ attribute: "age", operator: ">=", value: "18" }
+{ attribute: "accountDays", operator: ">", value: "365" }
+
+// List conditions
+{ attribute: "role", operator: "in", value: "admin,moderator,viewer" }
+```
+
+## Setting Up Rules
+
+### Creating a Targeting Rule
+
+1. Open your flag in the dashboard
+2. Click **Add Rule**
+3. Enter a descriptive name (e.g., "Premium Users")
+4. Select **Targeting Rule** as the type
+5. Add conditions to target specific users:
+   - `plan == premium`
+   - `country == US`
+6. Choose the rollout percentage (default: 100%)
+7. Select the target variation
+8. Click **Save**
+
+### Creating an Experiment Rule
+
+1. Open your flag in the dashboard
+2. Click **Add Rule**
+3. Enter a descriptive name (e.g., "Checkout Redesign A/B Test")
+4. Select **Experiment Rule** as the type
+5. Set up variation splits:
+   - Variation A: 50%
+   - Variation B: 50%
+6. Click **Save**
+
+## Real-World Targeting Examples
+
+### Example 1: Gradual Feature Rollout
+
+Roll out a new feature to increasing percentages of users:
+
+```
+Rule 1: "10% Rollout"
+  Conditions: (none)
+  Rollout: 10%
+  Target: "new-checkout"
+  
+[Wait for metrics and feedback]
+
+Rule 1: "25% Rollout"  
+  Conditions: (none)
+  Rollout: 25%
+  Target: "new-checkout"
+
+[Continue scaling...]
+```
+
+### Example 2: Segment-Based Targeting
+
+Deliver different experiences based on user segment:
+
+```
+Rule 1: "Free Users - Simple Checkout"
+  Conditions: plan == "free"
+  Rollout: 100%
+  Target: "simple-checkout"
+
+Rule 2: "Premium Users - Advanced Checkout"
+  Conditions: plan == "premium"
+  Rollout: 100%
+  Target: "advanced-checkout"
+
+Rule 3: "Enterprise Users - Custom Checkout"
+  Conditions: plan == "enterprise"
+  Rollout: 100%
+  Target: "custom-checkout"
+```
+
+### Example 3: A/B Test with Early Access
+
+Run an A/B test while giving early access to a specific group:
+
+```
+Rule 1: "Early Testers - New UI"
+  Conditions: betaTester == true
+  Rollout: 100%
+  Target: "new-ui"
+
+Rule 2: "A/B Test - 50/50 Split"
+  Conditions: (none)
+  Rollout: 100%
+  Variation A: 50%
+  Variation B: 50%
+
+[Measure results in the Analytics dashboard]
+```
+
+### Example 4: Geographic Targeting
+
+Show features only in specific regions:
+
+```
+Rule 1: "US Users Only"
+  Conditions: country in ["US", "CA", "MX"]
+  Rollout: 100%
+  Target: "us-features"
+
+Rule 2: "EU Users with GDPR Compliance"
+  Conditions: country in ["DE", "FR", "IT", "ES"]
+  Rollout: 100%
+  Target: "gdpr-features"
+```
+
+## Rollout Percentages
+
+Rollout percentages control what fraction of users matching a rule's conditions receive the target variation.
+
+**How it works:**
+- Each user is consistently assigned to a "bucket" (0-99) based on their user ID
+- Users with buckets below the rollout percentage see the variation
+- The same user always gets the same bucket (consistent bucketing)
+
+**Use cases:**
+- **100%**: All matching users see the variation
+- **50%**: Half of matching users see the variation (useful for A/B tests)
+- **10%**: Only 10% of matching users see the variation (safe rollouts)
+
+## How Consistent Bucketing Works
+
+Flagix uses a hashing algorithm to ensure the same user always gets the same variation:
+
+1. User ID is hashed (SHA-256)
+2. Hash is converted to a bucket number (0-99)
+3. Bucket is compared against rollout percentage
+4. Result is deterministic and stable
+
+**Benefit**: Users see consistent experiences across page refreshes, devices, and time.
+
+---
+
+Check out our [Analytics Guide](/docs/analytics) to measure the impact of your targeting strategies and A/B tests.

@@ -1,0 +1,92 @@
+---
+title: Environments & Configuration
+description: Manage feature flags across development, staging, and production
+---
+
+Flagix allows you to manage separate flag configurations across multiple environments. This guide explains how environments work.
+
+## Understanding Environments
+
+Environments are separate instances of your feature flag configuration. Common environments include:
+
+- **Development**: Local development and team testing
+- **Staging**: Production-like environment for QA and acceptance testing
+- **Production**: Live environment serving real users
+
+Each environment has:
+- Independent flag enable/disable settings
+- Separate targeting rules
+- Isolated analytics
+- Own traffic flow
+
+## Environment Isolation
+
+Flags and variations are shared across environments, but **everything else is isolated**:
+
+| Aspect | Shared | Isolated |
+|--------|--------|----------|
+| **Variations** | ✅ Yes | - |
+| **Flag Key** | ✅ Yes | - |
+| **Flag Name** | ✅ Yes | - |
+| **Enabled Status** | - | ✅ Per environment |
+| **Default Variation** | - | ✅ Per environment |
+| **Targeting Rules** | - | ✅ Per environment |
+| **Rule Order** | - | ✅ Per environment |
+| **Rollout Percentages** | - | ✅ Per environment |
+| **Analytics Data** | - | ✅ Per environment |
+
+## Managing Environment-Specific Rules
+
+### Environment Selector
+
+In the flag detail page, use the environment dropdown to switch between environments:
+
+```
+[Development ▼] | [Staging ▼] | [Production ▼]
+```
+
+Each environment shows its own configuration.
+
+### Creating Environment-Specific Rules
+
+Rules are managed per environment:
+
+1. Select the environment from the dropdown
+2. Scroll to **Targeting Rules**
+3. Add or edit rules
+4. Rules only affect the selected environment
+
+### Copying Rules Between Environments
+
+To replicate rules from staging to production:
+
+1. Open Staging environment
+2. Note the rule configuration
+3. Switch to Production environment
+4. Manually recreate the same rule structure
+5. Adjust percentages as needed
+
+## SDK Integration Across Environments
+
+### Detecting Current Environment
+
+Your application should know which environment it's running in:
+(Ensure you use the correct api key for the environment you're in)
+
+```javascript
+// Determine environment
+const env = process.env.NODE_ENV; // "development", "staging", "production"
+
+// Initialize Flagix with environment-specific API key
+await Flagix.initialize({
+  apiKey: process.env[`FLAGIX_API_KEY_${env.toUpperCase()}`],
+  apiBaseUrl: process.env.FLAGIX_API_URL,
+  initialContext: {
+    userId: user.id,
+    environment: env
+  }
+});
+```
+---
+
+Learn more about [User Targeting](/docs/targeting) to set up environment-specific rules effectively.

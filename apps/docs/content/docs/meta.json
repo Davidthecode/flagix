@@ -1,0 +1,13 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "introduction",
+    "installation",
+    "sdk",
+    "features",
+    "targeting",
+    "analytics",
+    "environments"
+  ]
+}

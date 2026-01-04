@@ -1,0 +1,313 @@
+---
+title: React & Next.js SDK
+description: Complete reference for the Flagix React and Next.js SDK
+---
+
+The Flagix React SDK provides React-specific components and hooks for seamless integration with your React and Next.js applications. Works with both traditional React apps and Next.js projects (App Router and Pages Router).
+
+## Installation
+
+```bash
+npm install @flagix/react
+# or
+yarn add @flagix/react
+# or
+pnpm add @flagix/react
+```
+
+## Setup for React Apps
+
+If you're using a traditional React app (Create React App, Vite, etc.), wrap your root component:
+
+```jsx
+import { FlagixProvider } from "@flagix/react";
+
+const options = {
+  apiKey: "your-api-key",
+  apiBaseUrl: "https://api.flagix.com",
+  initialContext: {
+    userId: "user_123",
+    email: "user@example.com",
+    plan: "premium"
+  }
+};
+
+function App() {
+  return (
+    <FlagixProvider options={options}>
+      <YourApp />
+    </FlagixProvider>
+  );
+}
+
+export default App;
+```
+
+## Setup for Next.js
+
+For Next.js, Use the App Router (recommended) or Pages Router.
+
+### Next.js App Router
+
+Create a `providers.tsx` file in your app directory:
+
+```tsx
+"use client";
+
+import { FlagixProvider } from "@flagix/react";
+import type React from "react";
+
+const flagixOptions = {
+  apiKey: "your-api-key",
+  apiBaseUrl: "https://api.flagix.com",
+  initialContext: {
+    userId: "user_123",
+    email: "user@example.com",
+    plan: "premium"
+  }
+};
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <FlagixProvider options={flagixOptions}>
+      {children}
+    </FlagixProvider>
+  );
+}
+```
+
+Then wrap your root layout:
+
+```tsx
+import type { Metadata } from "next";
+import { Providers } from "./providers";
+
+export const metadata: Metadata = {
+  title: "My App",
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
+  );
+}
+```
+
+### Next.js Pages Router
+
+Wrap your `_app.tsx`:
+
+```tsx
+import type { AppProps } from "next/app";
+import { FlagixProvider } from "@flagix/react";
+
+const flagixOptions = {
+  apiKey: "your-api-key",
+  apiBaseUrl: "https://api.flagix.com",
+  initialContext: {
+    userId: "user_123",
+    email: "user@example.com",
+    plan: "premium"
+  }
+};
+
+export default function App({ Component, pageProps }: AppProps) {
+  return (
+    <FlagixProvider options={flagixOptions}>
+      <Component {...pageProps} />
+    </FlagixProvider>
+  );
+}
+```
+
+## FlagixProvider
+
+The `FlagixProvider` component wraps your application and provides Flagix functionality to all child components.
+
+### Props
+
+```typescript
+interface FlagixProviderProps {
+  options: FlagixClientOptions;
+  context?: EvaluationContext;
+  children: React.ReactNode;
+}
+```
+
+#### Props Details
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `options` | `FlagixClientOptions` | ✅ | SDK configuration (apiKey, apiBaseUrl, etc.) |
+| `context` | `EvaluationContext` | ❌ | Dynamic context that syncs with all flag evaluations |
+| `children` | `React.ReactNode` | ✅ | Child components |
+
+### Example
+
+```jsx
+import { FlagixProvider } from "@flagix/react";
+
+const options = {
+  apiKey: "your-api-key",
+  apiBaseUrl: "https://api.flagix.com",
+  initialContext: {
+    userId: "user_123",
+    email: "user@example.com",
+    plan: "premium"
+  }
+};
+
+function App() {
+  return (
+    <FlagixProvider options={options}>
+      <YourApp />
+    </FlagixProvider>
+  );
+}
+```
+
+## Hooks
+
+### Declarative Syncing with Context Prop
+
+The recommended way to keep flag evaluations in sync with your application state is to pass a `context` prop to `FlagixProvider`. This is especially useful in authenticated applications where user state changes dynamically.
+
+```jsx
+import { FlagixProvider } from "@flagix/react";
+import { useAuth } from "./hooks/use-auth"; // Your auth hook
+
+const options = {
+  apiKey: "your-api-key",
+  apiBaseUrl: "https://api.flagix.com",
+};
+
+function App() {
+  const user = useAuth(); // Gets current authenticated user
+
+  return (
+    <FlagixProvider options={options} context={user}>
+      {/* All child components automatically re-evaluate when user changes */}
+      <Dashboard />
+    </FlagixProvider>
+  );
+}
+
+function Dashboard() {
+  const premiumFeatures = useFlag("premium-features");
+  
+  // When user.plan changes, this automatically re-evaluates
+  return (
+    <div>
+      {premiumFeatures && <PremiumSection />}
+    </div>
+  );
+}
+```
+
+The `context` prop is automatically synced with `setContext()` internally. When the context changes, all components using `useFlag()` automatically re-render with the latest flag values—no manual updates needed.
+
+### useFlag()
+
+The primary hook for evaluating feature flags in React components.
+
+```typescript
+function useFlag<T extends VariationValue>(
+  flagKey: string,
+  contextOverrides?: EvaluationContext
+): T | null
+```
+
+#### Parameters
+
+- `flagKey` - The key of the flag to evaluate
+- `contextOverrides` - Optional context to override the global context
+
+#### Returns
+
+- The evaluated value of the flag, or `null` if the flag doesn't exist
+
+#### Examples
+
+```jsx
+import { useFlag } from "@flagix/react";
+
+function FeatureComponent() {
+  const isNewFeatureEnabled = useFlag<boolean>("new-feature");
+  
+  if (isNewFeatureEnabled === null) {
+    return <div>Loading...</div>;
+  }
+  
+  if (isNewFeatureEnabled) {
+    return <NewFeature />;
+  }
+  
+  return <OldFeature />;
+}
+```
+
+### useFlagixActions()
+
+Hook for accessing Flagix actions like tracking events and updating context.
+
+```typescript
+function useFlagixActions(): {
+  track: (eventName: string, properties?: Record<string, unknown>) => void;
+  setContext: (newContext: EvaluationContext) => void;
+}
+```
+
+#### When to Use `setContext()`
+
+While the `context` prop on `FlagixProvider` is the recommended way to manage global user state, `setContext()` is still available for:
+
+- **Temporary overrides**: Quick testing or short-lived changes that don't warrant provider state updates
+- **Manual updates**: Fine-grained control in edge cases
+- **Vanilla JavaScript**: Applications not using a provider pattern
+
+For most authenticated applications, prefer passing user state via the `context` prop for cleaner, more declarative code.
+
+#### Examples
+
+```jsx
+import { useFlagixActions } from "@flagix/react";
+
+function PurchaseButton() {
+  const { track } = useFlagixActions();
+  
+  const handlePurchase = () => {
+    // Track purchase event
+    track("purchase_completed", {
+      amount: 99.99,
+      currency: "USD",
+      productId: "prod_123"
+    });
+    
+    // Process purchase...
+  };
+  
+  return <button onClick={handlePurchase}>Buy Now</button>;
+}
+
+function TestComponent() {
+  const { setContext } = useFlagixActions();
+  
+  // Temporary context override for testing
+  const handleTestAsAdmin = () => {
+    setContext({ role: "admin" });
+  };
+  
+  return <button onClick={handleTestAsAdmin}>Test Admin Features</button>;
+}
+```
+---
+
+Need help? [contact support](https://x.com/flagixx).

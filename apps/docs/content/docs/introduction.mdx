@@ -1,0 +1,94 @@
+---
+title: Introduction
+description: A comprehensive guide to Flagix feature flag management platform
+---
+
+# Welcome to Flagix Documentation
+
+Flagix is a lightweight feature flag management platform designed to help teams safely deploy and control features. With support for gradual rollouts, A/B testing, and user targeting, Flagix enables you to ship features faster while maintaining control over your releases.
+
+## What are Feature Flags?
+
+Feature flags (also known as feature toggles) are a software development technique that lets you enable or disable features without deploying new code. This powerful approach gives you:
+
+- **Instant Control**: Turn features on or off in real-time
+- **Risk Mitigation**: Roll back problematic features instantly
+- **Gradual Rollouts**: Release features to subsets of users
+- **A/B Testing**: Test different variations with your users
+- **Targeted Delivery**: Show features to specific user segments
+
+## Why Choose Flagix?
+
+### **Developer Friendly**
+- Simple SDKs for JavaScript and React
+- Minimal setup required
+- TypeScript support out of the box
+
+### **Real-time Updates**
+- Changes reflect instantly in your applications
+
+### **Advanced Targeting**
+- Target specific users or segments
+- Attribute-based targeting
+- Percentage-based rollouts
+
+### **Analytics & Insights**
+- Track flag usage and performance
+- Monitor experiment results
+- Conversion tracking
+
+### **Enterprise Ready**
+- Multi-environment support
+- Role-based access control
+- Audit logs
+
+## Key Concepts
+
+### Variations
+
+Each flag can have multiple variations that represent different values:
+
+```javascript
+// Boolean variation
+const isNewUI = Flagix.evaluate("new-ui"); // true or false
+
+// String variation
+const theme = Flagix.evaluate("theme-mode"); // "light", "dark", "auto"
+
+// Number variation
+const timeoutMs = Flagix.evaluate("api-timeout"); // 5000, 10000, 30000
+```
+
+### Rules & Targeting
+
+Rules determine which users see which variations:
+
+- **Targeting Rules**: Serve a specific variation to users matching certain conditions
+- **Experiment Rules**: Split traffic between variations for A/B testing
+- **Percentage Rollouts**: Gradually release features to a percentage of users
+
+### Environments
+
+Manage flags separately across development, staging, and production with isolated configurations for each environment.
+
+## Getting Started
+
+Ready to integrate Flagix into your application?
+
+1. **[Installation](/docs/installation)** - Set up the SDK in your project
+2. **[Creating Flags](/docs/features/creating)** - Create and configure your first flag
+3. **[User Targeting](/docs/targeting)** - Set up targeting rules
+4. **[Analytics](/docs/analytics)** - Track usage and measure impact
+
+## How Flagix Works
+
+**The evaluation flow:**
+
+1. Your application calls `Flagix.evaluate(flagKey)` with user context
+2. The SDK evaluates rules locally
+3. Returns the appropriate variation value
+4. Automatically tracks the evaluation for analytics
+5. Real-time updates push flag changes to all connected clients
+6. **Reactive Updates**: When user attributes change (like a plan upgrade), the SDK notifies all components to re-evaluate instantly
+
+This ensures evaluations are **instant, reliable, and low-latency** since they happen locally without network calls.

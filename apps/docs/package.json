@@ -4,6 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "postinstall": "fumadocs-mdx",
     "dev": "next dev --turbopack --port 3001",
     "build": "next build",
     "start": "next start",
@@ -13,16 +14,23 @@
   },
   "dependencies": {
     "@flagix/ui": "workspace:*",
-    "next": "^15.5.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "@tailwindcss/postcss": "^4.1.16",
+    "fumadocs-core": "^16.4.2",
+    "fumadocs-mdx": "^14.2.4",
+    "fumadocs-ui": "^16.4.2",
+    "lucide-react": "^0.548.0",
+    "next": "^16.1.1",
+    "postcss": "^8.5.6",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "tailwindcss": "^4.1.16"
   },
   "devDependencies": {
     "@flagix/typescript-config": "workspace:*",
+    "@types/mdx": "^2.0.13",
     "@types/node": "^22.15.3",
-    "@types/react": "19.1.0",
-    "@types/react-dom": "19.1.1",
-    "eslint": "^9.34.0",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
     "typescript": "5.9.2"
   }
 }

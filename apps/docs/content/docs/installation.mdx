@@ -1,0 +1,207 @@
+---
+title: Installation
+description: Complete guide to installing and setting up Flagix
+---
+
+This guide will help you install and configure Flagix in your application.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- A Flagix account (sign up at [flagix.com](https://flagix.com))
+- Create a project and get your API key
+- Node.js 18 or higher
+- A supported framework (React, Next.js, or vanilla JavaScript)
+
+## Step 1: Install the SDK
+
+Choose the appropriate SDK for your application:
+
+### JavaScript SDK
+
+For vanilla JavaScript, Node.js, or any JavaScript framework:
+
+```bash
+npm install @flagix/js-sdk
+# or
+yarn add @flagix/js-sdk
+# or
+pnpm add @flagix/js-sdk
+```
+
+### React SDK
+
+For React and Next.js applications:
+
+```bash
+npm install @flagix/react
+# or
+yarn add @flagix/react
+# or
+pnpm add @flagix/react
+```
+
+**Note:** The React SDK works with both traditional React apps and Next.js (App Router and Pages Router). See the [React & Next.js SDK reference](/docs/sdk/react) for framework-specific setup instructions.
+
+## Step 2: Initialize the Client
+
+### JavaScript SDK
+
+```javascript
+import { Flagix } from "@flagix/js-sdk";
+
+// Initialize the SDK
+await Flagix.initialize({
+  apiKey: "your-api-key-here",
+  apiBaseUrl: "https://api.flagix.com",
+  initialContext: {
+    userId: "user_123",
+    email: "user@example.com",
+    plan: "premium",
+    version: "1.2.3"
+  }
+});
+```
+
+### React SDK
+
+Wrap your application with the `FlagixProvider` (see the [React & Next.js SDK reference](/docs/sdk/react) for complete setup instructions for your framework):
+
+**Simple React example:**
+```jsx
+import { FlagixProvider } from "@flagix/react";
+
+const options = {
+  apiKey: "your-api-key-here",
+  apiBaseUrl: "https://api.flagix.com",
+  initialContext: {
+    userId: "user_123",
+    email: "user@example.com",
+    plan: "premium"
+  },
+};
+
+function App() {
+  return (
+    <FlagixProvider options={options}>
+      <YourApp />
+    </FlagixProvider>
+  );
+}
+```
+
+**With dynamic user context (e.g for authenticated apps):**
+```jsx
+import { FlagixProvider } from "@flagix/react";
+import { useAuth } from "./hooks/use-auth"; // Your auth hook
+
+const options = {
+  apiKey: "your-api-key-here",
+  apiBaseUrl: "https://api.flagix.com",
+};
+
+function App() {
+  const user = useAuth(); // Get authenticated user
+
+  return (
+    <FlagixProvider options={options} context={user}>
+      <YourApp />
+    </FlagixProvider>
+  );
+}
+```
+
+The `context` prop is automatically synced with `setContext()`. When your user state changes, all flags re-evaluate instantly without a page refresh.
+
+For **Next.js App Router**, create a `providers.tsx` file and wrap your root layout. For **Next.js Pages Router**, wrap your `_app.tsx`. See the [React & Next.js SDK reference](/docs/sdk/react) for detailed examples.
+
+## Step 3: Configuration Options
+
+### Core Options
+
+| Option | Type | Required | Description |
+|--------|------|----------|-------------|
+| `apiKey` | `string` | ✅ | Your Flagix API key |
+| `apiBaseUrl` | `string` | ✅ | Base URL for the Flagix API |
+| `initialContext` | `object` | ❌ | Initial evaluation context |
+| `context` (React only) | `object` | ❌ | Dynamic context that syncs automatically |
+| `logs.level` | `string` | ❌ | Set to `info`, `warn`, or `error` to see internal SDK logs in the console. |
+
+## Step 4: Environment Variables
+
+Store your API credentials in environment variables:
+
+### JavaScript/Node.js
+
+```bash
+# .env
+FLAGIX_API_KEY=your-api-key
+FLAGIX_API_URL=https://api.flagix.com
+```
+
+Then in your code:
+
+```javascript
+await Flagix.initialize({
+  apiKey: process.env.FLAGIX_API_KEY,
+  apiBaseUrl: process.env.FLAGIX_API_URL,
+  initialContext: { userId: "user_123" }
+});
+```
+
+### Next.js
+
+Environment variables must be prefixed with `NEXT_PUBLIC_` to be accessible in the browser:
+
+```bash
+# .env
+NEXT_PUBLIC_FLAGIX_API_KEY=your-api-key
+NEXT_PUBLIC_FLAGIX_API_URL=https://api.flagix.com
+```
+
+Then use them in your provider component:
+
+```jsx
+const options = {
+  apiKey: process.env.NEXT_PUBLIC_FLAGIX_API_KEY,
+  apiBaseUrl: process.env.NEXT_PUBLIC_FLAGIX_API_URL,
+};
+```
+
+## Step 5: Verify Installation
+
+Test your installation by using your flag:
+
+```javascript
+// JavaScript SDK
+const isEnabled = Flagix.evaluate("your-flag-key");
+console.log("Test flag enabled:", isEnabled);
+```
+
+```jsx
+// React SDK
+import { useFlag } from "@flagix/react";
+
+function TestComponent() {
+  const isEnabled = useFlag("your-flag-key");
+  
+  return (
+    <div>
+      Test flag is: {isEnabled ? "ENABLED" : "DISABLED"}
+    </div>
+  );
+}
+```
+
+## Next Steps
+
+Now that you have Flagix installed:
+
+- [Learn about the SDKs](/docs/sdk/javascript)
+- [Create your first feature flag](/docs/features/creating)
+- [Set up user targeting](/docs/targeting)
+
+---
+
+Need help? Contact our support team on [Twitter](https://x.com/flagixx) or check out our [GitHub discussions](http://github.com/Davidthecode/flagix/discussions).

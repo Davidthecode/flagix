@@ -1,0 +1,182 @@
+---
+title: Getting Started
+description: Get started with Flagix feature flag management
+---
+
+Welcome to Flagix! This guide will help you get up and running with feature flags in minutes.
+
+## What is Flagix?
+
+Flagix is a modern feature flag management platform that helps you:
+
+- **Ship features faster** - Deploy code behind flags and release when ready
+- **Target precisely** - Show features to specific users or segments  
+- **Measure impact** - Track usage and run A/B tests
+- **Real-time updates** - Change flags without redeploying
+- **Enterprise ready** - Scale with confidence
+
+## Quick Start
+
+### 1. Install the SDK
+
+```bash
+# For JavaScript/Node.js
+npm install @flagix/js-sdk
+
+# For React applications
+npm install @flagix/react
+```
+
+### 2. Initialize Flagix
+
+```javascript
+import { Flagix } from "@flagix/js-sdk";
+
+await Flagix.initialize({
+  apiKey: "your-api-key",
+  apiBaseUrl: "https://api.flagix.com",
+  initialContext: {
+    userId: "user_123",
+    email: "user@example.com",
+    plan: "premium"
+  }
+});
+```
+
+### 3. Use Your First Flag
+
+```javascript
+const isNewFeatureEnabled = Flagix.evaluate("new-feature");
+
+if (isNewFeatureEnabled) {
+  // Show new feature
+  showNewDashboard();
+} else {
+  // Show old feature  
+  showOldDashboard();
+}
+```
+
+## React Integration
+
+For React applications, use the React SDK:
+
+```jsx
+import { FlagixProvider } from "@flagix/react";
+
+function App() {
+  const options = {
+    apiKey: "your-api-key",
+    apiBaseUrl: "https://api.flagix.com",
+    initialContext: { userId: "user_123" }
+  }
+
+  return (
+    <FlagixProvider options={options}>
+      <YourApp />
+    </FlagixProvider>
+  );
+}
+```
+
+Then use the `useFlag` hook to evaluate flags:
+
+```jsx
+import { useFlag } from "@flagix/react";
+
+function MyComponent() {
+  const isNewFeature = useFlag("new-feature");
+  
+  return (
+    <div>
+      {isNewFeature ? <NewFeature /> : <OldFeature />}
+    </div>
+  );
+}
+```
+
+## Next Steps
+
+### **Learn the Basics**
+
+- [Installation Guide](/docs/installation) - Detailed setup instructions
+- [JavaScript SDK](/docs/sdk/javascript) - Complete SDK reference
+- [React SDK](/docs/sdk/react) - Complete React/Next.js reference
+
+### **Create Your First Flag**
+
+- [Creating Feature Flags](/docs/features/creating) - Learn to create and configure flags
+- [User Targeting](/docs/targeting) - Advanced targeting strategies
+- [Analytics](/docs/analytics) - Track usage and measure impact
+
+## Key Concepts
+
+### Feature Flags
+
+Feature flags are conditional statements that control whether code should execute:
+
+```javascript
+if (Flagix.evaluate("new-search")) {
+  // New search algorithm
+  results = newSearchAlgorithm(query);
+} else {
+  // Original search algorithm
+  results = originalSearchAlgorithm(query);
+}
+```
+
+### Evaluation Context
+
+Context provides information about the current user/environment:
+
+```javascript
+Flagix.setContext({
+  userId: "user_123",
+  email: "user@example.com",
+  plan: "premium",
+  country: "US",
+  device: "mobile"
+});
+```
+
+#### Reactivity
+
+Flagix is **reactive by design**. When you update the context using `Flagix.setContext()` (JavaScript) or by updating the `context` prop on `FlagixProvider` (React), all flag evaluations instantly reflect the changes. Any components using flags will automatically re-evaluate without a page refresh:
+
+```javascript
+// JavaScript: Update context
+Flagix.setContext({ plan: "premium" });
+// → All flags re-evaluate instantly
+// → UI components using useFlag() automatically update
+
+// React: Update user in your provider
+<FlagixProvider context={authenticatedUser}>
+  {/* Components automatically re-render with new evaluations */}
+</FlagixProvider>
+```
+
+This enables dynamic feature control based on user state changes, like showing premium features immediately after a user upgrades their plan.
+
+### Variations
+
+Flags can return different values:
+
+```javascript
+// Boolean flag
+const isEnabled = Flagix.evaluate("feature-flag"); // true/false
+
+// String flag  
+const theme = Flagix.evaluate("theme"); // "light", "dark", "auto"
+
+// Number flag
+const maxItems = Flagix.evaluate("max-items"); // 10, 20, 50
+```
+
+
+### **Community**
+
+- [GitHub Discussions](https://github.com/Davidthecode/flagix/discussions) - Ask questions
+
+---
+
+Ready to dive deeper? Check out our [Installation Guide](/docs/installation) for detailed setup instructions.

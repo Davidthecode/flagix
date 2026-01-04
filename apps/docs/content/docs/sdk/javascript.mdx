@@ -1,0 +1,293 @@
+---
+title: JavaScript SDK
+description: Complete reference for the Flagix JavaScript SDK
+---
+
+The Flagix JavaScript SDK provides a powerful way to integrate feature flags into any JavaScript application.
+
+## Core API
+
+### Flagix.initialize()
+
+Initializes the Flagix SDK with your configuration.
+
+```typescript
+async initialize(options: FlagixClientOptions): Promise<void>
+```
+
+#### Parameters
+
+- `options` - Configuration object for the SDK
+
+#### Options
+
+```typescript
+interface FlagixClientOptions {
+  apiKey: string;                    // Required: Your API key
+  apiBaseUrl: string;                 // Required: API base URL
+  initialContext?: EvaluationContext; // Optional: Initial context
+  logs?: {
+    level?: "none" | "error" | "warn" | "info"; // Optional: default "none"
+  };
+}
+```
+
+#### Example
+
+```javascript
+import { Flagix } from "@flagix/js-sdk";
+
+await Flagix.initialize({
+  apiKey: "your-api-key",
+  apiBaseUrl: "https://api.flagix.com",
+  initialContext: {
+    userId: "user_123",
+    email: "user@example.com",
+    plan: "premium"
+  },
+});
+```
+
+### Flagix.evaluate()
+
+Evaluates a feature flag based on the current context.
+
+```typescript
+evaluate<T extends VariationValue>(
+  flagKey: string,
+  contextOverrides?: EvaluationContext
+): T | null
+```
+
+#### Parameters
+
+- `flagKey` - The key of the flag to evaluate
+- `contextOverrides` - Optional context to override the global context
+
+#### Returns
+
+- The evaluated value of the flag, or `null` if the flag doesn't exist
+
+#### Examples
+
+```javascript
+// Basic evaluation
+const isNewFeatureEnabled = Flagix.evaluate("new-feature");
+
+// With context overrides
+const isAdminFeature = Flagix.evaluate("admin-panel", {
+  userId: "admin_user",
+  role: "admin"
+});
+```
+
+### Flagix.track()
+
+Records a custom event for analytics and conversion tracking.
+
+```typescript
+track(
+  eventName: string,
+  properties?: Record<string, unknown>,
+  contextOverrides?: EvaluationContext
+): void
+```
+
+#### Parameters
+
+- `eventName` - The name of the event to track
+- `properties` - Optional additional properties
+- `contextOverrides` - Optional context overrides
+
+#### Examples
+
+```javascript
+// Simple event tracking
+Flagix.track("button_click");
+
+// Event with properties
+Flagix.track("purchase_completed", {
+  amount: 99.99,
+  currency: "USD",
+  productId: "prod_123"
+});
+
+// Event with context overrides
+Flagix.track("admin_action", 
+{
+  action: "delete_user"
+}, 
+{
+  userId: "admin_456",
+  role: "super_admin"
+});
+```
+
+### Flagix.setContext()
+
+Updates the global evaluation context and triggers re-evaluation of all flags.
+
+```typescript
+setContext(newContext: EvaluationContext): void
+```
+
+#### Parameters
+
+- `newContext` - New context attributes to merge with existing context
+
+#### Reactivity
+
+Calling `setContext()` instantly re-evaluates all cached flags with the new context. Any active listeners subscribed via `onFlagUpdate()` are triggered, enabling reactive updates in your application.
+
+#### Examples
+
+```javascript
+// Update user context after login
+Flagix.setContext({
+  userId: "user_789",
+  email: "newuser@example.com",
+  isAuthenticated: true,
+  plan: "premium"
+});
+// → All flags re-evaluate with new context
+// → All onFlagUpdate listeners are triggered
+
+// Add additional attributes
+Flagix.setContext({
+  lastLogin: new Date().toISOString(),
+  sessionId: "session_abc123"
+});
+// → Context merges with existing values
+// → Reactive updates triggered again
+```
+
+### Flagix.onFlagUpdate()
+
+Subscribes to real-time flag updates triggered by `setContext()` or server-sent events.
+
+```typescript
+onFlagUpdate(listener: (flagKey: string) => void): void
+```
+
+#### Parameters
+
+- `listener` - Callback function called when any flag is updated
+
+#### Creating Reactive UI
+
+In vanilla JavaScript applications, use `onFlagUpdate()` to create reactive behavior when user identity or attributes change:
+
+```javascript
+// Subscribe to flag updates
+Flagix.onFlagUpdate((flagKey) => {
+  console.log(`Flag ${flagKey} was updated`);
+  
+  // Re-evaluate the flag
+  const newValue = Flagix.evaluate(flagKey);
+  console.log(`New value:`, newValue);
+  
+  // Update DOM elements
+  updateUIForFlag(flagKey, newValue);
+});
+
+// Helper to update UI
+function updateUIForFlag(flagKey, value) {
+  if (flagKey === "premium-features") {
+    const element = document.getElementById("premium-section");
+    if (value) {
+      element.classList.remove("hidden");
+    } else {
+      element.classList.add("hidden");
+    }
+  }
+}
+
+// Later: When user context changes, UI automatically updates
+Flagix.setContext({ isPremium: true });
+// → onFlagUpdate fires for all flags
+// → DOM updates instantly without page refresh
+```
+
+This pattern enables dynamic feature control in single-page applications without requiring a full page reload.
+
+### Flagix.offFlagUpdate()
+
+Unsubscribes from flag updates.
+
+```typescript
+offFlagUpdate(listener: (flagKey: string) => void): void
+```
+
+#### Example
+
+```javascript
+const updateListener = (flagKey) => {
+  console.log(`Flag ${flagKey} updated`);
+};
+
+Flagix.onFlagUpdate(updateListener);
+
+// Later, remove the listener
+Flagix.offFlagUpdate(updateListener);
+```
+
+### Flagix.isInitialized()
+
+Checks if the SDK is properly initialized.
+
+```typescript
+isInitialized(): boolean
+```
+
+#### Example
+
+```javascript
+if (!Flagix.isInitialized()) {
+  console.log("Flagix not initialized yet");
+  await Flagix.initialize(config);
+}
+```
+
+### Flagix.close()
+
+Cleans up resources and closes connections.
+
+```typescript
+close(): void
+```
+
+#### Example
+
+```javascript
+// In a React component cleanup
+useEffect(() => {
+  return () => {
+    Flagix.close();
+  };
+}, []);
+
+// In Node.js process shutdown
+process.on('SIGTERM', () => {
+  Flagix.close();
+  process.exit(0);
+});
+```
+
+## Type Definitions
+
+### EvaluationContext
+
+```typescript
+type EvaluationContext ={
+  [x: string]: any;
+}
+```
+
+### VariationValue
+
+```typescript
+type VariationValue = string | number | boolean;
+```
+---
+
+Check out our [React SDK](/docs/sdk/react).

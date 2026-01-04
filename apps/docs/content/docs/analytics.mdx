@@ -1,0 +1,278 @@
+---
+title: Analytics and Insights
+description: Track flag usage, measure experiments, and gain insights
+---
+
+Flagix provides comprehensive analytics to help you understand how your feature flags are being used and measure the impact of your experiments. Flagix currently shows only project wide analytics. Per-flag analytics will be available in future releases.
+
+## Overview
+
+The analytics dashboard gives you insights into:
+
+- **Flag Usage**: How often flags are evaluated
+- **Active and Stale flags**: Which flags are active and stale
+- **Variation Impressions**: Which variations are being used most
+- **Experiment Results**: A/B test performance
+
+## Flag Usage Analytics
+
+### How Evaluation Tracking Works
+
+Flag usage is tracked automatically when you call `Flagix.evaluate()`:
+
+```javascript
+// This automatically records an impression for the flag evaluation
+const isEnabled = Flagix.evaluate("new-feature");
+
+// The following data is captured:
+// - Flag key: "new-feature"
+// - Variation returned: true/false (or your variation value)
+// - User ID: from your evaluation context
+// - Timestamp: when the evaluation occurred
+```
+
+**Note:** You don't need to manually track flag evaluations. Every `evaluate()` call is automatically recorded in your analytics.
+
+### Usage Dashboard
+
+The usage dashboard shows:
+
+- **Total Impressions**: Number of times flags were evaluated
+- **Active Flags**: Flags that have received traffic in the selected time range
+- **Stale Flags**: Flags with fewer than 100 impressions (may indicate unused features)
+- **Variation Distribution**: Which variations are being served to users
+- **Impression Trends**: How flag usage changes over time
+
+### Key Metrics
+
+| Metric | Description | Use Case |
+|--------|-------------|----------|
+| **Total Impressions** | Total flag evaluations | Measures feature reach |
+| **Active Flags** | Flags receiving traffic | Track feature adoption |
+| **Stale Flags** | Low-traffic flags | Identify unused features to clean up |
+| **Variation Impressions** | Traffic per variation | See how traffic splits between versions |
+
+## Conversion Tracking
+
+### Understanding Conversions
+
+Conversions allow you to measure specific user actions (like purchases or signups) in relation to feature flag variations. This is essential for A/B testing and measuring the business impact of your features.
+
+**Key Concept:** You use `Flagix.track()` to record custom events that represent goals or conversions in your application.
+
+### Setting Up Conversion Tracking
+
+Track important user actions in your application:
+
+```javascript
+// Simple conversion tracking
+Flagix.track("purchase_completed", {
+  revenue: 99.99,
+  currency: "USD",
+  plan: "premium"
+});
+
+// Another example: signup
+Flagix.track("signup_completed", {
+  method: "google-oauth",
+  plan: "free"
+});
+```
+
+**Important:** When you call `Flagix.track()`, it records a conversion event. The system automatically associates this event with flag evaluations that happened before it (for the same user), which is how we calculate A/B test conversion rates.
+
+### Conversion Funnels
+
+Track multi-step user journeys:
+
+```javascript
+// Step 1: User views pricing page
+Flagix.track("pricing_viewed", {
+  source: "homepage"
+});
+
+// Step 2: User starts checkout
+Flagix.track("checkout_started", {
+  plan: "premium"
+});
+
+// Step 3: User completes purchase
+Flagix.track("purchase_completed", {
+  plan: "premium",
+  revenue: 99.99
+});
+```
+
+By tracking these steps, you can measure:
+- How many people view pricing → start checkout
+- How many start checkout → complete purchase
+- Conversion rates for each step of your funnel
+
+### How Conversions Work in A/B Tests
+
+When you run an A/B test:
+
+```javascript
+// User is assigned a variation
+const checkoutType = Flagix.evaluate("checkout-redesign");
+
+// ... user interacts with the feature ...
+
+// User completes a purchase (conversion event)
+Flagix.track("purchase_completed", {
+  revenue: 99.99
+});
+```
+
+Flagix automatically:
+1. Records that this user **saw** the `checkout-redesign` flag (impression)
+2. Records that this user **completed** a purchase (conversion event)
+3. Calculates the conversion rate for each variation
+
+**This is why we have both `evaluate()` and `track()`:**
+- `evaluate()` records which variation users saw
+- `track()` records what actions users completed
+- Together, they calculate: "Of users who saw variation A, X% completed the goal"
+
+### Conversion Metrics
+
+| Metric | Description | How It's Calculated |
+|--------|-------------|-------------|
+| **Conversion Rate** | % of users who converted | (Users who tracked event) / (Users who saw flag) |
+| **Participants** | Users who saw the variation | Count of distinct users in `evaluate()` |
+| **Conversions** | Users who completed the goal | Count of distinct users in `track()` after seeing flag |
+
+
+## A/B Testing Analytics
+
+### Setting Up A/B Tests
+
+To run an A/B test in Flagix, create an experiment rule on your flag that splits traffic between two or more variations. Then, track conversions:
+
+```javascript
+// Assign user to a variation
+const checkoutType = Flagix.evaluate("checkout-redesign");
+
+// User interacts with the feature...
+// ... user completes purchase (or your goal) ...
+
+// Record the conversion
+Flagix.track("purchase_completed", {
+  revenue: 99.99,
+  plan: "premium"
+});
+
+// That's it! Flagix automatically:
+// 1. Recorded which variation the user saw
+// 2. Recorded the conversion event
+// 3. Will calculate conversion rates per variation
+```
+
+### Understanding Experiment Results
+
+Your A/B test results show:
+
+```javascript
+{
+  "variation-a": {
+    "participants": 1000,      // Users who saw this variation
+    "conversions": 120,        // Users who converted
+    "conversionRate": 0.12,    // 12% conversion rate
+    "lift": 20,                // 20% better than control
+    "significance": 0.96       // 96% statistical confidence
+  },
+  "variation-b": {
+    "participants": 1000,
+    "conversions": 100,
+    "conversionRate": 0.10,
+    "lift": 0,                 // This is the control
+    "significance": 0
+  }
+}
+```
+
+### Statistical Significance
+
+Understanding the results:
+
+| Metric | Meaning | Action |
+|--------|---------|--------|
+| **Significance > 0.95** | 95% confident result is real | Consider rolling out the winning variation |
+| **Significance < 0.95** | Insufficient confidence | Keep test running for more data |
+| **Lift > 0** | Variation outperforms control | Better conversion rate |
+| **Lift < 0** | Variation underperforms control | Worse conversion rate |
+
+**Note:** Statistical significance is calculated using the Wilson score interval 
+method for all variation sizes. With very small sample sizes (1-5 users), 
+confidence intervals will be wide. For reliable results, aim for at least 
+100+ participants per variation..
+
+### Experiment Reports
+
+Monitor your experiments in the dashboard:
+
+- **Total Participants**: Users exposed to each variation
+- **Top Performer**: Which variation has the best conversion rate
+- **Performance Breakdown**: Detailed metrics for each variation
+- **Conversion Rate Trend**: How conversion rates change over time
+
+The system automatically calculates lift and statistical confidence using a Z-test for proportions.
+
+
+## Real-time Analytics
+
+### Real-time Flag Updates
+
+Flagix uses Server-Sent Events (SSE) to push flag updates to your client in real-time. When you update a flag in the dashboard, connected clients receive the update instantly:
+
+```javascript
+// The Flagix client automatically listens for flag updates
+// When a flag changes, it emits a 'flagUpdate' event
+
+Flagix.on('flagUpdate', (flagKey) => {
+  console.log(`Flag '${flagKey}' was updated`);
+  
+  // You can now re-evaluate the flag with the new configuration
+  const newValue = Flagix.evaluate(flagKey);
+  console.log(`New value for ${flagKey}: ${newValue}`);
+});
+```
+
+This ensures your application always uses the latest flag configurations without requiring a page reload.
+
+### Performance Monitoring
+
+Monitor your SDK performance locally:
+
+```javascript
+// Measure evaluation performance
+const startTime = performance.now();
+const result = Flagix.evaluate("feature-flag");
+const endTime = performance.now();
+
+const evaluationTime = endTime - startTime;
+console.log(`Flag evaluation took ${evaluationTime}ms`);
+
+// Flagix evaluations are cached locally, so they should be very fast
+// First initialization may take slightly longer due to API calls
+```
+
+## Analytics API
+
+### Accessing Analytics Data
+
+Analytics data is available through the Flagix dashboard.
+
+To access analytics:
+
+1. **Via Dashboard**: Visit your project's Analytics section in the Flagix UI
+2. **Usage Metrics**: the analytics tab shows flag usage, impressions, and variation distribution
+3. **A/B Test Results**: the analytics tab shows experiment performance and conversion rates
+
+### Supported Time Ranges
+
+- **7d**: Last 7 days (default)
+- **30d**: Last 30 days
+- **3m**: Last 3 months
+
+---

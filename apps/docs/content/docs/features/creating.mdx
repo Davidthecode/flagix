@@ -1,0 +1,256 @@
+---
+title: Creating Feature Flags
+description: Learn how to create and configure feature flags in Flagix
+---
+
+Feature flags are the core of Flagix. This guide walks you through creating, configuring, and managing your feature flags.
+
+## Quick Start: Creating Your First Flag
+
+### Step 1: Create the Flag
+
+1. Go to your Flagix dashboard
+2. Select your project
+3. Click **Create Flag**
+4. Enter a flag key: `new-checkout` (unique identifier, lowercase with hyphens)
+5. Enter a description: "New checkout experience" (optional but recommended)
+6. Click **Create**
+
+### Step 2: Add Variations
+
+Flagix provides two default variations (on(true) and off(false)) for every flag. For custom variations:
+
+1. In the flag detail page, find the **Variations** section
+2. Click **Add Variation**
+3. Enter variation details:
+   - **Name**: `new-ui` (identifier for your code)
+   - **Value**: `true` (what your code receives)
+   - **Type**: Select appropriate type (Boolean, String, Number)
+4. Add more variations as needed
+5. Click **Save Variations**
+
+### Step 3: Configure Default Variation
+
+The default variation is returned when no rules match. Flagix automatically selects off(false) as the default variation, to change your default variation:
+
+1. Find the **Default Variation** section
+2. Select which variation should be the default
+
+### Step 4: Enable in Environments
+
+By default, flags are disabled. To activate a flag:
+
+1. Go to the **Environment Config** section
+2. Select the environment (Development, Staging, Production)
+3. Toggle the flag **On**
+4. Click **Save**
+
+Repeat for each environment where you want the flag active.
+
+## Understanding Variations
+
+Variations are the different values your flag can return. Each variation has three properties:
+
+### Variation Types
+
+#### Boolean Variations
+Perfect for simple feature toggles:
+
+```javascript
+// In your code
+const isNewFeatureEnabled = Flagix.evaluate("new-feature");
+
+if (isNewFeatureEnabled) {
+  showNewUI();
+} else {
+  showOldUI();
+}
+```
+
+**Dashboard example:**
+- Name: `enabled` | Value: `true` | Type: Boolean
+- Name: `disabled` | Value: `false` | Type: Boolean
+
+#### String Variations
+For selecting between multiple string options:
+
+```javascript
+// In your code
+const theme = Flagix.evaluate("ui-theme");
+
+if (theme === "dark") {
+  applyDarkTheme();
+} else if (theme === "light") {
+  applyLightTheme();
+} else {
+  applyAutoTheme();
+}
+```
+
+**Dashboard example:**
+- Name: `dark-mode` | Value: `"dark"` | Type: String
+- Name: `light-mode` | Value: `"light"` | Type: String
+- Name: `auto` | Value: `"auto"` | Type: String
+
+#### Number Variations
+For numeric configuration:
+
+```javascript
+// In your code
+const timeout = Flagix.evaluate("api-timeout");
+const maxRetries = Flagix.evaluate("max-retries");
+
+fetch(url, { timeout });
+```
+
+**Dashboard example:**
+- Name: `timeout-5s` | Value: `5000` | Type: Number
+- Name: `timeout-10s` | Value: `10000` | Type: Number
+- Name: `timeout-30s` | Value: `30000` | Type: Number
+
+## Managing Multiple Environments
+
+Flagix supports separate configurations across environments (e.g., Development, Staging, Production).
+You can also create more environments as you wish.
+
+### Environment Setup
+
+1. When you create a flag, it's automatically created in the three default project environments
+2. Each environment has its own configuration
+3. Variations are shared across environments
+4. Rules and settings can differ per environment
+5. You can create additional environments in your project settings if needed
+
+### Typical Workflow
+
+```
+Development:
+  ├─ Flag enabled: YES
+  ├─ Rule: Everyone sees "new-ui"
+  └─ Purpose: Team testing
+
+Staging:
+  ├─ Flag enabled: YES
+  ├─ Rule: 25% of users see "new-ui"
+  └─ Purpose: Production preview
+
+Production:
+  ├─ Flag enabled: YES
+  ├─ Rule: 50% of users see "new-ui"
+  └─ Purpose: Gradual rollout
+```
+
+### Switching Environments
+
+In the flag detail page, use the environment selector to:
+- View configuration for different environments
+- Edit rules per environment
+- Manage variations (shared across all environments)
+- Enable/disable the flag per environment
+
+## Adding Targeting Rules
+
+Rules determine which users see which variations. See the [Targeting Guide](/docs/targeting) for comprehensive details.
+
+### Add a Simple Targeting Rule
+
+1. Open your flag
+2. Select the environment
+3. Scroll to **Targeting Rules**
+4. Click **Add Rule**
+5. Enter rule details:
+   - **Description**: "Premium users"
+   - **Type**: Targeting
+   - **Conditions**: `plan == "premium"`
+   - **Rollout**: 100%
+   - **Variation**: Select "new-ui"
+6. Click **Save**
+
+### Add an A/B Test
+
+1. Open your flag
+2. Scroll to **Targeting Rules**
+3. Click **Add Rule**
+4. Enter rule details:
+   - **Description**: "50/50 A/B test"
+   - **Type**: Experiment
+   - **Variation A**: 50%
+   - **Variation B**: 50%
+5. Click **Save**
+
+See the [Analytics Guide](/docs/analytics) to measure results.
+
+## Rule Order & Evaluation
+
+Rules are evaluated from top to bottom. The first matching rule determines the result.
+
+### Reorder Rules
+
+1. Open your flag
+2. Find the **Targeting Rules** section
+3. Click and drag rules to reorder them
+4. Rules now evaluate in the new order
+
+### Example Evaluation Order
+
+```
+User requests flag evaluation
+  ↓
+Does rule "Admin Users" match?
+  → YES: Return "admin-ui"
+  → NO: Continue to next rule
+  ↓
+Does rule "Premium Users" match?
+  → YES: Return "premium-ui"
+  → NO: Continue to next rule
+  ↓
+Does rule "Gradual Rollout" match?
+  → YES: Return "new-ui" (based on rollout %)
+  → NO: Continue to next rule
+  ↓
+No rules matched → Return default variation
+```
+
+## Editing & Managing Flags
+
+### Edit a Flag
+
+1. Open the flag
+2. Click the **Edit** icon next to flag details
+3. Update:
+   - Flag key (can't change after creation)
+   - Description
+   - Any other settings
+4. Click **Save**
+
+### Update Variations
+
+1. Open the flag
+2. Find **Variations** section
+3. Click **Edit Variations**
+4. Add, remove, or rename variations
+5. Click **Save**
+
+**Note**: Changing variation values will immediately affect all users evaluating that flag.
+
+### Delete a Rule
+
+1. Open the flag
+2. Find the rule in **Targeting Rules**
+3. Click the **Delete** icon (trash can)
+4. Confirm deletion
+
+### Delete a Flag
+
+1. Open the flag
+2. Scroll to the bottom
+3. Click **Delete Flag**
+4. Confirm deletion
+
+**⚠️ Warning**: Deleting a flag removes it from all environments. Make sure no code still depends on it.
+
+---
+
+Ready to measure the impact? Check out our [Analytics Guide](/docs/analytics) to track flag usage and A/B test results.
+
+For advanced targeting strategies, see [User Targeting & Rules](/docs/targeting).
