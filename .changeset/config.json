@@ -12,6 +12,8 @@
     "@flagix/db",
     "@flagix/data-sync",
     "@flagix/web",
-    "@flagix/docs"
+    "@flagix/docs",
+    "@flagix/ui",
+    "@flagix/typescript-config"
   ]
 }
