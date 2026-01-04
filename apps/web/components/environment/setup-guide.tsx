@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@flagix/ui/components/button";
-import { Check, Copy, Terminal } from "lucide-react";
+import { Check, ChevronRight, Copy, Terminal } from "lucide-react";
 import { useState } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -162,6 +162,21 @@ export function SetupGuide({ environment }: { environment: FullEnvironment }) {
             />
           </>
         )}
+      </div>
+
+      <div className="flex items-center justify-between border-gray-100 border-t pt-6">
+        <p className="text-gray-500 text-sm">
+          Need more advanced targeting or tracking info?
+        </p>
+        <a
+          className="inline-flex items-center font-semibold text-emerald-600 text-sm hover:text-emerald-700 hover:underline"
+          href="https://docs.flagix.com/"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          View Full Documentation
+          <ChevronRight className="ml-1 h-4 w-4" />
+        </a>
       </div>
     </div>
   );

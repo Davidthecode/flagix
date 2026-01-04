@@ -49,16 +49,19 @@ npm install @flagix/react
 
 ```javascript
 // JavaScript SDK
+
 import { Flagix } from "@flagix/js-sdk";
 
 // Initialize the SDK. 
 await Flagix.initialize({
   apiKey: "<YOUR_API_KEY>",
   apiBaseUrl: "https://api.flagix.com",
-  initialContext: { 
-    userId: "server_user_01",
-    internal: true 
-  }
+});
+
+// Set user context (triggers instant re-evaluation)
+Flagix.setContext({ 
+  userId: "user_123", 
+  plan: "premium" 
 });
 
 // Evaluate a flag
@@ -66,12 +69,8 @@ const isEnabled = Flagix.evaluate("my-feature-flag");
 
 // Listen for real-time updates
 Flagix.onFlagUpdate((key) => {
-  const updatedValue = Flagix.evaluate(key);
-  console.log(`Flag ${key} updated to:`, updatedValue);
+  console.log(`Flag ${key} updated to:`, Flagix.evaluate(key));
 });
-
-// Track events (Conversions)
-Flagix.track("server_init", { environment: process.env.NODE_ENV });
 ```
 
 ```jsx
@@ -79,19 +78,21 @@ Flagix.track("server_init", { environment: process.env.NODE_ENV });
 
 // Configure the provider
 import { FlagixProvider } from "@flagix/react";
+import { useAuth } from "./hooks/use-auth";
 
 const options = {
   apiKey: "<YOUR_API_KEY>",
   apiBaseUrl: "https://api.flagix.com",
-  initialContext: {
-    userId: "user_123", 
-    platform: "web",
-  },
 };
 
 export default function Providers({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+
   return (
-    <FlagixProvider options={options}>
+    <FlagixProvider
+      options={options}
+      context={user}
+    >
       {children}
     </FlagixProvider>
   );
@@ -99,25 +100,30 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
 
 // Use in component
-import { useFlag, useFlagixActions } from "@flagix/react";
+import { useFlag } from "@flagix/react";
 
 export default function MyComponent() {
-  const isFeatureEnabled = useFlag<boolean>("my-feature-flag");
-  const { track } = useFlagixActions();
+  const isFeatureEnabled = useFlag("my-feature-flag");
 
-  if (isFeatureEnabled) {
-    return (
-      <button onClick={() => track("button_click")}>
-        New Feature
-      </button>
-    );
-  }
-
-  return <div>Old Feature</div>;
+  return (
+    <div>
+      {isFeatureEnabled ? <NewFeature /> : <OldFeature />}
+    </div>
+  );
 }
 ```
 
-## Getting Started
+## Documentation
+
+For full technical references, advanced targeting guides, and framework-specific examples, visit our documentation:
+
+<a href="https://docs.flagix.com" target="_blank" rel="noopener noreferrer"><strong>docs.flagix.com</strong></a>
+
+### Quick Links
+- <a href="https://docs.flagix.com/docs/sdk/javascript" target="_blank" rel="noopener noreferrer">JavaScript SDK Reference</a>
+- <a href="https://docs.flagix.com/docs/sdk/react" target="_blank" rel="noopener noreferrer">React & Next.js Guide</a>
+
+## Contributions
 
 Want to run Flagix locally or contribute a feature? Check out our [Contributing Guide](./.github/CONTRIBUTING.md) for a step-by-step guide.
 

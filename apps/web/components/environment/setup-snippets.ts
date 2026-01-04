@@ -5,65 +5,64 @@ export const SNIPPETS = {
       : "npm install @flagix/react",
 
   provider: (apiKey: string) => `import { FlagixProvider } from "@flagix/react";
+import { useAuth } from "./hooks/use-auth"; // Your auth hook
 
 const options = {
   apiKey: "${apiKey}",
   apiBaseUrl: "https://api.flagix.com",
-  initialContext: {
-    userId: "user_123", 
-    platform: "web",
-  },
 };
 
 export default function Providers({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth(); // Get your authenticated user
+
   return (
-    <FlagixProvider options={options}>
+    <FlagixProvider 
+      options={options} 
+      context={user} // Automatically syncs flags when user changes
+    >
       {children}
     </FlagixProvider>
   );
 }`,
 
-  usage: `import { useFlag, useFlagixActions } from "@flagix/react";
+  usage: `import { useFlag } from "@flagix/react";
 
 export default function MyComponent() {
-  const isFeatureEnabled = useFlag<boolean>("my-feature-flag");
-  const { track } = useFlagixActions();
+  // Flags re-evaluate instantly when the Provider context updates
+  const isFeatureEnabled = useFlag("my-feature-flag");
 
   if (isFeatureEnabled) {
     return (
-      <button onClick={() => track("button_click")}>
-        New Feature
-      </button>
+      <ShowFeatureComponent />
     );
   }
 
   return <div>Old Feature</div>;
-}`,
+};`,
 
   vanilla: (apiKey: string) => `import { Flagix } from "@flagix/js-sdk";
 
-/**
- * Initialize the SDK. 
- * Works in Browser and Node.js (v18+).
- */
+// Initialize the SDK.  
 await Flagix.initialize({
   apiKey: "${apiKey}",
   apiBaseUrl: "https://api.flagix.com",
-  initialContext: { 
-    userId: "server_user_01",
-    internal: true 
-  }
+});
+
+// Set user identity (triggers instant re-evaluation)
+Flagix.setContext({ 
+  userId: "user_123", 
+  plan: "premium" 
 });
 
 // Evaluate a flag
 const isEnabled = Flagix.evaluate("my-feature-flag");
 
-// Listen for real-time updates
+// Listen for updates
 Flagix.onFlagUpdate((key) => {
-  const updatedValue = Flagix.evaluate(key);
-  console.log(\`Flag \${key} updated to:\`, updatedValue);
+  const newValue = Flagix.evaluate(key);
+  console.log(\`Flag \${key} updated to:\`, newValue);
 });
 
-// Track events (Conversions)
-Flagix.track("server_init", { environment: process.env.NODE_ENV });`,
+// Track conversions
+Flagix.track("purchase_completed", { amount: 50 });`,
 };
