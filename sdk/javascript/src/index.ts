@@ -17,9 +17,24 @@ export const Flagix = {
    * Initializes the Flagix SDK, fetches all flags, and sets up an SSE connection.
    */
   async initialize(options: FlagixClientOptions): Promise<void> {
+    // this check ensures that we are able to watch for api key changes and re-initialize accordingly
+    // this ensures we dont use stale clients across different api keys
     if (clientInstance) {
-      log("warn", "Flagix SDK already initialized. Ignoring subsequent call.");
-      return;
+      if (clientInstance.getApiKey() === options.apiKey) {
+        if (clientInstance.getIsInitialized()) {
+          return;
+        }
+
+        if (isInitializing && initializationPromise) {
+          return initializationPromise;
+        }
+      } else {
+        log(
+          "info",
+          "[Flagix SDK] API Key change detected. Resetting client..."
+        );
+        this.close();
+      }
     }
 
     if (isInitializing && initializationPromise) {
@@ -28,17 +43,19 @@ export const Flagix = {
 
     isInitializing = true;
 
-    try {
-      clientInstance = new FlagixClient(options);
-      initializationPromise = clientInstance.initialize();
-      await initializationPromise;
-    } catch (error) {
-      log("error", "Flagix SDK failed during initialization:", error);
-      throw error;
-    } finally {
-      isInitializing = false;
-      initializationPromise = null;
-    }
+    initializationPromise = (async () => {
+      try {
+        clientInstance = new FlagixClient(options);
+        await clientInstance.initialize();
+      } catch (error) {
+        clientInstance = null;
+        throw error;
+      } finally {
+        isInitializing = false;
+      }
+    })();
+
+    return await initializationPromise;
   },
 
   /**
@@ -83,6 +100,17 @@ export const Flagix = {
   },
 
   /**
+   * Replaces the global evaluation context.
+   */
+  identify(newContext: EvaluationContext): void {
+    if (!clientInstance) {
+      log("error", "Flagix SDK not initialized.");
+      return;
+    }
+    clientInstance.identify(newContext);
+  },
+
+  /**
    * Sets or updates the global evaluation context.
    * @param newContext New context attributes to merge or replace.
    */
@@ -101,6 +129,8 @@ export const Flagix = {
     if (clientInstance) {
       clientInstance.close();
       clientInstance = null;
+      initializationPromise = null;
+      isInitializing = false;
     }
   },
 

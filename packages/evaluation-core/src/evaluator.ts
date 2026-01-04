@@ -202,7 +202,11 @@ export function evaluateFlag(
   context: EvaluationContext
 ): FlagVariation | null {
   if (!config.enabled) {
-    return config.defaultVariation;
+    const offVariation = config.variations.find(
+      (v) => v.name.toLowerCase() === "off"
+    );
+
+    return offVariation ?? config.defaultVariation;
   }
 
   for (const rule of config.rules) {

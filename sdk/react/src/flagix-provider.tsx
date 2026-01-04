@@ -50,6 +50,7 @@ export const FlagixProvider = ({
 
     return () => {
       mounted = false;
+      Flagix.close();
     };
   }, [apiKey, apiBaseUrl]);
 

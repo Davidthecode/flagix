@@ -37,6 +37,7 @@ export class FlagixClient {
   private readonly maxReconnectAttempts = Number.POSITIVE_INFINITY;
   private readonly baseReconnectDelay = 1000;
   private readonly maxReconnectDelay = 30_000;
+  private isConnectingSSE = false;
 
   constructor(options: FlagixClientOptions) {
     this.apiKey = options.apiKey;
@@ -49,21 +50,25 @@ export class FlagixClient {
   /**
    * Subscribes a listener to a flag update event.
    */
-  on(
+  on = (
     event: typeof FLAG_UPDATE_EVENT,
     listener: (flagKey: string) => void
-  ): void {
+  ) => {
     this.emitter.on(event, listener);
-  }
+  };
 
   /**
    * Unsubscribes a listener from a flag update event.
    */
-  off(
+  off = (
     event: typeof FLAG_UPDATE_EVENT,
     listener: (flagKey: string) => void
-  ): void {
+  ) => {
     this.emitter.off(event, listener);
+  };
+
+  getApiKey(): string {
+    return this.apiKey;
   }
 
   /**
@@ -126,6 +131,15 @@ export class FlagixClient {
   }
 
   /**
+   * Replaces the global evaluation context.
+   */
+  identify(newContext: EvaluationContext): void {
+    this.context = newContext;
+    log("info", "[Flagix SDK] Context replaced");
+    this.refreshAllFlags();
+  }
+
+  /**
    * Sets or updates the global evaluation context.
    * @param newContext New context attributes to merge or replace.
    */
@@ -135,7 +149,13 @@ export class FlagixClient {
       "info",
       "[Flagix SDK] Context updated. Evaluations will use the new context."
     );
+    this.refreshAllFlags();
+  }
 
+  /**
+   * Helper to refresh all flags by emitting update events for each cached flag.
+   */
+  private refreshAllFlags(): void {
     for (const flagKey of this.localCache.keys()) {
       this.emitter.emit(FLAG_UPDATE_EVENT, flagKey);
     }
@@ -172,6 +192,10 @@ export class FlagixClient {
   }
 
   private async setupSSEListener(): Promise<void> {
+    if (this.isConnectingSSE) {
+      return;
+    }
+
     if (this.sseConnection) {
       try {
         this.sseConnection.close();
@@ -185,89 +209,102 @@ export class FlagixClient {
       this.sseConnection = null;
     }
 
+    this.isConnectingSSE = true;
     const url = `${this.apiBaseUrl}/api/sse/stream`;
 
-    const source = await createEventSource(url, this.apiKey);
-    if (!source) {
-      log("warn", "[Flagix SDK] Failed to create EventSource. Retrying...");
-      this.scheduleReconnect();
-      return;
-    }
-
-    this.sseConnection = source;
-
-    source.onopen = () => {
-      this.reconnectAttempts = 0;
-      this.isReconnecting = false;
-      if (this.reconnectTimeoutId) {
-        clearTimeout(this.reconnectTimeoutId);
-        this.reconnectTimeoutId = null;
+    try {
+      const source = await createEventSource(url, this.apiKey);
+      if (!source) {
+        log("warn", "[Flagix SDK] Failed to create EventSource. Retrying...");
+        this.scheduleReconnect();
+        return;
       }
 
-      // If this is a reconnection and not the first connection, refresh the cache
-      // this ensures we have the latest flag values that may have changed while disconnected
-      if (this.hasEstablishedConnection && this.isInitialized) {
-        log(
-          "info",
-          "[Flagix SDK] SSE reconnected. Refreshing cache to sync with server..."
-        );
-        this.fetchInitialConfig().catch((error) => {
+      if (!this.isInitialized && !this.isReconnecting) {
+        source.close();
+        return;
+      }
+
+      this.sseConnection = source;
+
+      source.onopen = () => {
+        this.reconnectAttempts = 0;
+        this.isReconnecting = false;
+        if (this.reconnectTimeoutId) {
+          clearTimeout(this.reconnectTimeoutId);
+          this.reconnectTimeoutId = null;
+        }
+
+        // If this is a reconnection and not the first connection, refresh the cache
+        // this ensures we have the latest flag values that may have changed while disconnected
+        if (this.hasEstablishedConnection && this.isInitialized) {
           log(
-            "error",
-            "[Flagix SDK] Failed to refresh cache after reconnection",
+            "info",
+            "[Flagix SDK] SSE reconnected. Refreshing cache to sync with server..."
+          );
+          this.fetchInitialConfig().catch((error) => {
+            log(
+              "error",
+              "[Flagix SDK] Failed to refresh cache after reconnection",
+              error
+            );
+          });
+        } else {
+          this.hasEstablishedConnection = true;
+        }
+
+        log("info", "[Flagix SDK] SSE connection established.");
+      };
+
+      source.onerror = (error) => {
+        const eventSource = error.target as EventSource;
+        const readyState = eventSource?.readyState;
+
+        // EventSource.readyState: 0 = CONNECTING, 1 = OPEN, 2 = CLOSED
+        if (readyState === 2) {
+          log(
+            "warn",
+            "[Flagix SDK] SSE connection closed. Attempting to reconnect..."
+          );
+          this.handleReconnect();
+        } else if (readyState === 0) {
+          log(
+            "warn",
+            "[Flagix SDK] SSE connection error (connecting state)",
             error
           );
-        });
-      } else {
-        this.hasEstablishedConnection = true;
-      }
+        } else {
+          log("error", "[Flagix SDK] SSE error", error);
+          this.handleReconnect();
+        }
+      };
 
-      log("info", "[Flagix SDK] SSE connection established.");
-    };
+      // Listen for the "connected" event from the server
+      source.addEventListener("connected", () => {
+        log("info", "[Flagix SDK] SSE connection confirmed by server.");
+      });
 
-    source.onerror = (error) => {
-      const eventSource = error.target as EventSource;
-      const readyState = eventSource?.readyState;
+      source.addEventListener(EVENT_TO_LISTEN, (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          const { flagKey, type } = data as {
+            flagKey: string;
+            type: FlagUpdateType;
+          };
 
-      // EventSource.readyState: 0 = CONNECTING, 1 = OPEN, 2 = CLOSED
-      if (readyState === 2) {
-        log(
-          "warn",
-          "[Flagix SDK] SSE connection closed. Attempting to reconnect..."
-        );
-        this.handleReconnect();
-      } else if (readyState === 0) {
-        log(
-          "warn",
-          "[Flagix SDK] SSE connection error (connecting state)",
-          error
-        );
-      } else {
-        log("error", "[Flagix SDK] SSE error", error);
-        this.handleReconnect();
-      }
-    };
+          log("info", `[Flagix SDK] Received update for ${flagKey} (${type}).`);
 
-    // Listen for the "connected" event from the server
-    source.addEventListener("connected", () => {
-      log("info", "[Flagix SDK] SSE connection confirmed by server.");
-    });
-
-    source.addEventListener(EVENT_TO_LISTEN, (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        const { flagKey, type } = data as {
-          flagKey: string;
-          type: FlagUpdateType;
-        };
-
-        log("info", `[Flagix SDK] Received update for ${flagKey} (${type}).`);
-
-        this.fetchSingleFlagConfig(flagKey, type);
-      } catch (error) {
-        log("error", "[Flagix SDK] Failed to parse SSE event data.", error);
-      }
-    });
+          this.fetchSingleFlagConfig(flagKey, type);
+        } catch (error) {
+          log("error", "[Flagix SDK] Failed to parse SSE event data.", error);
+        }
+      });
+    } catch (error) {
+      log("error", "[Flagix SDK] Failed during SSE setup", error);
+      this.handleReconnect();
+    } finally {
+      this.isConnectingSSE = false;
+    }
   }
 
   private handleReconnect(): void {
@@ -324,7 +361,7 @@ export class FlagixClient {
   ): Promise<void> {
     const url = `${this.apiBaseUrl}/api/flag-config/${flagKey}`;
 
-    if (type === "FLAG_DELETED" || type === "RULE_DELETED") {
+    if (type === "FLAG_DELETED") {
       this.localCache.delete(flagKey);
       log("info", `[Flagix SDK] Flag ${flagKey} deleted from cache.`);
       this.emitter.emit(FLAG_UPDATE_EVENT, flagKey);
