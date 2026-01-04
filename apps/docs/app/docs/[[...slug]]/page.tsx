@@ -17,8 +17,8 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
     notFound();
   }
 
-  // @ts-expect-error PageData type from fumadocs-core doesn't fully reflect the MDX output, but these properties exist at runtime
-  const { body: MDX, toc } = page.data;
+  // biome-ignore lint/suspicious/noExplicitAny: <>
+  const { body: MDX, toc } = page.data as any;
 
   return (
     <DocsPage toc={toc}>
