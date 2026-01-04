@@ -64,12 +64,24 @@ export const ProjectHeader = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-60">
             <DropdownMenuItem>
-              <BookOpen className="mr-2 h-4 w-4" />
-              View Docs
+              <Link
+                className="flex items-center"
+                href="https://docs.flagix.com"
+                target="_blank"
+              >
+                <BookOpen className="mr-2 h-4 w-4" />
+                View Docs
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Github className="mr-2 h-4 w-4" />
-              View SDK (GitHub)
+              <Link
+                className="flex items-center"
+                href="https://github.com/Davidthecode/flagix"
+                target="_blank"
+              >
+                <Github className="mr-2 h-4 w-4" />
+                View SDK (GitHub)
+              </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

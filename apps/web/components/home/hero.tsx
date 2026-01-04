@@ -22,12 +22,14 @@ export const HeroSection = () => (
       <div className="group inline-flex items-center space-x-2 rounded-full border border-gray-300/50 bg-white/50 px-3 py-1 backdrop-blur-sm transition-all hover:border-gray-400">
         <span className="flex h-2 w-2 animate-pulse rounded-full bg-green-500" />
         <span className="font-medium text-gray-600 text-xs uppercase tracking-tight">
-          v1.0 is live
+          v1.2.0 is live
         </span>
         <div className="h-3 w-px bg-gray-300" />
         <Link
           className="flex items-center font-bold text-gray-900 text-xs transition-transform group-hover:translate-x-0.5"
-          href="/docs"
+          href="https://github.com/Davidthecode/flagix/releases"
+          rel="noopener"
+          target="_blank"
         >
           View Changelog <ChevronRight className="ml-0.5 h-3.5 w-3.5" />
         </Link>
@@ -54,7 +56,9 @@ export const HeroSection = () => (
         </Link>
         <Link
           className="flex items-center rounded-full border border-gray-300 bg-white px-8 py-4 font-semibold text-gray-700 transition hover:border-gray-400 hover:bg-gray-50"
-          href="/docs"
+          href="https://docs.flagix.com"
+          rel="noopener"
+          target="_blank"
         >
           <Terminal className="mr-2 h-4 w-4" />
           View Docs

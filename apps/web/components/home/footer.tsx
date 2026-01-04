@@ -31,7 +31,10 @@ export const Footer = () => {
             <div className="mt-6 flex items-center space-x-3">
               {[
                 { icon: FaXTwitter, href: "https://x.com/flagixx" },
-                { icon: FaGithub, href: "https://github.com/davidthecode" },
+                {
+                  icon: FaGithub,
+                  href: "https://github.com/davidthecode/flagix",
+                },
               ].map((social) => (
                 <a
                   className="rounded-lg border border-black/10 bg-black/5 p-2 transition-all hover:-translate-y-0.5 hover:bg-black/10"
@@ -73,7 +76,9 @@ export const Footer = () => {
               <li>
                 <Link
                   className="transition-colors hover:text-gray-900"
-                  href="/docs"
+                  href="https://docs.flagix.com"
+                  rel="noopener"
+                  target="_blank"
                 >
                   Documentation
                 </Link>

@@ -44,7 +44,9 @@ export const Header = () => {
           </a>
           <a
             className="transition hover:text-gray-900 dark:hover:text-white"
-            href="#docs"
+            href="https://docs.flagix.com"
+            rel="noopener"
+            target="_blank"
           >
             Docs
           </a>
@@ -54,7 +56,7 @@ export const Header = () => {
           <div className="hidden items-center space-x-4 sm:flex">
             <a
               className="flex items-center space-x-1.5 font-medium text-gray-700 text-sm transition hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-              href="https://github.com/davidthecode"
+              href="https://github.com/davidthecode/flagix"
               rel="noopener"
               target="_blank"
             >
@@ -103,8 +105,10 @@ export const Header = () => {
             </Link>
             <Link
               className={mobileNavLinkClasses}
-              href="/docs"
+              href="https://docs.flagix.com"
               onClick={() => setIsOpen(false)}
+              rel="noopener"
+              target="_blank"
             >
               Docs
             </Link>
