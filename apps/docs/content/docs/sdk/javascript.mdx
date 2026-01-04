@@ -24,7 +24,7 @@ async initialize(options: FlagixClientOptions): Promise<void>
 ```typescript
 interface FlagixClientOptions {
   apiKey: string;                    // Required: Your API key
-  apiBaseUrl: string;                 // Required: API base URL
+  apiBaseUrl: string;                 // Required: base URL
   initialContext?: EvaluationContext; // Optional: Initial context
   logs?: {
     level?: "none" | "error" | "warn" | "info"; // Optional: default "none"
