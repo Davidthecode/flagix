@@ -1,6 +1,6 @@
 {
   "name": "@flagix/react",
-  "version": "1.3.0",
+  "version": "1.5.0",
   "description": "Flagix React SDK",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
