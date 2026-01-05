@@ -2,7 +2,7 @@ import type { CorsOptionsDelegate } from "cors";
 import type { Request } from "express";
 import { env } from "@/config/env";
 
-const SDK_PREFIXES = ["/api/flag-config", "/api/track", "/api/sse"];
+const SDK_PREFIXES = ["/api/flag-config", "/api/sync", "/api/sse"];
 const ALLOWED_ADMIN_ORIGINS = [env.FRONTEND_URL, "http://localhost:3000"];
 
 export const corsOptions: CorsOptionsDelegate = (req, callback) => {

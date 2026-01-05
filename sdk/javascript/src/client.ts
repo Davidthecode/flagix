@@ -412,7 +412,7 @@ export class FlagixClient {
     properties?: Record<string, unknown>,
     contextOverrides?: EvaluationContext
   ): void {
-    const url = `${this.apiBaseUrl}/api/track/event`;
+    const url = `${this.apiBaseUrl}/api/sync/event`;
 
     const finalContext = { ...this.context, ...contextOverrides };
     const distinctId = resolveIdentifier(finalContext);
@@ -466,7 +466,7 @@ export class FlagixClient {
     result: FlagVariation,
     context: EvaluationContext
   ): void {
-    const url = `${this.apiBaseUrl}/api/track/evaluation`;
+    const url = `${this.apiBaseUrl}/api/sync/evaluation`;
 
     const distinctId = resolveIdentifier(context);
 
