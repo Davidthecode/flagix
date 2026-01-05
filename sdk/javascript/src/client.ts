@@ -1,6 +1,7 @@
 import { evaluateFlag, resolveIdentifier } from "@flagix/evaluation-core";
 import {
   EVENT_TO_LISTEN,
+  FLAGIX_API_URL,
   type FlagUpdateType,
   REMOVE_TRAILING_SLASH,
 } from "@/lib/constants";
@@ -15,6 +16,7 @@ import type {
   FlagConfig,
   FlagixClientOptions,
   FlagVariation,
+  InternalFlagixOptions,
   VariationValue,
 } from "@/types";
 
@@ -24,7 +26,7 @@ import type {
  */
 export class FlagixClient {
   private readonly apiKey: string;
-  private readonly apiBaseUrl: string;
+  private readonly apiBaseUrl: string = FLAGIX_API_URL;
   private readonly localCache = new Map<string, FlagConfig>();
   private context: EvaluationContext;
   private isInitialized = false;
@@ -40,8 +42,11 @@ export class FlagixClient {
   private isConnectingSSE = false;
 
   constructor(options: FlagixClientOptions) {
+    const internalOpts = options as InternalFlagixOptions;
+    this.apiBaseUrl =
+      internalOpts.__internal_baseUrl?.replace(REMOVE_TRAILING_SLASH, "") ??
+      FLAGIX_API_URL;
     this.apiKey = options.apiKey;
-    this.apiBaseUrl = options.apiBaseUrl.replace(REMOVE_TRAILING_SLASH, "");
     this.context = options.initialContext || {};
     this.emitter = new FlagixEventEmitter();
     setLogLevel(options.logs?.level ?? "none");

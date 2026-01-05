@@ -3,7 +3,7 @@ import { FLAG_UPDATE_EVENT } from "@/lib/emitter";
 import { log } from "@/lib/logger";
 import type {
   EvaluationContext,
-  FlagixClientOptions,
+  InternalFlagixOptions,
   VariationValue,
 } from "@/types";
 
@@ -16,7 +16,7 @@ export const Flagix = {
   /**
    * Initializes the Flagix SDK, fetches all flags, and sets up an SSE connection.
    */
-  async initialize(options: FlagixClientOptions): Promise<void> {
+  async initialize(options: InternalFlagixOptions): Promise<void> {
     // this check ensures that we are able to watch for api key changes and re-initialize accordingly
     // this ensures we dont use stale clients across different api keys
     if (clientInstance) {

@@ -3,7 +3,7 @@
   "changelog": "@changesets/cli/changelog",
   "commit": false,
   "fixed": [],
-  "linked": [],
+  "linked": [["@flagix/evaluation-core", "@flagix/js-sdk", "@flagix/react"]],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",

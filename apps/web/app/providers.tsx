@@ -16,7 +16,7 @@ const queryClient = new QueryClient({
 
 const SDK_OPTIONS = {
   apiKey: env.FLAGIX_SDK_API_KEY as string,
-  apiBaseUrl: env.FLAGIX_SDK_BASE_URL as string,
+  __internal_baseUrl: env.FLAGIX_SDK_BASE_URL,
   initialContext: {
     sessionId: "session-12345",
     platform: "web",

@@ -10,3 +10,4 @@ export type FlagUpdateType =
   | "RULE_DELETED";
 
 export const EVENT_TO_LISTEN = "flag-update";
+export const FLAGIX_API_URL = "https://api.flagix.com";

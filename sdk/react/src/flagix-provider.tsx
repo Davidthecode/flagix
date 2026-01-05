@@ -4,6 +4,7 @@ import {
   type EvaluationContext,
   Flagix,
   type FlagixClientOptions,
+  type InternalFlagixOptions,
 } from "@flagix/js-sdk";
 import type React from "react";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
@@ -28,13 +29,14 @@ export const FlagixProvider = ({
 }: FlagixProviderProps) => {
   const [isReady, setIsReady] = useState(() => Flagix.isInitialized());
   const [error, setError] = useState<Error | null>(null);
-  const { apiKey, apiBaseUrl } = options;
+  const internalOptions = options as InternalFlagixOptions;
+  const { apiKey, __internal_baseUrl } = internalOptions;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <>
   useEffect(() => {
     let mounted = true;
 
-    Flagix.initialize(options)
+    Flagix.initialize(internalOptions)
       .then(() => {
         if (mounted) {
           setIsReady(true);
@@ -52,7 +54,7 @@ export const FlagixProvider = ({
       mounted = false;
       Flagix.close();
     };
-  }, [apiKey, apiBaseUrl]);
+  }, [apiKey, __internal_baseUrl]);
 
   useEffect(() => {
     if (isReady && context) {
