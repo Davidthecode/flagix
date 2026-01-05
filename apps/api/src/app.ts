@@ -8,7 +8,7 @@ import flagRoutes from "@/routes/flag/route";
 import flagConfigRoutes from "@/routes/flag-config/route";
 import projectRoutes from "@/routes/project/route";
 import sseRoutes from "@/routes/sse/route";
-import trackRoutes from "@/routes/sync/route";
+import trackRoutes from "@/routes/track/route";
 
 const createApp = (): Express => {
   const app: Express = express();
