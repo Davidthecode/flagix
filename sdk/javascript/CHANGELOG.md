@@ -1,5 +1,11 @@
 # @flagix/js-sdk
 
+## 1.3.1
+
+### Patch Changes
+
+- 818fc23: Fixed an issue where evaluation and event tracking requests were being blocked by certain browser privacy extensions and ad-blockers. Replaced navigator.sendBeacon with fetch + keepalive to improve the delivery reliability
+
 ## 1.3.0
 
 ### Minor Changes
