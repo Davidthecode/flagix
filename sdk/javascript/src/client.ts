@@ -427,13 +427,6 @@ export class FlagixClient {
 
     const payloadJson = JSON.stringify(payload);
 
-    if (typeof navigator !== "undefined" && navigator.sendBeacon) {
-      const blob = new Blob([payloadJson], { type: "application/json" });
-      if (navigator.sendBeacon(url, blob)) {
-        return;
-      }
-    }
-
     this.fireAndForgetFetch(url, payloadJson);
   }
 
@@ -490,21 +483,7 @@ export class FlagixClient {
 
     const payloadJson = JSON.stringify(payload);
 
-    if (typeof navigator !== "undefined" && navigator.sendBeacon) {
-      const blob = new Blob([payloadJson], { type: "application/json" });
-
-      const success = navigator.sendBeacon(url, blob);
-
-      if (success) {
-        log("info", `Successfully queued beacon for ${flagKey}.`);
-        return;
-      }
-
-      log("warn", `Beacon queue full for ${flagKey}. Falling back to fetch.`);
-      this.fireAndForgetFetch(url, payloadJson);
-    } else {
-      this.fireAndForgetFetch(url, payloadJson);
-    }
+    this.fireAndForgetFetch(url, payloadJson);
   }
 
   private fireAndForgetFetch(url: string, payloadJson: string): void {
