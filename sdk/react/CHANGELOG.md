@@ -1,5 +1,20 @@
 # @flagix/react
 
+## 1.5.0
+
+### Minor Changes
+
+- f696cb9: \*Simplified SDK initialization by making apiBaseUrl internal
+
+  - Added support for \_\_internal_baseUrl for local development.
+
+  - Updated event endpoints to /sync to improve reliability.
+
+### Patch Changes
+
+- Updated dependencies [f696cb9]
+  - @flagix/js-sdk@1.5.0
+
 ## 1.3.0
 
 ### Minor Changes

@@ -1,5 +1,15 @@
 # @flagix/evaluation-core
 
+## 1.5.0
+
+### Minor Changes
+
+- f696cb9: \*Simplified SDK initialization by making apiBaseUrl internal
+
+  - Added support for \_\_internal_baseUrl for local development.
+
+  - Updated event endpoints to /sync to improve reliability.
+
 ## 1.2.0
 
 ### Minor Changes
