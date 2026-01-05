@@ -55,7 +55,6 @@ import { Flagix } from "@flagix/js-sdk";
 // Initialize the SDK. 
 await Flagix.initialize({
   apiKey: "<YOUR_API_KEY>",
-  apiBaseUrl: "https://api.flagix.com",
 });
 
 // Set user context (triggers instant re-evaluation)
@@ -82,7 +81,6 @@ import { useAuth } from "./hooks/use-auth";
 
 const options = {
   apiKey: "<YOUR_API_KEY>",
-  apiBaseUrl: "https://api.flagix.com",
 };
 
 export default function Providers({ children }: { children: React.ReactNode }) {

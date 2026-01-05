@@ -22,7 +22,7 @@ export const HeroSection = () => (
       <div className="group inline-flex items-center space-x-2 rounded-full border border-gray-300/50 bg-white/50 px-3 py-1 backdrop-blur-sm transition-all hover:border-gray-400">
         <span className="flex h-2 w-2 animate-pulse rounded-full bg-green-500" />
         <span className="font-medium text-gray-600 text-xs uppercase tracking-tight">
-          v1.2.0 is live
+          v1.0 is live
         </span>
         <div className="h-3 w-px bg-gray-300" />
         <Link

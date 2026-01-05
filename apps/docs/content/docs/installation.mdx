@@ -54,7 +54,6 @@ import { Flagix } from "@flagix/js-sdk";
 // Initialize the SDK
 await Flagix.initialize({
   apiKey: "your-api-key-here",
-  apiBaseUrl: "https://api.flagix.com",
   initialContext: {
     userId: "user_123",
     email: "user@example.com",
@@ -71,17 +70,14 @@ Wrap your application with the `FlagixProvider` (see the [React & Next.js SDK re
 **Simple React example:**
 ```jsx
 import { FlagixProvider } from "@flagix/react";
-
 const options = {
   apiKey: "your-api-key-here",
-  apiBaseUrl: "https://api.flagix.com",
   initialContext: {
     userId: "user_123",
     email: "user@example.com",
     plan: "premium"
   },
 };
-
 function App() {
   return (
     <FlagixProvider options={options}>
@@ -98,7 +94,6 @@ import { useAuth } from "./hooks/use-auth"; // Your auth hook
 
 const options = {
   apiKey: "your-api-key-here",
-  apiBaseUrl: "https://api.flagix.com",
 };
 
 function App() {
@@ -123,7 +118,6 @@ For **Next.js App Router**, create a `providers.tsx` file and wrap your root lay
 | Option | Type | Required | Description |
 |--------|------|----------|-------------|
 | `apiKey` | `string` | ✅ | Your Flagix API key |
-| `apiBaseUrl` | `string` | ✅ | Base URL for the Flagix API |
 | `initialContext` | `object` | ❌ | Initial evaluation context |
 | `context` (React only) | `object` | ❌ | Dynamic context that syncs automatically |
 | `logs.level` | `string` | ❌ | Set to `info`, `warn`, or `error` to see internal SDK logs in the console. |
@@ -137,7 +131,6 @@ Store your API credentials in environment variables:
 ```bash
 # .env
 FLAGIX_API_KEY=your-api-key
-FLAGIX_API_URL=https://api.flagix.com
 ```
 
 Then in your code:
@@ -145,7 +138,6 @@ Then in your code:
 ```javascript
 await Flagix.initialize({
   apiKey: process.env.FLAGIX_API_KEY,
-  apiBaseUrl: process.env.FLAGIX_API_URL,
   initialContext: { userId: "user_123" }
 });
 ```
@@ -157,7 +149,6 @@ Environment variables must be prefixed with `NEXT_PUBLIC_` to be accessible in t
 ```bash
 # .env
 NEXT_PUBLIC_FLAGIX_API_KEY=your-api-key
-NEXT_PUBLIC_FLAGIX_API_URL=https://api.flagix.com
 ```
 
 Then use them in your provider component:
@@ -165,7 +156,6 @@ Then use them in your provider component:
 ```jsx
 const options = {
   apiKey: process.env.NEXT_PUBLIC_FLAGIX_API_KEY,
-  apiBaseUrl: process.env.NEXT_PUBLIC_FLAGIX_API_URL,
 };
 ```
 

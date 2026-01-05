@@ -24,7 +24,6 @@ import { FlagixProvider } from "@flagix/react";
 
 const options = {
   apiKey: "your-api-key",
-  apiBaseUrl: "https://api.flagix.com",
   initialContext: {
     userId: "user_123",
     email: "user@example.com",
@@ -59,7 +58,6 @@ import type React from "react";
 
 const flagixOptions = {
   apiKey: "your-api-key",
-  apiBaseUrl: "https://api.flagix.com",
   initialContext: {
     userId: "user_123",
     email: "user@example.com",
@@ -111,7 +109,6 @@ import { FlagixProvider } from "@flagix/react";
 
 const flagixOptions = {
   apiKey: "your-api-key",
-  apiBaseUrl: "https://api.flagix.com",
   initialContext: {
     userId: "user_123",
     email: "user@example.com",
@@ -157,7 +154,6 @@ import { FlagixProvider } from "@flagix/react";
 
 const options = {
   apiKey: "your-api-key",
-  apiBaseUrl: "https://api.flagix.com",
   initialContext: {
     userId: "user_123",
     email: "user@example.com",
@@ -186,7 +182,6 @@ import { useAuth } from "./hooks/use-auth"; // Your auth hook
 
 const options = {
   apiKey: "your-api-key",
-  apiBaseUrl: "https://api.flagix.com",
 };
 
 function App() {
@@ -262,52 +257,50 @@ Hook for accessing Flagix actions like tracking events and updating context.
 function useFlagixActions(): {
   track: (eventName: string, properties?: Record<string, unknown>) => void;
   setContext: (newContext: EvaluationContext) => void;
+  identify: (context?: EvaluationContext) => void;
 }
 ```
 
-#### When to Use `setContext()`
+#### track()
 
-While the `context` prop on `FlagixProvider` is the recommended way to manage global user state, `setContext()` is still available for:
-
-- **Temporary overrides**: Quick testing or short-lived changes that don't warrant provider state updates
-- **Manual updates**: Fine-grained control in edge cases
-- **Vanilla JavaScript**: Applications not using a provider pattern
-
-For most authenticated applications, prefer passing user state via the `context` prop for cleaner, more declarative code.
-
-#### Examples
+Records custom events for analytics and conversion tracking.
 
 ```jsx
-import { useFlagixActions } from "@flagix/react";
+const { track } = useFlagixActions();
 
-function PurchaseButton() {
-  const { track } = useFlagixActions();
-  
-  const handlePurchase = () => {
-    // Track purchase event
-    track("purchase_completed", {
-      amount: 99.99,
-      currency: "USD",
-      productId: "prod_123"
-    });
-    
-    // Process purchase...
-  };
-  
-  return <button onClick={handlePurchase}>Buy Now</button>;
-}
-
-function TestComponent() {
-  const { setContext } = useFlagixActions();
-  
-  // Temporary context override for testing
-  const handleTestAsAdmin = () => {
-    setContext({ role: "admin" });
-  };
-  
-  return <button onClick={handleTestAsAdmin}>Test Admin Features</button>;
-}
+track("purchase_completed", {
+  amount: 99.99,
+  currency: "USD",
+  productId: "prod_123"
+});
 ```
----
+
+See [Flagix.track()](/docs/sdk/javascript#flagixtrack) in the JavaScript SDK for details.
+
+#### setContext()
+
+Merges new attributes with existing context. Use for incremental updates.
+
+```jsx
+const { setContext } = useFlagixActions();
+
+setContext({ plan: "premium" }); // Adds/updates plan, keeps other context
+```
+
+See [Flagix.setContext()](/docs/sdk/javascript#flagixsetcontext) in the JavaScript SDK for details.
+
+#### identify()
+
+Replaces entire context. Use for logout or switching users.
+
+```jsx
+const { identify } = useFlagixActions();
+
+identify({}); // Logout - clears all context
+identify({ userId: "new_user", plan: "free" }); // Switch user
+```
+
+See [Flagix.identify()](/docs/sdk/javascript#flagixidentify) in the JavaScript SDK for details.
+
 
 Need help? [contact support](https://x.com/flagixx).

@@ -34,7 +34,6 @@ import { Flagix } from "@flagix/js-sdk";
 
 await Flagix.initialize({
   apiKey: "your-api-key",
-  apiBaseUrl: "https://api.flagix.com",
   initialContext: {
     userId: "user_123",
     email: "user@example.com",
@@ -67,7 +66,6 @@ import { FlagixProvider } from "@flagix/react";
 function App() {
   const options = {
     apiKey: "your-api-key",
-    apiBaseUrl: "https://api.flagix.com",
     initialContext: { userId: "user_123" }
   }
 

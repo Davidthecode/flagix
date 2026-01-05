@@ -9,7 +9,6 @@ import { useAuth } from "./hooks/use-auth"; // Your auth hook
 
 const options = {
   apiKey: "${apiKey}",
-  apiBaseUrl: "https://api.flagix.com",
 };
 
 export default function Providers({ children }: { children: React.ReactNode }) {
@@ -45,7 +44,6 @@ export default function MyComponent() {
 // Initialize the SDK.  
 await Flagix.initialize({
   apiKey: "${apiKey}",
-  apiBaseUrl: "https://api.flagix.com",
 });
 
 // Set user identity (triggers instant re-evaluation)

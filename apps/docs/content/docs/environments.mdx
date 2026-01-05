@@ -80,7 +80,6 @@ const env = process.env.NODE_ENV; // "development", "staging", "production"
 // Initialize Flagix with environment-specific API key
 await Flagix.initialize({
   apiKey: process.env[`FLAGIX_API_KEY_${env.toUpperCase()}`],
-  apiBaseUrl: process.env.FLAGIX_API_URL,
   initialContext: {
     userId: user.id,
     environment: env

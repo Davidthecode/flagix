@@ -201,6 +201,52 @@ RESEND_API_KEY=<YOUR_RESEND_API_KEY>
 TINYBIRD_TOKEN=<YOUR_TINYBIRD_TOKEN>
 ```
 
+## Local Development with SDKs
+
+When testing the SDKs locally with a local API server running on `localhost:5000`, you'll need to configure the `__internal_baseUrl` option to point to your local development server instead of the production API.
+
+### Using SDKs Locally
+
+For **JavaScript SDK**:
+
+```javascript
+import { Flagix } from "@flagix/js-sdk";
+
+await Flagix.initialize({
+  apiKey: "your-dev-api-key",
+  __internal_baseUrl: "http://localhost:5000", // Points to local API server
+  initialContext: {
+    userId: "test_user",
+    email: "test@example.com"
+  }
+});
+```
+
+For **React SDK**:
+
+```jsx
+import { FlagixProvider } from "@flagix/react";
+
+const options = {
+  apiKey: "your-dev-api-key",
+  __internal_baseUrl: "http://localhost:5000", // Points to local API server
+  initialContext: {
+    userId: "test_user",
+    email: "test@example.com"
+  }
+};
+
+function App() {
+  return (
+    <FlagixProvider options={options}>
+      <YourApp />
+    </FlagixProvider>
+  );
+}
+```
+
+**Note:** The `__internal_baseUrl` option is for local development and testing only. Do not include it in production code—the SDK will automatically use the production API endpoint.
+
 ## Running the Apps
 
 From the root you can run all apps:

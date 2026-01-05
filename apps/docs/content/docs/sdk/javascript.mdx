@@ -24,7 +24,6 @@ async initialize(options: FlagixClientOptions): Promise<void>
 ```typescript
 interface FlagixClientOptions {
   apiKey: string;                    // Required: Your API key
-  apiBaseUrl: string;                 // Required: base URL
   initialContext?: EvaluationContext; // Optional: Initial context
   logs?: {
     level?: "none" | "error" | "warn" | "info"; // Optional: default "none"
@@ -39,7 +38,6 @@ import { Flagix } from "@flagix/js-sdk";
 
 await Flagix.initialize({
   apiKey: "your-api-key",
-  apiBaseUrl: "https://api.flagix.com",
   initialContext: {
     userId: "user_123",
     email: "user@example.com",
@@ -159,6 +157,57 @@ Flagix.setContext({
 });
 // → Context merges with existing values
 // → Reactive updates triggered again
+```
+
+### Flagix.identify()
+
+Replaces the entire global evaluation context, clearing all previous context values.
+
+```typescript
+identify(newContext: EvaluationContext): void
+```
+
+#### Parameters
+
+- `newContext` - New context object that will completely replace the existing context
+
+#### Use Cases
+
+Unlike `setContext()` which merges with existing context, `identify()` is useful when you need to:
+
+- **Clear user context on logout**: Remove all user-specific attributes
+- **Switch between different users**: Replace one user's context entirely with another's
+- **Reset evaluation context**: Start fresh with a completely new context
+
+#### Reactivity
+
+Calling `identify()` instantly replaces the global context and triggers re-evaluation of all cached flags. Any active listeners subscribed via `onFlagUpdate()` are triggered.
+
+#### Examples
+
+```javascript
+// On user logout - completely clear context
+Flagix.identify({});
+// → All previous context is removed
+// → All flags re-evaluate with empty context
+// → All onFlagUpdate listeners are triggered
+
+// Switch to a different user
+Flagix.identify({
+  userId: "new_user_456",
+  email: "newuser@example.com",
+  plan: "basic"
+});
+// → Previous context is completely replaced
+// → No old user data persists
+// → Flags re-evaluate with new user context
+
+// Distinguish between setContext and identify
+// Use setContext for incremental updates
+Flagix.setContext({ lastActivity: new Date() });
+
+// Use identify for complete context replacement
+Flagix.identify({ userId: "user_new", role: "admin" });
 ```
 
 ### Flagix.onFlagUpdate()
