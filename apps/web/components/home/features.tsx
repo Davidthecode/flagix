@@ -1,96 +1,80 @@
-import {
-  Aperture,
-  Cloud,
-  Monitor,
-  Shield,
-  SlidersHorizontal,
-  Zap,
-} from "lucide-react";
+import Link from "next/link";
 
 const features = [
   {
     title: "Gradual Rollouts",
     description:
-      "Ship features to 1% of users, then 10%, ensuring stability before a full release. Includes instant 'kill switch' functionality.",
-    icon: Zap,
+      "Ship to 1% of users, then 10%, ensuring stability before a full release.",
   },
   {
     title: "A/B Testing",
     description:
-      "Define distinct user segments and instantly allocate traffic to variant flags for reliable outcome measurement and analysis.",
-    icon: Aperture,
+      "Define segments and allocate traffic to flags for reliable measurement.",
   },
   {
-    title: "Dynamic Targeting Rules",
+    title: "Dynamic Targeting",
     description:
-      "Target users based on geography, plan tier, email domain, or custom attributes via a simple, powerful dashboard.",
-    icon: SlidersHorizontal,
+      "Target users based on geography, plan tier, or custom attributes.",
   },
   {
     title: "Secure & Scalable SDKs",
     description:
-      "Integration is fast and latency is low, powered by edge infrastructure designed for high-throughput traffic.",
-    icon: Cloud,
+      "Integration is fast and latency is low, powered by edge infrastructure.",
   },
   {
-    title: "Full Audit Logs & Governance",
+    title: "Full Audit Logs",
     description:
-      "Maintain SOC-2 and HIPAA compliance with comprehensive audit logs, approval workflows, and role-based access control (RBAC).",
-    icon: Shield,
+      "Maintain compliance with comprehensive logs and approval workflows.",
   },
   {
-    title: "Observability Integration",
+    title: "Observability",
     description:
-      "Connect flag changes directly to your APM/logging tools (Datadog, New Relic) to instantly detect performance impacts or errors. (coming soon)",
-    icon: Monitor,
+      "Connect flag changes to your APM to detect performance impacts.",
   },
 ];
 
 export const FeaturesSection = () => {
   return (
-    <section
-      className="relative overflow-hidden bg-[#09090b] py-24 md:py-32"
-      id="features"
-      style={{ contain: "paint" }}
-    >
-      {/* Background & Patterns */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-grid-white opacity-[0.05]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,#09090b_70%)]" />
-      </div>
-
-      <div className="container-landing relative z-10 mx-auto px-6">
-        <div className="text-center">
-          <h2 className="shimmer-text contain-[paint] mx-auto max-w-4xl font-extrabold text-4xl tracking-tight sm:text-5xl md:text-6xl">
-            Engineered for Developer Velocity
-          </h2>
-
-          <p className="mx-auto mt-6 max-w-2xl text-gray-400 text-lg leading-relaxed">
-            Your core capabilities, delivered with the simplicity and power
-            modern teams demand.
-          </p>
+    <section className="bg-[#080808] py-24 md:py-32" id="features">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="mb-12 flex flex-col justify-between gap-8 md:flex-row md:items-end">
+          <div className="max-w-2xl">
+            <h2 className="font-medium text-3xl text-[#f7f7f7] tracking-tight sm:text-7xl">
+              Engineered for
+              <br /> Developer Velocity
+            </h2>
+          </div>
+          <div className="max-w-[400px]">
+            <p className="text-[#8a8a8e] text-lg leading-relaxed">
+              Flagix is designed to decouple development from releases, allowing
+              your team to ship code continuously and toggle features with total
+              precision.{"  "}
+              <Link
+                className="inline-flex items-center text-white transition-all hover:underline"
+                href="/login"
+              >
+                Get started <span className="ml-1 text-[10px]">→</span>
+              </Link>
+            </p>
+          </div>
         </div>
 
-        <div className="mt-20 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {features.map((feature, index) => {
-            const Icon = feature.icon;
             return (
               <div
-                className="group relative overflow-hidden rounded-3xl border border-white/8 bg-white/2 p-8 transition-all hover:border-white/15 hover:bg-white/4"
+                className="group relative flex min-h-[180px] flex-col justify-between overflow-hidden rounded-[18px] border border-white/6 bg-[#111113] p-6 transition-all hover:bg-[#141416]"
                 key={`${feature.title}-${index}`}
               >
-                <div className="relative z-10">
-                  <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-inner transition-transform group-hover:scale-110">
-                    <Icon className="h-6 w-6 text-white" />
+                <div className="relative z-10 flex items-end justify-between">
+                  <div className="space-y-1.5">
+                    <h3 className="font-medium text-[#f7f7f7] text-lg">
+                      {feature.title}
+                    </h3>
+                    <p className="max-w-[75%] text-[#8a8a8e] leading-snug">
+                      {feature.description}
+                    </p>
                   </div>
-
-                  <h3 className="font-bold text-white text-xl tracking-tight">
-                    {feature.title}
-                  </h3>
-
-                  <p className="mt-4 text-[15px] text-gray-400 leading-relaxed">
-                    {feature.description}
-                  </p>
                 </div>
               </div>
             );

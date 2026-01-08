@@ -7,7 +7,7 @@ export const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative overflow-hidden border-black/5 border-t bg-[#F4F4F5] pt-16 pb-0">
+    <footer className="relative overflow-hidden border-black/5 border-t bg-[#F4F4F5] py-16">
       <div className="container-landing mx-auto px-6">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-4 lg:gap-24">
           <div className="col-span-1 md:col-span-2">
@@ -24,8 +24,7 @@ export const Footer = () => {
               </span>
             </div>
             <p className="mt-4 max-w-xs font-medium text-gray-500 text-sm leading-relaxed">
-              The collaborative feature management platform built for modern dev
-              teams to ship code with confidence.
+              Ship faster and safer with real-time feature management
             </p>
 
             <div className="mt-6 flex items-center space-x-3">
@@ -37,7 +36,7 @@ export const Footer = () => {
                 },
               ].map((social) => (
                 <a
-                  className="rounded-lg border border-black/10 bg-black/5 p-2 transition-all hover:-translate-y-0.5 hover:bg-black/10"
+                  className="border-black/10 p-2 transition-all hover:-translate-y-0.5 hover:bg-black/10"
                   href={social.href}
                   key={social.href}
                   target="_blank"
@@ -52,7 +51,7 @@ export const Footer = () => {
             </div>
           </div>
 
-          <div className="text-sm">
+          <div className="text-sm md:col-start-4">
             <h4 className="mb-4 font-bold text-gray-900 text-xs uppercase tracking-[0.15em]">
               Product
             </h4>
@@ -65,14 +64,7 @@ export const Footer = () => {
                   Features
                 </Link>
               </li>
-              <li>
-                <Link
-                  className="transition-colors hover:text-gray-900"
-                  href="#"
-                >
-                  Pricing
-                </Link>
-              </li>
+
               <li>
                 <Link
                   className="transition-colors hover:text-gray-900"
@@ -86,53 +78,15 @@ export const Footer = () => {
               <li>
                 <Link
                   className="transition-colors hover:text-gray-900"
-                  href="#"
+                  href="https://github.com/Davidthecode/flagix/releases"
+                  rel="noopener"
+                  target="_blank"
                 >
                   Changelog
                 </Link>
               </li>
             </ul>
           </div>
-
-          <div className="text-sm">
-            <h4 className="mb-4 font-bold text-gray-900 text-xs uppercase tracking-[0.15em]">
-              Legal
-            </h4>
-            <ul className="space-y-3 font-medium text-gray-500">
-              <li>
-                <Link
-                  className="transition-colors hover:text-gray-900"
-                  href="#"
-                >
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="transition-colors hover:text-gray-900"
-                  href="#"
-                >
-                  Terms of Service
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="transition-colors hover:text-gray-900"
-                  href="#"
-                >
-                  Cookie Policy
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="relative mt-2 flex justify-center pt-10">
-          <div className="absolute bottom-0 h-[200px] w-[500px] rounded-full bg-black/5 blur-[100px]" />
-
-          <h2 className="shimmer-text-dark select-none font-black text-[22vw] leading-[0.8] tracking-tighter">
-            Flagix
-          </h2>
         </div>
       </div>
     </footer>
