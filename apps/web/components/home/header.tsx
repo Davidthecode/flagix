@@ -13,7 +13,7 @@ export const Header = () => {
   const mobileNavLinkClasses = "transition-colors hover:text-gray-900 py-1";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-white/10 border-b bg-[#F4F4F5] backdrop-blur-xl dark:bg-black/70">
+    <header className="sticky top-0 z-50 w-full bg-[#F4F4F5] backdrop-blur-xl dark:bg-black/70">
       <div className="container-landing mx-auto flex h-16 items-center justify-between px-6">
         <div className="flex items-center space-x-3">
           <Image

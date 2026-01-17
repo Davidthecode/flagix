@@ -2,17 +2,17 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "@flagix/ui/styles/globals.css";
 import "./globals.css";
-import { Raleway } from "next/font/google";
+import { Geist, Geist_Mono, Raleway } from "next/font/google";
 import { SITE_CONFIG } from "@/utils/site";
 import Providers from "./providers";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
+const geistSans = Geist({
+  subsets: ["latin"],
   variable: "--font-geist-sans",
 });
 
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
   variable: "--font-geist-mono",
 });
 

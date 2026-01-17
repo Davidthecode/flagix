@@ -7,7 +7,7 @@ export const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative overflow-hidden border-black/5 border-t bg-[#F4F4F5] py-16">
+    <footer className="relative overflow-hidden border-white/10 border-t bg-black py-16">
       <div className="container-landing mx-auto px-6">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-4 lg:gap-24">
           <div className="col-span-1 md:col-span-2">
@@ -19,11 +19,11 @@ export const Footer = () => {
                 src={FlagixLogo}
                 width={24}
               />
-              <span className="font-bold text-gray-900 text-xl tracking-tight">
+              <span className="font-bold text-white text-xl tracking-tight">
                 Flagix
               </span>
             </div>
-            <p className="mt-4 max-w-xs font-medium text-gray-500 text-sm leading-relaxed">
+            <p className="mt-4 max-w-xs font-medium text-gray-400 text-sm leading-relaxed">
               Ship faster and safer with real-time feature management
             </p>
 
@@ -36,12 +36,12 @@ export const Footer = () => {
                 },
               ].map((social) => (
                 <a
-                  className="border-black/10 p-2 transition-all hover:-translate-y-0.5 hover:bg-black/10"
+                  className="border-white/10 p-2 transition-all hover:-translate-y-0.5 hover:bg-white/10"
                   href={social.href}
                   key={social.href}
                   target="_blank"
                 >
-                  <social.icon className="h-4 w-4 text-gray-700" />
+                  <social.icon className="h-4 w-4 text-gray-300" />
                 </a>
               ))}
 
@@ -52,13 +52,13 @@ export const Footer = () => {
           </div>
 
           <div className="text-sm md:col-start-4">
-            <h4 className="mb-4 font-bold text-gray-900 text-xs uppercase tracking-[0.15em]">
+            <h4 className="mb-4 font-bold text-white text-xs uppercase tracking-[0.15em]">
               Product
             </h4>
-            <ul className="space-y-3 font-medium text-gray-500">
+            <ul className="space-y-3 font-medium text-gray-400">
               <li>
                 <Link
-                  className="transition-colors hover:text-gray-900"
+                  className="transition-colors hover:text-white"
                   href="#features"
                 >
                   Features
@@ -67,7 +67,7 @@ export const Footer = () => {
 
               <li>
                 <Link
-                  className="transition-colors hover:text-gray-900"
+                  className="transition-colors hover:text-white"
                   href="https://docs.flagix.com"
                   rel="noopener"
                   target="_blank"
@@ -77,7 +77,7 @@ export const Footer = () => {
               </li>
               <li>
                 <Link
-                  className="transition-colors hover:text-gray-900"
+                  className="transition-colors hover:text-white"
                   href="https://github.com/Davidthecode/flagix/releases"
                   rel="noopener"
                   target="_blank"
