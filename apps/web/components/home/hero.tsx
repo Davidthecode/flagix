@@ -106,7 +106,7 @@ export const HeroSection = () => {
 
           {/* Right Side: Vertical Grid */}
           <div className="relative col-span-3 hidden grid-cols-4 lg:grid">
-             {/* Column 1 */}
+            {/* Column 1 */}
             <div className="relative h-full">
               <div className="absolute top-0 right-0 bottom-0 w-px overflow-hidden bg-white/10">
                 <motion.div
@@ -256,7 +256,7 @@ export const HeroSection = () => {
                 }}
               />
             </div>
-            <p className="mt-4 font-medium text-white text-lg leading-snug">
+            <p className="mt-4 font-medium text-lg text-white leading-snug">
               Detailed targeting rules for specific user segments and
               environments.
             </p>
@@ -275,7 +275,7 @@ export const HeroSection = () => {
                 }}
               />
             </div>
-            <p className="mt-4 font-medium text-white text-lg leading-snug">
+            <p className="mt-4 font-medium text-lg text-white leading-snug">
               Decouple deploy from release. Ship code to production safely and
               instantly.
             </p>
@@ -294,7 +294,7 @@ export const HeroSection = () => {
                 }}
               />
             </div>
-            <p className="mt-4 font-medium text-white text-lg leading-snug">
+            <p className="mt-4 font-medium text-lg text-white leading-snug">
               Real-time analytics and A/B testing results directly in your
               dashboard.
             </p>

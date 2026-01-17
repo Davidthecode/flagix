@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import "@flagix/ui/styles/globals.css";
 import "./globals.css";
 import { Geist, Geist_Mono, Raleway } from "next/font/google";
