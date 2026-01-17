@@ -33,7 +33,7 @@ export const HeroSection = () => {
   )`;
 
   return (
-    <section className="container-landing group relative py-12 md:py-12">
+    <section className="container-landing group relative py-16">
       <div className="border border-white/10">
         <div className="grid h-32 grid-cols-12 border-white/10 border-b">
           {/* Top Left: Fan/Perspective Pattern */}
