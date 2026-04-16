@@ -5,16 +5,14 @@ import { Header } from "@/components/home/header";
 import { HeroSection } from "@/components/home/hero";
 
 const Page = () => (
-  <div className="flex w-full items-center justify-center">
-    <div className="dark flex min-h-screen w-full flex-col bg-background">
-      <Header />
-      <main>
-        <HeroSection />
-        <FeaturesSection />
-        <DemoSection />
-        <Footer />
-      </main>
-    </div>
+  <div className="dark flex min-h-screen w-full flex-col bg-background">
+    <Header />
+    <main>
+      <HeroSection />
+      <FeaturesSection />
+      <DemoSection />
+      <Footer />
+    </main>
   </div>
 );
 
