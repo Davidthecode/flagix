@@ -39,6 +39,7 @@ export const Footer = () => {
                   className="border-white/10 p-2 transition-all hover:-translate-y-0.5 hover:bg-white/10"
                   href={social.href}
                   key={social.href}
+                  rel="noopener"
                   target="_blank"
                 >
                   <social.icon className="h-4 w-4 text-gray-300" />

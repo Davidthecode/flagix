@@ -111,4 +111,4 @@ function TableEmpty({ children, className }: TableEmptyProps) {
   );
 }
 
-export { Table, TableHeader, TableBody, TableRow, TableCell, TableEmpty };
+export { Table, TableBody, TableCell, TableEmpty, TableHeader, TableRow };
