@@ -22,9 +22,6 @@
       },
       "complexity": {
         "useSimplifiedLogicExpression": "off"
-      },
-      "nursery": {
-        "noUnnecessaryConditions": "off"
       }
     }
   }

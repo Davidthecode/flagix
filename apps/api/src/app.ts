@@ -2,8 +2,10 @@ import { toNodeHandler } from "better-auth/node";
 import cors from "cors";
 import express, { type Express } from "express";
 import { corsOptions } from "@/config/cors";
+import { rateLimits } from "@/config/rate-limit";
 import { auth } from "@/lib/auth/auth";
 import { requireAuth } from "@/middleware/auth";
+import { createRateLimitMiddleware } from "@/middleware/rate-limit";
 import flagRoutes from "@/routes/flag/route";
 import flagConfigRoutes from "@/routes/flag-config/route";
 import projectRoutes from "@/routes/project/route";
@@ -17,22 +19,40 @@ const createApp = (): Express => {
 
   app.use(cors(corsOptions));
 
+  app.use("/api/auth", createRateLimitMiddleware(rateLimits.auth));
   app.all("/api/auth/*splat", toNodeHandler(auth));
 
   app.use(express.json());
 
-  app.use("/api/flag-config", flagConfigRoutes);
-  app.use("/api/sse", sseRoutes);
+  app.use(
+    "/api/flag-config",
+    createRateLimitMiddleware(rateLimits.sdkFlagConfig),
+    flagConfigRoutes
+  );
+  app.use("/api/sse", createRateLimitMiddleware(rateLimits.sdkSse), sseRoutes);
 
   // this route ideally should be `track` but is named `sync` because ad-blockers block routes with "track" in them
   // the route handles tracking events from the SDK
-  app.use("/api/sync", trackRoutes);
+  app.use(
+    "/api/sync",
+    createRateLimitMiddleware(rateLimits.sdkTracking),
+    trackRoutes
+  );
 
   app.use(requireAuth);
 
-  app.use("/api/projects", projectRoutes);
-  app.use("/api/flags", flagRoutes);
+  app.use(
+    "/api/projects",
+    createRateLimitMiddleware(rateLimits.admin),
+    projectRoutes
+  );
+  app.use(
+    "/api/flags",
+    createRateLimitMiddleware(rateLimits.admin),
+    flagRoutes
+  );
 
+  app.use(createRateLimitMiddleware(rateLimits.global));
   app.get("/health", (_req, res) => {
     res.json({ status: "ok" });
   });
