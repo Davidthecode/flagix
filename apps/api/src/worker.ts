@@ -3,7 +3,7 @@ import { env } from "@/config/env";
 import { startTrackingWorker } from "@/workers/tracking-worker";
 
 function main() {
-  const PORT = Number(env.PORT) || 10_000;
+  const PORT = Number(env.WORKER_PORT) || Number(env.PORT) || 5002;
   http
     .createServer((_req, res) => {
       res.writeHead(200);

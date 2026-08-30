@@ -2,6 +2,7 @@ import "dotenv/config";
 
 export const env = {
   PORT: process.env.PORT,
+  WORKER_PORT: process.env.WORKER_PORT,
   NODE_ENV: process.env.NODE_ENV,
   APP_URL: process.env.APP_URL,
   FRONTEND_URL: process.env.FRONTEND_URL,
